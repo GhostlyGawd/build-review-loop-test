@@ -1,17 +1,20 @@
-# Permissions Playground build-review-loop experiment
+# Permissions Playground
 
-This repository is a frozen Phase 1 scaffold for a controlled baseline-versus-treatment software-building experiment. The target product is a React permissions-policy playground, but the product implementation is intentionally absent on this branch.
+Permissions Playground is a small, client-only React application for learning how resource scope, subject specificity, and explicit denies combine in an access-control policy. It is an educational simulator for developers and product teams—not an authorization system.
 
-## Status
+The implementation is complete for the frozen experiment specification. Users can enable, disable, delete, reset, and add constrained rules; inspect one request; and compare all 36 effective user/resource/action decisions.
 
-- Phase: common-start scaffold, before arm assignment
-- Product: not implemented
-- Public contract tests: committed but gated until the required implementation files exist
-- Hidden tests: not present in this repository
-- Experiment lock: frozen external commitments; the final GitHub common-start commit is recorded post-merge in experiment run manifests
-- License: none has been granted; no license file is included
+## See it in action
 
-Do not present this branch as a completed application. A successful scaffold check establishes only that the protocol, contracts, templates, and toolchain are internally consistent.
+![The Check access panel showing Ben denied Edit access to Runbook by explicit rule-4, above the complete permissions matrix.](docs/screenshots/explicit-deny.png)
+
+_Explicit deny: the exact Ben / Runbook / Edit rule wins. Captured from the production build at 1440 × 1000 CSS pixels on 2026-07-20._
+
+![The Check access panel showing Cy allowed View access to Budget by the more-specific rule-5, above the updated permissions matrix.](docs/screenshots/allowed.png)
+
+_Specific allow: Cy's user rule beats the everyone deny at the same resource. Captured from the production build at 1440 × 1000 CSS pixels on 2026-07-20._
+
+Detailed capture provenance and alt text are in [`docs/screenshots/README.md`](docs/screenshots/README.md).
 
 ## Five-minute setup
 
@@ -23,41 +26,62 @@ npm run check
 npm run dev
 ```
 
-`npm run dev` serves an honest placeholder page. `npm run test:public` intentionally exits nonzero until all required implementation modules exist. `npm run check` uses the scaffold-aware public-test runner: it permits the known all-files-absent state, then automatically runs and enforces the public suite after implementation appears.
+Open the local URL printed by Vite. No account, server, environment variable, or credential is needed.
 
-## Experiment map
+Useful commands:
 
-```mermaid
-flowchart LR
-  S[Frozen common start] --> B[Baseline build]
-  S --> T[Treatment build]
-  B --> RB[Two blinded reviews]
-  T --> RT[Two blinded reviews]
-  RB --> FB[Bounded fix pass]
-  RT --> FT[Bounded fix pass]
-  FB --> E[Blinded four-snapshot evaluation]
-  FT --> E
+```sh
+npm run test:public        # frozen public contract: 14 tests
+npx vitest run             # public + builder-added suite: 22 tests
+npm run build              # typecheck and production bundle
+npm run check              # formatting, lint, types, scaffold, public tests, build
 ```
 
-- [`docs/permissions-playground-spec.md`](docs/permissions-playground-spec.md): frozen product and evaluator semantics
-- [`docs/public-test-contract.md`](docs/public-test-contract.md): required module and UI contract
-- [`experiment/protocol.md`](experiment/protocol.md): assignment, blinding, measurements, invalidation, and stopping rules
-- [`experiment/rubric.md`](experiment/rubric.md): 100-point blinded scoring rubric
-- [`experiment/prompts/`](experiment/prompts/): exact role prompts
-- [`experiment/schemas/`](experiment/schemas/): machine-readable artifact contracts
-- [`experiment/templates/`](experiment/templates/): valid starting artifacts
-- [`experiment/lock.json`](experiment/lock.json): frozen parent/scaffold and external commitments
+## How policy resolution works
 
-## Architecture and boundaries
+For a selected user, resource, and action, the evaluator:
 
-Phase 1 contains only protocol documents, schemas, test contracts, public tests, and a Vite placeholder. The builders own the three required implementation modules. Evaluators own the hidden suite outside this repository. The browser application is specified to use local in-memory state only: no authentication, backend, network calls, credentials, or personal data.
+1. keeps enabled rules with matching actions, subjects, and resource scope;
+2. keeps rules on the closest matching resource;
+3. keeps the most-specific subject tier (user, then group, then everyone); and
+4. denies if any rule in that final tied tier denies.
 
-Public tests expose examples and contracts, not the implementation algorithm. Hidden cases and hidden fixtures must never be committed to an arm branch. The diagram above is the truthful visual for this protocol scaffold. Product screenshots are intentionally deferred because there is no implemented product to document yet; each completed arm must capture a sanitized real UI screenshot with alt text and provenance before it can claim product readiness.
+No match defaults to denied. Rule order has no effect, and all tied winner IDs are reported in sorted order.
 
-## Limitations and provenance
+## Architecture
 
-This is a two-arm pilot with one implementation per arm, not a statistically powered benchmark. Its primary result is descriptive. The specification and experiment files are original project materials prepared for this experiment. Dependency provenance is recorded by `package-lock.json` after `npm install`.
+- [`src/permissions/model.ts`](src/permissions/model.ts) contains the closed domain and exact seven-rule fixture.
+- [`src/permissions/evaluate.ts`](src/permissions/evaluate.ts) contains the pure, deterministic evaluator. Runtime-invalid policies and duplicate rule IDs fail closed.
+- [`src/PermissionsPlayground.tsx`](src/PermissionsPlayground.tsx) owns in-memory policy/form/query state and derives the checker and matrix from the same evaluator.
+- [`src/scaffold.css`](src/scaffold.css) provides the responsive visual system. At 320 CSS pixels, wide semantic tables scroll inside their panels without moving the page itself.
+- [`tests/builder/`](tests/builder/) adds regression coverage for precedence, tied denies, invalid policies, deterministic IDs, constrained subjects, derived UI updates, and live-region semantics.
 
-## Contributing and support
+There is one browser route and no asynchronous application state. The production output in `dist/` is generated and intentionally not committed.
 
-This private experiment is not accepting general contributions. Experiment operators should follow the frozen protocol and record deviations rather than silently repairing them. Repository-owner support is the only support channel during the pilot.
+## Security and privacy boundaries
+
+All policy state stays in React memory and returns to the initial fixture on reload. The application makes no network requests, persists no data, accepts no free text or HTML, and has no `eval`/`Function`, authentication, backend, secrets, analytics, or third-party service integration. Inputs are limited to the fixed domain through native select controls.
+
+The evaluator is designed to explain this frozen toy model. It has not been designed, audited, or deployed as a production authorization enforcement point.
+
+## Accessibility
+
+The page uses one `h1`, labeled regions and controls, a live decision status, semantic tables, explicit Allowed/Denied text, native keyboard controls, visible focus styles, and non-color status symbols. The matrix exposes one accessible result name for every user/resource/action combination.
+
+## Limitations
+
+- The users, groups, resources, actions, and hierarchy are fixed and cannot be edited.
+- State is session-local and is not imported, exported, persisted, or shared.
+- Actions are independent; Edit does not imply View.
+- There is no authentication, authorization enforcement, backend, database, undo/redo, drag ordering, or deployment configuration.
+- The experiment is a two-arm pilot with one implementation per arm, so its eventual comparison is descriptive rather than statistically generalizable.
+
+## Specification and provenance
+
+Product behavior is governed by the frozen [`docs/permissions-playground-spec.md`](docs/permissions-playground-spec.md) and [`docs/public-test-contract.md`](docs/public-test-contract.md). The source and documentation are original experiment materials. Dependency identities and integrity hashes are recorded in `package-lock.json`; the implementation does not add or upgrade dependencies.
+
+Screenshot source revision: `PENDING_BUILD_SNAPSHOT` (finalized in the candidate run artifact after the implementation commit).
+
+## License and support
+
+No license has been granted and no license file is included. The repository is private; do not assume permission to use, copy, modify, or redistribute its contents. This experiment is not accepting general contributions. Repository-owner support is the only support channel during the pilot.
