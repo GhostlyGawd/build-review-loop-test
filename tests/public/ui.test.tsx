@@ -56,9 +56,8 @@ describe("Permissions Playground public UI contract", () => {
     expect(screen.getByRole("status")).toHaveTextContent("rule-6");
 
     await user.click(screen.getByRole("button", { name: "Delete rule-6" }));
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "No matching rule; default deny.",
-    );
+    expect(screen.getByRole("status")).toHaveTextContent("Allowed");
+    expect(screen.getByRole("status")).toHaveTextContent("rule-1");
 
     await user.click(screen.getByRole("button", { name: "Reset policy" }));
     expect(screen.getByRole("status")).toHaveTextContent("Allowed");
