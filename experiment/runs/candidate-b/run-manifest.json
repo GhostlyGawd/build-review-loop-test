@@ -1,0 +1,37 @@
+{
+  "candidateLabel": "candidate-b",
+  "commonStartCommit": "1b1375e5fa182abd667ddbf77efc27358b162ff7",
+  "preregistrationLockCommit": "b5d6538b75680888709d86d15041dc41ecde8712",
+  "lockFileSha256": "74f65bc6b74dfb0ce0b73437f1e302f9ba72052dd73172de9891e3f9eda0bf3b",
+  "buildSnapshot": {
+    "commit": "cd66ab1c9f76eeb72167e58722be96d199ecb635",
+    "sealedAt": "2026-07-20T22:20:24.7101653Z",
+    "treeSha256": "ddd46028266fa66c4b85907c73203d0c2972e6321fd240eeca57171db6cc7c49"
+  },
+  "finalSnapshot": null,
+  "status": "pending",
+  "promptSha256": "96ac04deea4d25fe887aa8058071f45a09517bec83384a0e31a4b1051ab7169b",
+  "checks": [
+    {
+      "stage": "build",
+      "command": "npx --yes node@22 C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js ci",
+      "exitCode": 0
+    },
+    {
+      "stage": "build",
+      "command": "npx --yes node@22 C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js run check",
+      "exitCode": 0
+    },
+    {
+      "stage": "build",
+      "command": "npx --yes node@22 node_modules\\vitest\\vitest.mjs run",
+      "exitCode": 0
+    },
+    {
+      "stage": "build",
+      "command": "npx --yes agent-browser (production preview verification at 1440x1000 and 320x800)",
+      "exitCode": 0
+    }
+  ],
+  "deviations": []
+}
