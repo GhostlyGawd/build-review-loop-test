@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Review Loop"
+  short_description: "Run blind build-review convergence loops"
+  default_prompt: "Use $build-review-loop to run an isolated blind build-review-fix evaluation."
