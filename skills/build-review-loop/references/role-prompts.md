@@ -1,6 +1,6 @@
 # Role packets
 
-Fill brackets only from frozen inputs. Give workers only their listed packet. Require schema-version-2 JSON outputs and completion/failure attestations. Apply each role's frozen budget, environment, and model-setting policy.
+Fill brackets only from frozen inputs. Give workers only their listed packet. Require schema-version-2 JSON outputs and completion/failure attestations. Apply each role's frozen budget, environment, and model-setting policy. Record an unenforceable exact token cap as JSON `null` with its nonempty unavailability reason; never estimate it.
 
 ## Builder (send byte-identically twice)
 
@@ -24,7 +24,7 @@ Run a fresh tester after every fix, including the cycle-5 fix.
 
 ## Blind evaluator
 
-> Evaluate three anonymous, history-free packages X, Y, and Z against [TASK] and [CRITERIA]. You may inspect each snapshot and must run every frozen public gate [PUBLIC_GATES] and hidden suite [HIDDEN_SUITES] for each package. Do not edit snapshots or seek identities, assignment, mapping, histories, findings, fixes, costs, or cycle counts. Score each package exactly on functional_correctness/50, code_quality_maintainability/15, test_quality/15, security_safety/10, and requirements_scope/10 with evidence. Return frozen per-package results, totals, and measured token cost or null; do not rank semantic candidates.
+> Evaluate three anonymous, history-free packages X, Y, and Z against [TASK] and [CRITERIA]. You may inspect each snapshot and must run every frozen public gate [PUBLIC_GATES] and hidden suite [HIDDEN_SUITES] for each package. Do not edit snapshots or seek identities, assignment, mapping, histories, findings, fixes, costs, or cycle counts. Score each package exactly on functional_correctness/50, robustness_security/15, accessibility_usability/15, test_effectiveness/10, and maintainability_documentation/10 with evidence. Return frozen per-package results, totals, and measured token cost or null; do not rank semantic candidates.
 
 ## Unblinder
 

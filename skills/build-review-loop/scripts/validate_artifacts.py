@@ -20,10 +20,10 @@ FINDING_FIELDS = {
 ROLES = {"builder", "reviewer", "fixer", "tester", "evaluator", "unblinder", "git_worker"}
 RUBRIC = {
     "functional_correctness": 50,
-    "code_quality_maintainability": 15,
-    "test_quality": 15,
-    "security_safety": 10,
-    "requirements_scope": 10,
+    "robustness_security": 15,
+    "accessibility_usability": 15,
+    "test_effectiveness": 10,
+    "maintainability_documentation": 10,
 }
 SEMANTIC_SNAPSHOTS = {"baseline_final", "treatment_initial", "treatment_final"}
 ASSIGNMENT_DOMAIN = b"build-review-loop-assignment-v2\x00"
@@ -118,7 +118,16 @@ def validate_run(root: Path, errors: list[str]) -> dict[str, Any] | None:
             location = f"run.json: role_policy.{role}"
             require(isinstance(policy, dict), f"{location} must be an object", errors)
             if isinstance(policy, dict):
-                require(positive_int(policy.get("max_tokens")), f"{location}.max_tokens must be positive", errors)
+                require("max_tokens" in policy, f"{location}.max_tokens must be present", errors)
+                max_tokens = policy.get("max_tokens")
+                reason = policy.get("max_tokens_unavailable_reason")
+                if max_tokens is None:
+                    require("max_tokens_unavailable_reason" in policy and nonempty_string(reason),
+                            f"{location}.max_tokens_unavailable_reason required when max_tokens is null", errors)
+                else:
+                    require(positive_int(max_tokens), f"{location}.max_tokens must be positive or null", errors)
+                    require(reason is None,
+                            f"{location}.max_tokens_unavailable_reason must be null or absent when max_tokens is capped", errors)
                 require(positive_int(policy.get("timeout_seconds")), f"{location}.timeout_seconds must be positive", errors)
                 for field in ("environment_sha256", "model_settings_sha256"):
                     require(bool(HEX64.fullmatch(str(policy.get(field, "")))), f"{location}.{field} invalid", errors)

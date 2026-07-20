@@ -22,9 +22,9 @@ result: exit 0
 
 Complete validator test suite
 command: python -m unittest discover -s .\skills\build-review-loop\scripts -p test_*.py -v
-result: exit 0; 13 tests ran; all passed
-positive cases: baseline zero cycles; treatment fresh-zero-findings convergence; treatment cycle-5 fix/test with unverified convergence; exact assignment recomputation; three-snapshot blind evaluation and primary/secondary deltas
-negative cases: reversed assignment; assignment before both freezes; baseline cycle; duplicate semantic package; missing hidden suite; wrong rubric weight; estimated token cost; invalid severity; evidence mutation; malformed worker ID
+result: exit 0; 16 tests ran; all passed
+positive cases: baseline zero cycles; treatment fresh-zero-findings convergence; treatment cycle-5 fix/test with unverified convergence; exact assignment recomputation; three-snapshot blind evaluation and primary/secondary deltas; exact token caps with absent/null unavailability reason; unavailable exact token cap as null with a nonempty reason
+negative cases: reversed assignment; assignment before both freezes; baseline cycle; duplicate semantic package; missing hidden suite; wrong rubric weight; null token cap without reason; exact token cap with non-null unavailability reason; estimated token cost; invalid severity; evidence mutation; malformed worker ID
 
 Validator CLI smoke
 command: python .\skills\build-review-loop\scripts\validate_artifacts.py --help
@@ -35,5 +35,5 @@ command: git diff --check
 result: exit 0; no whitespace errors
 
 Scope checks
-result: no schema-version-1, seed-parity-v1, arms/X, arms/Y, or two-label blind-evaluation contract remains in the skill
+result: no schema-version-1, seed-parity-v1, arms/X, arms/Y, two-label blind-evaluation contract, or superseded rubric category remains in the skill
 result: SKILL.md is under 500 lines and uses progressive references for isolation, role packets, and schema details

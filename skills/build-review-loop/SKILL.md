@@ -31,11 +31,12 @@ Use the bounded packets in [role-prompts.md](references/role-prompts.md). For cy
 
 After treatment stops, construct three history-free packages from the baseline final, treatment initial, and treatment final snapshots. Randomize them to `X`, `Y`, and `Z`; seal the mapping, identities, assignment, cycle history, findings, fixes, and costs from a fresh evaluator.
 
-The evaluator may inspect snapshots and must run the frozen public and hidden suites for all three packages. It must score each package on the exact 100-point rubric in [artifact-contract.md](references/artifact-contract.md). Unblind only after `blind.json` freezes; compute the primary treatment-final minus baseline score and secondary treatment-final minus treatment-initial score without changing evaluator scores.
+The evaluator may inspect snapshots and must run the frozen public and hidden suites for all three packages. It must score each package on exactly `functional_correctness`/50, `robustness_security`/15, `accessibility_usability`/15, `test_effectiveness`/10, and `maintainability_documentation`/10 as defined in [artifact-contract.md](references/artifact-contract.md). Unblind only after `blind.json` freezes; compute the primary treatment-final minus baseline score and secondary treatment-final minus treatment-initial score without changing evaluator scores.
 
 ## Preserve and validate evidence
 
 - Emit append-only chained events using the canonical SHA-256 rule in the artifact contract. Never edit or reorder an emitted event.
+- Freeze an enforceable role `max_tokens` as a positive integer. If the platform cannot impose an exact cap, use JSON `null` with a nonempty unavailability reason; never estimate a cap.
 - Record provider token telemetry only when measured. Use JSON `null` when unavailable; never estimate it.
 - Keep prompt/config hashes, initial attestations, snapshots, worker IDs, assignment, findings, fixes, suite results, scores, and invalidations. Redact secrets and record redactions.
 - Have a delegated validator run `python scripts/validate_artifacts.py RUN_DIR`. A nonzero exit invalidates the evidence; it does not establish an outcome.

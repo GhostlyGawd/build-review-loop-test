@@ -54,7 +54,7 @@ class ArtifactValidatorTests(unittest.TestCase):
         return validate_artifacts.candidate_assignment(self.seed, self.candidates)
 
     def role_policy(self) -> dict[str, object]:
-        return {
+        policies = {
             role: {
                 "max_tokens": 1000,
                 "timeout_seconds": 600,
@@ -63,6 +63,8 @@ class ArtifactValidatorTests(unittest.TestCase):
             }
             for role in validate_artifacts.ROLES
         }
+        policies["git_worker"]["max_tokens_unavailable_reason"] = None
+        return policies
 
     def public_results(self) -> list[dict[str, object]]:
         return [{"command": self.public_gates[0], "exit_code": 0, "output_digest": "public-pass"}]
@@ -73,10 +75,10 @@ class ArtifactValidatorTests(unittest.TestCase):
     def score(self, total_offset: int = 0) -> dict[str, object]:
         values = {
             "functional_correctness": 40 + total_offset,
-            "code_quality_maintainability": 12,
-            "test_quality": 12,
-            "security_safety": 8,
-            "requirements_scope": 8,
+            "robustness_security": 12,
+            "accessibility_usability": 12,
+            "test_effectiveness": 8,
+            "maintainability_documentation": 8,
         }
         return {
             "dimensions": {
@@ -364,6 +366,37 @@ class ArtifactValidatorTests(unittest.TestCase):
             arm["token_cost"] = "~100"
             write_json(arm_path, arm)
             self.assertTrue(any("token_cost" in error for error in self.errors(root)))
+
+    def test_accepts_null_role_cap_with_unavailable_reason(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_valid_run(root)
+            run_path = root / "run.json"
+            run = json.loads(run_path.read_text(encoding="utf-8"))
+            run["role_policy"]["builder"]["max_tokens"] = None
+            run["role_policy"]["builder"]["max_tokens_unavailable_reason"] = "platform cannot enforce an exact cap"
+            write_json(run_path, run)
+            self.assertEqual([], self.errors(root))
+
+    def test_rejects_null_role_cap_without_reason(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_valid_run(root)
+            run_path = root / "run.json"
+            run = json.loads(run_path.read_text(encoding="utf-8"))
+            run["role_policy"]["reviewer"]["max_tokens"] = None
+            write_json(run_path, run)
+            self.assertTrue(any("unavailable_reason required" in error for error in self.errors(root)))
+
+    def test_rejects_unavailable_reason_with_exact_role_cap(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_valid_run(root)
+            run_path = root / "run.json"
+            run = json.loads(run_path.read_text(encoding="utf-8"))
+            run["role_policy"]["tester"]["max_tokens_unavailable_reason"] = "estimated instead"
+            write_json(run_path, run)
+            self.assertTrue(any("must be null or absent" in error for error in self.errors(root)))
 
     def test_rejects_invalid_finding_severity(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

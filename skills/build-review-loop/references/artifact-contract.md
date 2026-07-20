@@ -37,7 +37,7 @@ Require `run.json` to contain:
     "test": true, "evaluation": true, "git": true
   },
   "role_policy": {
-    "builder": {"max_tokens": 1, "timeout_seconds": 1, "environment_sha256": "64 lowercase hex", "model_settings_sha256": "64 lowercase hex"},
+    "builder": {"max_tokens": null, "max_tokens_unavailable_reason": "platform cannot impose an exact cap", "timeout_seconds": 1, "environment_sha256": "64 lowercase hex", "model_settings_sha256": "64 lowercase hex"},
     "reviewer": {}, "fixer": {}, "tester": {}, "evaluator": {},
     "unblinder": {}, "git_worker": {}
   },
@@ -56,7 +56,7 @@ Require `run.json` to contain:
 }
 ```
 
-Require all seven role-policy entries. Each freezes a positive integer `max_tokens`, positive integer `timeout_seconds`, and hashes of exact environment and model-setting bytes. `token_cost` in worker artifacts is separate telemetry: require a nonnegative integer when measured or JSON `null` when unavailable; reject strings and estimates. A completed valid comparison uses `invalidation: null`; on any invalidation, preserve the evidence and reason but do not emit a valid comparison result.
+Require all seven role-policy entries. Each freezes a positive integer `timeout_seconds` and hashes of exact environment and model-setting bytes. Require `max_tokens` explicitly. When the platform can enforce an exact cap, use a positive integer and keep `max_tokens_unavailable_reason` absent or JSON `null`. When it cannot, use JSON `null` and require a nonempty `max_tokens_unavailable_reason`; never estimate a cap. `token_cost` in worker artifacts is separate telemetry: require a nonnegative integer when measured or JSON `null` when unavailable; reject strings and estimates. A completed valid comparison uses `invalidation: null`; on any invalidation, preserve the evidence and reason but do not emit a valid comparison result.
 
 ### Candidate assignment algorithm
 
@@ -110,10 +110,10 @@ Require `evaluation/blind.json` to contain a fresh evaluator ID, `blind_labels: 
 | Dimension | Points |
 | --- | ---: |
 | `functional_correctness` | 50 |
-| `code_quality_maintainability` | 15 |
-| `test_quality` | 15 |
-| `security_safety` | 10 |
-| `requirements_scope` | 10 |
+| `robustness_security` | 15 |
+| `accessibility_usability` | 15 |
+| `test_effectiveness` | 10 |
+| `maintainability_documentation` | 10 |
 
 Each dimension needs an integer score from zero through its weight and nonempty evidence. Require the declared total to equal the five scores and evaluator token cost to be measured or null. The evaluator may and must run both frozen suites; testing is an explicit exception to read-only comparison, but editing remains forbidden.
 

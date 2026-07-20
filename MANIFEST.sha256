@@ -1,11 +1,11 @@
 # Frozen SHA-256 manifest for prospective build-review-loop skill v1 / artifact schema version 2.
 # Hashes cover the exact bytes of every skill source file and the validation evidence listed below.
 # Excluded: this manifest (to avoid self-reference), ignored bytecode, and repository files outside the skill/evidence scope.
-053c8fa2455264c7b1fbb91b7b3900907695bdca0a8e261cd2618fc35ab81e47  skills/build-review-loop/SKILL.md
+3981cd9427c9601ad34bb33b4384a90f83083d4d7cad1d287a0198e5d9205a17  skills/build-review-loop/SKILL.md
 5eede7f9edbf316ad94c2653f6fcaea2a9b31fb87225265ff0b15b9ca7ac03fa  skills/build-review-loop/agents/openai.yaml
-63d92629a8070597ac6125305ee7577f08bf428bfa2a5083027f36baded5d6bd  skills/build-review-loop/references/artifact-contract.md
+56c4f185a64a3ab6e1e19413a12958081530919f81641681468c7b878d8363b1  skills/build-review-loop/references/artifact-contract.md
 3803d2350c3b889b3a1dcc51704cdf4d74bd6e3c33764bc8558222f2dde1486a  skills/build-review-loop/references/isolation.md
-7c929234fff2aba1c2e9afd56ad0ac1a8d3da3127c25f9722fe3754ad1c201b6  skills/build-review-loop/references/role-prompts.md
-fd798a729e7b8ff1454615859247476c40e9a66d52270bacf6014b8d0b83bcfe  skills/build-review-loop/scripts/test_validate_artifacts.py
-dc4368690c907da1f3a81cf1eb6b8707ee80f85ceb5c6dff4572b3e7e2dfbaf8  skills/build-review-loop/scripts/validate_artifacts.py
-405553c390b9ace0d873e22f98721ea80c1e0b66db72235061a2b5ccdf0c5eeb  validation/validation-evidence.txt
+e50c7ecf4d54c6d9e65797a4cc4b8b8adcb626047ad3c60eb8ecc23f6c9b0a7c  skills/build-review-loop/references/role-prompts.md
+925c7d35f4177cea09b92dc7564d133a69cee8f57221eaa3c7993fdc6bc258c4  skills/build-review-loop/scripts/test_validate_artifacts.py
+cb0571316d322f9927f3e34dee27d53656cddae65334fba4be054ce24e7a731a  skills/build-review-loop/scripts/validate_artifacts.py
+1efaec5da1b4005eba9b6023ce7e5696e40596ffa89d2c89d8d3694cb329d751  validation/validation-evidence.txt
