@@ -15,9 +15,11 @@
     "format:check": "prettier --check .",
     "test": "npm run test:public",
     "test:public": "node scripts/run-public-tests.mjs",
+    "test:additional": "vitest run tests/evaluate.additional.test.ts tests/ui.additional.test.tsx",
     "test:public:if-implemented": "node scripts/run-public-tests.mjs --allow-absent",
     "validate:scaffold": "node scripts/validate-scaffold.mjs",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run validate:scaffold && npm run test:public:if-implemented && npm run build"
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run validate:scaffold && npm run test:public:if-implemented && npm run test:additional && npm run build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "19.2.7",

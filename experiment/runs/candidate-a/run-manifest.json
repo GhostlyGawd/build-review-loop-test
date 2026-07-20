@@ -1,0 +1,50 @@
+{
+  "candidateLabel": "candidate-a",
+  "commonStartCommit": "1b1375e5fa182abd667ddbf77efc27358b162ff7",
+  "preregistrationLockCommit": "b5d6538b75680888709d86d15041dc41ecde8712",
+  "lockFileSha256": "74f65bc6b74dfb0ce0b73437f1e302f9ba72052dd73172de9891e3f9eda0bf3b",
+  "buildSnapshot": {
+    "commit": "7cb67854353fb61e4c1dec57d6c12d0dd666929f",
+    "sealedAt": "2026-07-20T22:17:54.1455875Z",
+    "treeSha256": "3a37a5e89f96dc6791cc9286d2abda477bc3af01a668755d4fd66169f609f3fd"
+  },
+  "finalSnapshot": null,
+  "status": "valid",
+  "promptSha256": "96ac04deea4d25fe887aa8058071f45a09517bec83384a0e31a4b1051ab7169b",
+  "checks": [
+    {
+      "stage": "build",
+      "command": "npm ci (default Node 24.14.1)",
+      "exitCode": 0
+    },
+    {
+      "stage": "build",
+      "command": "Node 22.23.1 node.exe npm-cli.js ci",
+      "exitCode": 0
+    },
+    {
+      "stage": "build",
+      "command": "Node 22.23.1 node.exe npm-cli.js run check (initial added-test glob)",
+      "exitCode": 1
+    },
+    {
+      "stage": "build",
+      "command": "npx playwright test browser-evidence.spec.ts --reporter=line --workers=1 (initial 320px probe)",
+      "exitCode": 1
+    },
+    {
+      "stage": "build",
+      "command": "npx playwright test browser-evidence.spec.ts --reporter=line --workers=1 (post-fix production build)",
+      "exitCode": 0
+    },
+    {
+      "stage": "build",
+      "command": "Node 22.23.1 node.exe npm-cli.js run check (final)",
+      "exitCode": 0
+    }
+  ],
+  "deviations": [
+    "The default shell exposed Node 24.14.1. The authoritative clean install and full checks were rerun with Node 22.23.1 as required.",
+    "The shared test setup now calls Testing Library cleanup after each case because the frozen Vitest configuration does not expose a global afterEach for automatic cleanup; public tests and their runner were not modified."
+  ]
+}
