@@ -1,14 +1,15 @@
-build-review-loop experimental skill validation
+build-review-loop prospective skill v1 validation
 repository: GhostlyGawd/build-review-loop-test
-branch: experiment/skill-v0
-base commit: 2bc2f6b7f5a6717a2c4e82c39b585261de0a515e
+branch: experiment/skill-v1
+frozen start commit: 7a4eaea47e821531fc674febf533d4dfeabc78bf
+artifact schema_version: 2
 
-Official scaffold
-command: python C:\Users\rhenm\.codex\skills\.system\skill-creator\scripts\init_skill.py build-review-loop --path .\skills --resources scripts,references --interface display_name=Build Review Loop --interface short_description=Run blind build-review convergence loops --interface default_prompt=Use $build-review-loop to run an isolated blind build-review-fix evaluation.
-result: exit 0; skill, agents metadata, scripts, and references scaffolded
+Governance orientation
+command: python C:\Users\rhenm\.codex\skills\portfolio-governance\scripts\portfolio_context.py GhostlyGawd/build-review-loop-test
+result: exit 0; live default branch main; private; unarchived; governance status untracked; audit commit 07bbef104ccaaa983a748821e21ccf2c045f5611
 
 Official agents metadata generator
-command: python C:\Users\rhenm\.codex\skills\.system\skill-creator\scripts\generate_openai_yaml.py .\skills\build-review-loop --interface display_name=Build Review Loop --interface short_description=Run blind build-review convergence loops --interface default_prompt=Use $build-review-loop to run an isolated blind build-review-fix evaluation.
+command: python C:\Users\rhenm\.codex\skills\.system\skill-creator\scripts\generate_openai_yaml.py .\skills\build-review-loop --interface "display_name=Build Review Loop" --interface "short_description=Run a blinded treatment-only review pilot" --interface "default_prompt=Use $build-review-loop to run a prospective blinded build-review pilot from a frozen common start."
 result: exit 0; [OK] Created agents/openai.yaml
 
 Official skill validation
@@ -19,10 +20,11 @@ Python syntax validation
 command: python -m py_compile .\skills\build-review-loop\scripts\validate_artifacts.py .\skills\build-review-loop\scripts\test_validate_artifacts.py
 result: exit 0
 
-Complete script test suite
+Complete validator test suite
 command: python -m unittest discover -s .\skills\build-review-loop\scripts -p test_*.py -v
-result: exit 0; 5 tests ran; all passed
-tests: valid run; cycle-5 fix remains unverified; estimated token cost rejected; mutated evidence rejected; malformed worker ID rejected without validator crash
+result: exit 0; 13 tests ran; all passed
+positive cases: baseline zero cycles; treatment fresh-zero-findings convergence; treatment cycle-5 fix/test with unverified convergence; exact assignment recomputation; three-snapshot blind evaluation and primary/secondary deltas
+negative cases: reversed assignment; assignment before both freezes; baseline cycle; duplicate semantic package; missing hidden suite; wrong rubric weight; estimated token cost; invalid severity; evidence mutation; malformed worker ID
 
 Validator CLI smoke
 command: python .\skills\build-review-loop\scripts\validate_artifacts.py --help
@@ -31,3 +33,7 @@ result: exit 0; usage emitted
 Patch hygiene
 command: git diff --check
 result: exit 0; no whitespace errors
+
+Scope checks
+result: no schema-version-1, seed-parity-v1, arms/X, arms/Y, or two-label blind-evaluation contract remains in the skill
+result: SKILL.md is under 500 lines and uses progressive references for isolation, role packets, and schema details

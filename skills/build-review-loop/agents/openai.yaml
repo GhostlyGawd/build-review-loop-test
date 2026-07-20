@@ -1,4 +1,4 @@
 interface:
   display_name: "Build Review Loop"
-  short_description: "Run blind build-review convergence loops"
-  default_prompt: "Use $build-review-loop to run an isolated blind build-review-fix evaluation."
+  short_description: "Run a blinded treatment-only review pilot"
+  default_prompt: "Use $build-review-loop to run a prospective blinded build-review pilot from a frozen common start."
