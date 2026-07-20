@@ -88,7 +88,7 @@ for (const [schemaPath, dataPath] of schemaPairs) {
 
 const lock = readJson("experiment/lock.json");
 const placeholders = [
-  lock.commonStartCommit,
+  lock.lockParentCommit,
   lock.hiddenSuiteSha256,
   lock.treatmentSkillCommit,
   lock.treatmentSkillManifestSha256,

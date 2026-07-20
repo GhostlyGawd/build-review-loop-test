@@ -2,6 +2,8 @@
   "experimentId": "pilot-001",
   "startedAt": "2026-07-20T00:00:00Z",
   "operator": "UNSET_OPERATOR",
+  "commonStartCommit": "0000000000000000000000000000000000000000",
+  "preregistrationLockCommit": "0000000000000000000000000000000000000000",
   "lockFileSha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "randomizationDraw": 0,
   "buildOrder": ["baseline", "treatment"],

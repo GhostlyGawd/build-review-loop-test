@@ -1,6 +1,8 @@
 {
   "candidateLabel": "candidate-x",
-  "startCommit": "0000000000000000000000000000000000000000",
+  "commonStartCommit": "0000000000000000000000000000000000000000",
+  "preregistrationLockCommit": "0000000000000000000000000000000000000000",
+  "lockFileSha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "buildSnapshot": null,
   "finalSnapshot": null,
   "status": "pending",

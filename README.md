@@ -8,7 +8,7 @@ This repository is a frozen Phase 1 scaffold for a controlled baseline-versus-tr
 - Product: not implemented
 - Public contract tests: committed but gated until the required implementation files exist
 - Hidden tests: not present in this repository
-- Experiment lock: provisional until the common-start commit and hidden-suite/frozen-skill hashes are supplied
+- Experiment lock: frozen external commitments; the final GitHub common-start commit is recorded post-merge in experiment run manifests
 - License: none has been granted; no license file is included
 
 Do not present this branch as a completed application. A successful scaffold check establishes only that the protocol, contracts, templates, and toolchain are internally consistent.
@@ -46,7 +46,7 @@ flowchart LR
 - [`experiment/prompts/`](experiment/prompts/): exact role prompts
 - [`experiment/schemas/`](experiment/schemas/): machine-readable artifact contracts
 - [`experiment/templates/`](experiment/templates/): valid starting artifacts
-- [`experiment/lock.json`](experiment/lock.json): freeze metadata and pending hashes
+- [`experiment/lock.json`](experiment/lock.json): frozen parent/scaffold and external commitments
 
 ## Architecture and boundaries
 

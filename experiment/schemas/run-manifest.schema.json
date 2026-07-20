@@ -6,7 +6,9 @@
   "additionalProperties": false,
   "required": [
     "candidateLabel",
-    "startCommit",
+    "commonStartCommit",
+    "preregistrationLockCommit",
+    "lockFileSha256",
     "buildSnapshot",
     "finalSnapshot",
     "status",
@@ -16,7 +18,18 @@
   ],
   "properties": {
     "candidateLabel": { "type": "string", "pattern": "^candidate-[a-z0-9-]+$" },
-    "startCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "commonStartCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "preregistrationLockCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "lockFileSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
     "buildSnapshot": { "$ref": "#/$defs/snapshot" },
     "finalSnapshot": { "$ref": "#/$defs/snapshot" },
     "status": { "enum": ["pending", "valid", "invalid", "blocked"] },

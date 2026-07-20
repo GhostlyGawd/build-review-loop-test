@@ -8,6 +8,8 @@
     "experimentId",
     "startedAt",
     "operator",
+    "commonStartCommit",
+    "preregistrationLockCommit",
     "lockFileSha256",
     "randomizationDraw",
     "buildOrder",
@@ -19,6 +21,14 @@
     "experimentId": { "type": "string", "minLength": 1 },
     "startedAt": { "type": "string", "format": "date-time" },
     "operator": { "type": "string", "minLength": 1 },
+    "commonStartCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "preregistrationLockCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
     "lockFileSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "randomizationDraw": { "type": "integer", "minimum": 0, "maximum": 1 },
     "buildOrder": {

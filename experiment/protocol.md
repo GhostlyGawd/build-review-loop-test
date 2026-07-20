@@ -17,17 +17,19 @@ Directional hypothesis: the treatment arm will have a higher final blinded 100-p
 Phase 1 is complete only when:
 
 1. this branch passes `npm ci` and `npm run check` on Node 22;
-2. its commit is recorded as `commonStartCommit` in `experiment/lock.json`;
+2. `experiment/lock.json` records the exact scaffold commit immediately before the preregistration lock commit as `lockParentCommit`;
 3. the external hidden-suite archive is frozen and its SHA-256 is recorded as `hiddenSuiteSha256` without committing its contents;
 4. the treatment skill is immutable; its 40-character commit and manifest SHA-256 are recorded as `treatmentSkillCommit` and `treatmentSkillManifestSha256`;
 5. all JSON templates validate against their paired schemas; and
 6. no builder has received the task materials.
 
-After the freeze commit, specification, rubric, public tests, prompts, schemas, initial dependencies, and CI are locked. Corrections require a logged protocol amendment and normally invalidate both arms for a clean restart.
+The preregistration lock cannot contain its own commit SHA, and the final GitHub common-start commit does not exist until the PR is merged. Immediately after merge, the operator MUST record the exact merged `commonStartCommit`, this preregistration lock commit SHA, and the SHA-256 of the byte-identical `experiment/lock.json` in the private experiment manifest and both candidate run manifests. This three-value binding is the authoritative common-start record. It supports merge, rebase, or squash strategies without pretending that a commit can hash itself.
+
+After the freeze commit, specification, rubric, public tests, prompts, schemas, initial dependencies, CI, and lock are immutable. Corrections require a logged protocol amendment and normally invalidate both arms for a clean restart.
 
 ## 3. Experimental unit and arms
 
-The unit is a repository worktree produced by one builder session from the same `commonStartCommit`. Exactly two units are run:
+The unit is a repository worktree produced by one builder session from the same post-merge `commonStartCommit` recorded in its run manifest. Exactly two units are run:
 
 - **Baseline:** receives the exact baseline builder prompt and repository, with no treatment skill content, summary, or treatment-specific coaching.
 - **Treatment:** receives the exact treatment builder prompt, repository, and read access to the skill at exactly `treatmentSkillCommit`. No newer or working-tree skill state is allowed.
@@ -51,7 +53,7 @@ Budget exhaustion ends that role at its current filesystem state. It is not a re
 
 ## 5. Environment and contamination controls
 
-- Create both arm branches directly from `commonStartCommit`; confirm zero diff before the builder prompt.
+- After verifying that both run manifests bind the same `commonStartCommit`, preregistration lock commit, and lock-file SHA-256, create both arm branches directly from `commonStartCommit`; confirm zero diff before the builder prompt.
 - Use clean dependency installation from the committed lockfile. Do not upgrade dependencies per arm.
 - Remove or equalize unrelated global instructions. Repository instructions apply equally.
 - Baseline tools may include ordinary code/search/test tools available to both arms, but must not expose the treatment skill or derivatives.
@@ -140,4 +142,4 @@ Interpretation order is: validity first, functional score, non-functional sectio
 
 ## 12. Amendments
 
-Before builders start, a change requires a new protocol version, rationale, diff, timestamp, operator identity, and updated common-start commit. After builders start, do not amend in place: apply the invalidation rules. Finalizing the two pending hashes is completion of the declared freeze metadata, not a substantive amendment, provided no other byte changes.
+Before builders start, a change requires a new protocol version, rationale, diff, timestamp, operator identity, new preregistration lock, and updated post-merge common-start binding. After builders start, do not amend in place: apply the invalidation rules. Recording the post-merge `commonStartCommit` and preregistration lock commit in manifests completes the declared binding; it does not amend the frozen lock.

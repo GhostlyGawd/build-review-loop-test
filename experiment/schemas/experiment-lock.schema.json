@@ -6,19 +6,20 @@
   "additionalProperties": false,
   "required": [
     "protocolVersion",
-    "commonStartCommit",
+    "lockParentCommit",
     "hiddenSuiteSha256",
     "treatmentSkillCommit",
     "treatmentSkillManifestSha256",
+    "commonStartCommitPolicy",
     "nodeVersion",
     "packageManager",
     "freezeState"
   ],
   "properties": {
     "protocolVersion": { "const": "1.0.0-frozen" },
-    "commonStartCommit": {
+    "lockParentCommit": {
       "type": "string",
-      "pattern": "^([0-9a-f]{40}|UNSET_COMMON_START_COMMIT)$"
+      "pattern": "^([0-9a-f]{40}|UNSET_LOCK_PARENT_COMMIT)$"
     },
     "hiddenSuiteSha256": {
       "type": "string",
@@ -32,6 +33,9 @@
       "type": "string",
       "pattern": "^([0-9a-f]{64}|UNSET_TREATMENT_SKILL_MANIFEST_SHA256)$"
     },
+    "commonStartCommitPolicy": {
+      "const": "Record the final GitHub commonStartCommit post-merge in the experiment and run manifests, together with this preregistration lock commit and lock-file SHA-256."
+    },
     "nodeVersion": { "const": "22.x" },
     "packageManager": {
       "type": "string",
@@ -44,7 +48,7 @@
       "if": { "properties": { "freezeState": { "const": "frozen" } } },
       "then": {
         "properties": {
-          "commonStartCommit": {
+          "lockParentCommit": {
             "type": "string",
             "pattern": "^[0-9a-f]{40}$"
           },
