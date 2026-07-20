@@ -1,11 +1,16 @@
 {
-  "protocolVersion": "1.0.0-frozen",
-  "lockParentCommit": "fd09002eb565a1c11802bc8ae8fe0fac0743d3d3",
-  "hiddenSuiteSha256": "cd40b4719149c6acf4ce5306609d7abfe2847e9cb540fbccf0283e0638fa5d56",
-  "treatmentSkillCommit": "7a4eaea47e821531fc674febf533d4dfeabc78bf",
-  "treatmentSkillManifestSha256": "82b83be3bd0743414713fb3477592872385fda5d6545267d66285aa0dd0e7b32",
+  "protocolVersion": "2.0.0",
+  "protocolStatus": "draft",
+  "lockParentCommit": "UNSET_LOCK_PARENT_COMMIT",
+  "hiddenSuiteSha256": "UNSET_HIDDEN_SUITE_SHA256",
+  "treatmentSkillCommit": "de1747fb46ed5b052e5507d2cd3c5c02cf87d73b",
+  "treatmentSkillTree": "d53d15935764d36a3f9272bbc0ae5c5c30008288",
+  "treatmentSkillManifestSha256": "45ccaed2d7812d646595c2cc7c27ff1c942ceefad8006d2093448a18e3e1ccb2",
+  "treatmentAlgorithmSha256": "abc1ffa422244259592452cab096fbb3abda7ee0ae64705d70ed7d54c4f93f2b",
+  "neutralBuilderPromptSha256": "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82",
+  "neutralBuilderConfigSha256": "60c5969f08108a9763868f9917eebe4e9b14dfbc98dc717502e1d4056a63c535",
   "commonStartCommitPolicy": "Record the final GitHub commonStartCommit post-merge in the experiment and run manifests, together with this preregistration lock commit and lock-file SHA-256.",
   "nodeVersion": "22.x",
   "packageManager": "npm@11.11.0",
-  "freezeState": "frozen"
+  "freezeState": "provisional"
 }

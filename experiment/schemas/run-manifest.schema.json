@@ -1,70 +1,201 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/run-manifest.schema.json",
-  "title": "Candidate run manifest",
+  "title": "Protocol 2.0.0 candidate run manifest",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "protocolVersion",
     "candidateLabel",
-    "commonStartCommit",
-    "preregistrationLockCommit",
-    "lockFileSha256",
-    "buildSnapshot",
+    "bindings",
+    "assignedArm",
+    "assignmentRecordHash",
+    "neutralPromptSha256",
+    "neutralConfigSha256",
+    "initialSnapshot",
     "finalSnapshot",
+    "cycles",
+    "stopReason",
+    "convergence",
     "status",
-    "promptSha256",
     "checks",
+    "evidenceChain",
     "deviations"
   ],
   "properties": {
-    "candidateLabel": { "type": "string", "pattern": "^candidate-[a-z0-9-]+$" },
-    "commonStartCommit": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{40}$"
+    "protocolVersion": { "const": "2.0.0" },
+    "candidateLabel": { "enum": ["candidate-a", "candidate-b"] },
+    "bindings": { "$ref": "#/$defs/bindings" },
+    "assignedArm": {
+      "type": ["string", "null"],
+      "enum": [null, "baseline", "treatment"]
     },
-    "preregistrationLockCommit": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{40}$"
+    "assignmentRecordHash": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sha256" }]
     },
-    "lockFileSha256": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{64}$"
+    "neutralPromptSha256": { "$ref": "#/$defs/sha256" },
+    "neutralConfigSha256": { "$ref": "#/$defs/sha256" },
+    "initialSnapshot": { "$ref": "#/$defs/nullableSnapshot" },
+    "finalSnapshot": { "$ref": "#/$defs/nullableSnapshot" },
+    "cycles": {
+      "type": "array",
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/cycle" }
     },
-    "buildSnapshot": { "$ref": "#/$defs/snapshot" },
-    "finalSnapshot": { "$ref": "#/$defs/snapshot" },
+    "stopReason": {
+      "type": ["string", "null"],
+      "enum": [
+        null,
+        "baseline-zero-cycles",
+        "zero-findings",
+        "max-cycles",
+        "role-budget",
+        "platform-failure",
+        "safety-boundary",
+        "invalidated"
+      ]
+    },
+    "convergence": { "type": ["boolean", "null"] },
     "status": { "enum": ["pending", "valid", "invalid", "blocked"] },
-    "promptSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "checks": { "type": "array", "items": { "$ref": "#/$defs/check" } },
+    "evidenceChain": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidenceLink" }
+    },
     "deviations": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 }
     }
   },
   "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commonStartCommit",
+        "preregistrationLockCommit",
+        "lockFileSha256"
+      ],
+      "properties": {
+        "commonStartCommit": { "$ref": "#/$defs/sha1" },
+        "preregistrationLockCommit": { "$ref": "#/$defs/sha1" },
+        "lockFileSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
     "snapshot": {
-      "oneOf": [
-        { "type": "null" },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["commit", "sealedAt", "treeSha256"],
-          "properties": {
-            "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-            "sealedAt": { "type": "string", "format": "date-time" },
-            "treeSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
-          }
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit", "sealedAt", "treeSha256", "packageProcedure"],
+      "properties": {
+        "commit": { "$ref": "#/$defs/sha1" },
+        "sealedAt": { "type": "string", "format": "date-time" },
+        "treeSha256": { "$ref": "#/$defs/sha256" },
+        "packageProcedure": { "type": "string", "minLength": 1 }
+      }
+    },
+    "nullableSnapshot": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/snapshot" }]
+    },
+    "cycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "number",
+        "inputSnapshot",
+        "reviewArtifactSha256",
+        "reviewFindingCount",
+        "fixArtifactSha256",
+        "testArtifactSha256",
+        "outputSnapshot",
+        "decision"
+      ],
+      "properties": {
+        "number": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "inputSnapshot": { "$ref": "#/$defs/snapshot" },
+        "reviewArtifactSha256": { "$ref": "#/$defs/sha256" },
+        "reviewFindingCount": { "type": "integer", "minimum": 0 },
+        "fixArtifactSha256": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sha256" }]
+        },
+        "testArtifactSha256": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sha256" }]
+        },
+        "outputSnapshot": { "$ref": "#/$defs/nullableSnapshot" },
+        "decision": {
+          "enum": ["continue", "zero-findings", "max-cycles", "terminated"]
         }
-      ]
+      }
     },
     "check": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["stage", "command", "exitCode"],
+      "required": ["stage", "command", "exitCode", "outputSha256"],
       "properties": {
-        "stage": { "enum": ["build", "final"] },
+        "stage": { "enum": ["initial", "cycle", "final"] },
         "command": { "type": "string", "minLength": 1 },
-        "exitCode": { "type": "integer" }
+        "exitCode": { "type": "integer" },
+        "outputSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "evidenceLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "kind",
+        "artifactSha256",
+        "previousSha256",
+        "transcriptSha256",
+        "costRecordSha256"
+      ],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 0 },
+        "kind": {
+          "enum": [
+            "binding",
+            "builder",
+            "assignment",
+            "review",
+            "fix",
+            "test",
+            "snapshot",
+            "evaluation-package"
+          ]
+        },
+        "artifactSha256": { "$ref": "#/$defs/sha256" },
+        "previousSha256": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sha256" }]
+        },
+        "transcriptSha256": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sha256" }]
+        },
+        "costRecordSha256": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sha256" }]
+        }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "assignedArm": { "const": "baseline" } },
+        "required": ["assignedArm"]
+      },
+      "then": {
+        "properties": {
+          "cycles": { "maxItems": 0 },
+          "stopReason": { "const": "baseline-zero-cycles" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "assignedArm": { "const": "treatment" } },
+        "required": ["assignedArm"]
+      },
+      "then": { "properties": { "cycles": { "minItems": 1, "maxItems": 5 } } }
+    }
+  ]
 }

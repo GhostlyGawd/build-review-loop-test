@@ -1,15 +1,27 @@
 {
+  "protocolVersion": "2.0.0",
   "experimentId": "pilot-001",
   "startedAt": "2026-07-20T00:00:00Z",
   "operator": "UNSET_OPERATOR",
-  "commonStartCommit": "0000000000000000000000000000000000000000",
-  "preregistrationLockCommit": "0000000000000000000000000000000000000000",
-  "lockFileSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-  "randomizationDraw": 0,
-  "buildOrder": ["baseline", "treatment"],
-  "blindMapping": {
-    "candidate-x": "baseline",
-    "candidate-y": "treatment"
+  "bindings": {
+    "commonStartCommit": "0000000000000000000000000000000000000000",
+    "preregistrationLockCommit": "0000000000000000000000000000000000000000",
+    "lockFileSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "candidateLabels": ["candidate-a", "candidate-b"],
+  "assignment": {
+    "seedHex": "0000000000000000000000000000000000000000000000000000000000000000",
+    "digestSha256": "909e5426e26a7fec5e0dafaca44f295cfffe12e8e5064fda2f7c16b8da968248",
+    "draw": 0,
+    "generatedAt": "2026-07-20T00:00:00Z",
+    "generator": "UNSET_OS_CSPRNG_API",
+    "mapping": { "candidate-a": "baseline", "candidate-b": "treatment" }
+  },
+  "evaluationRandomization": {
+    "seedHex": "0000000000000000000000000000000000000000000000000000000000000000",
+    "digestSha256": "ec47fcfaa090e9dfec2038cc3eec7778bce96cab5477dc153f1737ee62adaa07",
+    "order": ["X", "Y", "Z"],
+    "mapping": { "X": "T0", "Y": "Tfinal", "Z": "B0" }
   },
   "environment": {
     "model": "UNSET_MODEL",
@@ -19,7 +31,40 @@
     "npm": "UNSET_NPM",
     "os": "UNSET_OS",
     "networkPolicy": "UNSET_NETWORK_POLICY",
-    "toolPolicy": "UNSET_TOOL_POLICY"
+    "toolPolicy": "UNSET_TOOL_POLICY",
+    "builderConfigSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "budgets": {
+    "builder": {
+      "wallSecondsMaximum": 2400,
+      "tokenCeiling": null,
+      "tokenCeilingUnavailableReason": "provider-orchestrator-does-not-expose-an-enforceable-per-role-token-ceiling",
+      "turnLimit": 1
+    },
+    "reviewer": {
+      "wallSecondsMaximum": 900,
+      "tokenCeiling": null,
+      "tokenCeilingUnavailableReason": "provider-orchestrator-does-not-expose-an-enforceable-per-role-token-ceiling",
+      "turnLimit": 1
+    },
+    "fixer": {
+      "wallSecondsMaximum": 1500,
+      "tokenCeiling": null,
+      "tokenCeilingUnavailableReason": "provider-orchestrator-does-not-expose-an-enforceable-per-role-token-ceiling",
+      "turnLimit": 1
+    },
+    "tester": {
+      "wallSecondsMaximum": 900,
+      "tokenCeiling": null,
+      "tokenCeilingUnavailableReason": "provider-orchestrator-does-not-expose-an-enforceable-per-role-token-ceiling",
+      "turnLimit": 1
+    },
+    "evaluator": {
+      "wallSecondsMaximum": 1800,
+      "tokenCeiling": null,
+      "tokenCeilingUnavailableReason": "provider-orchestrator-does-not-expose-an-enforceable-per-role-token-ceiling",
+      "turnLimit": 1
+    }
   },
   "deviations": []
 }

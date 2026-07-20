@@ -1,53 +1,31 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/experiment-manifest.schema.json",
-  "title": "Private operator experiment manifest",
+  "title": "Private protocol 2.0.0 operator manifest",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "protocolVersion",
     "experimentId",
     "startedAt",
     "operator",
-    "commonStartCommit",
-    "preregistrationLockCommit",
-    "lockFileSha256",
-    "randomizationDraw",
-    "buildOrder",
-    "blindMapping",
+    "bindings",
+    "candidateLabels",
+    "assignment",
+    "evaluationRandomization",
     "environment",
+    "budgets",
     "deviations"
   ],
   "properties": {
+    "protocolVersion": { "const": "2.0.0" },
     "experimentId": { "type": "string", "minLength": 1 },
     "startedAt": { "type": "string", "format": "date-time" },
     "operator": { "type": "string", "minLength": 1 },
-    "commonStartCommit": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{40}$"
-    },
-    "preregistrationLockCommit": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{40}$"
-    },
-    "lockFileSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-    "randomizationDraw": { "type": "integer", "minimum": 0, "maximum": 1 },
-    "buildOrder": {
-      "type": "array",
-      "prefixItems": [
-        { "enum": ["baseline", "treatment"] },
-        { "enum": ["baseline", "treatment"] }
-      ],
-      "items": false,
-      "minItems": 2,
-      "maxItems": 2,
-      "uniqueItems": true
-    },
-    "blindMapping": {
-      "type": "object",
-      "additionalProperties": { "enum": ["baseline", "treatment"] },
-      "minProperties": 2,
-      "maxProperties": 2
-    },
+    "bindings": { "$ref": "#/$defs/bindings" },
+    "candidateLabels": { "const": ["candidate-a", "candidate-b"] },
+    "assignment": { "$ref": "#/$defs/assignment" },
+    "evaluationRandomization": { "$ref": "#/$defs/evaluationRandomization" },
     "environment": {
       "type": "object",
       "additionalProperties": false,
@@ -59,22 +37,154 @@
         "npm",
         "os",
         "networkPolicy",
-        "toolPolicy"
+        "toolPolicy",
+        "builderConfigSha256"
       ],
       "properties": {
         "model": { "type": "string", "minLength": 1 },
         "provider": { "type": "string", "minLength": 1 },
         "reasoningSetting": { "type": "string", "minLength": 1 },
-        "node": { "type": "string", "minLength": 1 },
+        "node": { "const": "22.x" },
         "npm": { "type": "string", "minLength": 1 },
         "os": { "type": "string", "minLength": 1 },
         "networkPolicy": { "type": "string", "minLength": 1 },
-        "toolPolicy": { "type": "string", "minLength": 1 }
+        "toolPolicy": { "type": "string", "minLength": 1 },
+        "builderConfigSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["builder", "reviewer", "fixer", "tester", "evaluator"],
+      "properties": {
+        "builder": { "$ref": "#/$defs/builderBudget" },
+        "reviewer": { "$ref": "#/$defs/reviewerBudget" },
+        "fixer": { "$ref": "#/$defs/fixerBudget" },
+        "tester": { "$ref": "#/$defs/testerBudget" },
+        "evaluator": { "$ref": "#/$defs/evaluatorBudget" }
       }
     },
     "deviations": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commonStartCommit",
+        "preregistrationLockCommit",
+        "lockFileSha256"
+      ],
+      "properties": {
+        "commonStartCommit": { "$ref": "#/$defs/sha1" },
+        "preregistrationLockCommit": { "$ref": "#/$defs/sha1" },
+        "lockFileSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seedHex",
+        "digestSha256",
+        "draw",
+        "generatedAt",
+        "generator",
+        "mapping"
+      ],
+      "properties": {
+        "seedHex": { "$ref": "#/$defs/sha256" },
+        "digestSha256": { "$ref": "#/$defs/sha256" },
+        "draw": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "generator": { "type": "string", "minLength": 1 },
+        "mapping": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["candidate-a", "candidate-b"],
+          "properties": {
+            "candidate-a": { "enum": ["baseline", "treatment"] },
+            "candidate-b": { "enum": ["baseline", "treatment"] }
+          }
+        }
+      }
+    },
+    "evaluationRandomization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seedHex", "digestSha256", "order", "mapping"],
+      "properties": {
+        "seedHex": { "$ref": "#/$defs/sha256" },
+        "digestSha256": { "$ref": "#/$defs/sha256" },
+        "order": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": { "enum": ["X", "Y", "Z"] }
+        },
+        "mapping": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["X", "Y", "Z"],
+          "properties": {
+            "X": { "enum": ["B0", "T0", "Tfinal"] },
+            "Y": { "enum": ["B0", "T0", "Tfinal"] },
+            "Z": { "enum": ["B0", "T0", "Tfinal"] }
+          }
+        }
+      }
+    },
+    "budgetBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wallSecondsMaximum",
+        "tokenCeiling",
+        "tokenCeilingUnavailableReason",
+        "turnLimit"
+      ],
+      "properties": {
+        "wallSecondsMaximum": { "type": "integer" },
+        "tokenCeiling": { "const": null },
+        "tokenCeilingUnavailableReason": { "type": "string", "minLength": 1 },
+        "turnLimit": { "const": 1 }
+      }
+    },
+    "builderBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 2400 } } }
+      ]
+    },
+    "reviewerBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 900 } } }
+      ]
+    },
+    "fixerBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 1500 } } }
+      ]
+    },
+    "testerBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 900 } } }
+      ]
+    },
+    "evaluatorBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 1800 } } }
+      ]
     }
   }
 }

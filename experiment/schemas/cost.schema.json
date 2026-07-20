@@ -1,12 +1,18 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/cost.schema.json",
-  "title": "Role cost and duration record",
+  "title": "One-turn role cost and duration record",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "candidateLabel",
+    "packageLabel",
     "role",
+    "cycle",
+    "turnLimit",
+    "wallSecondsMaximum",
+    "tokenCeiling",
+    "tokenCeilingUnavailableReason",
     "startedAt",
     "completedAt",
     "wallSeconds",
@@ -18,10 +24,20 @@
     "source"
   ],
   "properties": {
-    "candidateLabel": { "type": "string", "pattern": "^candidate-[a-z0-9-]+$" },
-    "role": {
-      "enum": ["builder", "reviewer-F", "reviewer-Q", "fixer", "evaluator"]
+    "candidateLabel": {
+      "type": ["string", "null"],
+      "pattern": "^candidate-[a-z0-9-]+$"
     },
+    "packageLabel": {
+      "type": ["string", "null"],
+      "enum": [null, "X", "Y", "Z"]
+    },
+    "role": { "enum": ["builder", "reviewer", "fixer", "tester", "evaluator"] },
+    "cycle": { "type": ["integer", "null"], "minimum": 1, "maximum": 5 },
+    "turnLimit": { "const": 1 },
+    "wallSecondsMaximum": { "enum": [900, 1500, 1800, 2400] },
+    "tokenCeiling": { "const": null },
+    "tokenCeilingUnavailableReason": { "type": "string", "minLength": 1 },
     "startedAt": { "type": "string", "format": "date-time" },
     "completedAt": { "type": "string", "format": "date-time" },
     "wallSeconds": { "type": "number", "minimum": 0 },

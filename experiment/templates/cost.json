@@ -1,6 +1,12 @@
 {
-  "candidateLabel": "candidate-x",
+  "candidateLabel": "candidate-a",
+  "packageLabel": null,
   "role": "builder",
+  "cycle": null,
+  "turnLimit": 1,
+  "wallSecondsMaximum": 2400,
+  "tokenCeiling": null,
+  "tokenCeilingUnavailableReason": "provider-orchestrator-does-not-expose-an-enforceable-per-role-token-ceiling",
   "startedAt": "2026-07-20T00:00:00Z",
   "completedAt": "2026-07-20T00:00:00Z",
   "wallSeconds": 0,

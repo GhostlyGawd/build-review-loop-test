@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/outcome.schema.json",
+  "title": "Unblinded protocol 2.0.0 outcome",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "packageMapping",
+    "scores",
+    "primaryTfinalMinusB0",
+    "secondaryTfinalMinusT0",
+    "mainSelection",
+    "tiePolicy",
+    "evaluationArtifactHashes",
+    "evidenceHash"
+  ],
+  "properties": {
+    "packageMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["X", "Y", "Z"],
+      "properties": {
+        "X": { "enum": ["B0", "T0", "Tfinal"] },
+        "Y": { "enum": ["B0", "T0", "Tfinal"] },
+        "Z": { "enum": ["B0", "T0", "Tfinal"] }
+      }
+    },
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["B0", "T0", "Tfinal"],
+      "properties": {
+        "B0": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "T0": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "Tfinal": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "primaryTfinalMinusB0": {
+      "type": "integer",
+      "minimum": -100,
+      "maximum": 100
+    },
+    "secondaryTfinalMinusT0": {
+      "type": "integer",
+      "minimum": -100,
+      "maximum": 100
+    },
+    "mainSelection": { "enum": ["baseline", "treatment"] },
+    "tiePolicy": { "const": "baseline" },
+    "evaluationArtifactHashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["X", "Y", "Z"],
+      "properties": {
+        "X": { "$ref": "#/$defs/sha256" },
+        "Y": { "$ref": "#/$defs/sha256" },
+        "Z": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "evidenceHash": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": { "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+}

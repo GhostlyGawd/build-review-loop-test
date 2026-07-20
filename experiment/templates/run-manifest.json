@@ -1,12 +1,22 @@
 {
-  "candidateLabel": "candidate-x",
-  "commonStartCommit": "0000000000000000000000000000000000000000",
-  "preregistrationLockCommit": "0000000000000000000000000000000000000000",
-  "lockFileSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-  "buildSnapshot": null,
+  "protocolVersion": "2.0.0",
+  "candidateLabel": "candidate-a",
+  "bindings": {
+    "commonStartCommit": "0000000000000000000000000000000000000000",
+    "preregistrationLockCommit": "0000000000000000000000000000000000000000",
+    "lockFileSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "assignedArm": null,
+  "assignmentRecordHash": null,
+  "neutralPromptSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "neutralConfigSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "initialSnapshot": null,
   "finalSnapshot": null,
+  "cycles": [],
+  "stopReason": null,
+  "convergence": null,
   "status": "pending",
-  "promptSha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "checks": [],
+  "evidenceChain": [],
   "deviations": []
 }

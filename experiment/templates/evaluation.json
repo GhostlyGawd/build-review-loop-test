@@ -1,18 +1,20 @@
 {
-  "candidateLabel": "candidate-x",
-  "snapshotCommit": "0000000000000000000000000000000000000000",
+  "packageLabel": "X",
+  "packageSha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "evaluatedAt": "2026-07-20T00:00:00Z",
   "publicTests": {
     "passed": 0,
     "failed": 0,
     "command": "npm run test:public",
-    "exitCode": 0
+    "exitCode": 0,
+    "rawOutputSha256": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   "hiddenTests": {
     "passed": 0,
     "failed": 0,
     "command": "UNSET_HIDDEN_COMMAND",
-    "exitCode": 0
+    "exitCode": 0,
+    "rawOutputSha256": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   "items": [
     {
@@ -164,6 +166,11 @@
     "maintainabilityDocs": 0
   },
   "uncappedTotal": 0,
+  "capConditions": {
+    "buildFailedOrCannotRender": false,
+    "defaultAllow": false,
+    "executableInjectionOrUnexpectedNetwork": false
+  },
   "capsApplied": [],
   "finalTotal": 0,
   "uncertainties": [],
