@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/experiment-manifest.schema.json",
-  "title": "Private protocol 2.0.0-frozen operator manifest",
+  "title": "Private protocol 2.1.0 operator manifest",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -10,6 +10,8 @@
     "startedAt",
     "operator",
     "bindings",
+    "canonicalContractSha256",
+    "gateBindings",
     "candidateLabels",
     "assignment",
     "evaluationRandomization",
@@ -18,11 +20,13 @@
     "deviations"
   ],
   "properties": {
-    "protocolVersion": { "const": "2.0.0-frozen" },
+    "protocolVersion": { "const": "2.1.0" },
     "experimentId": { "type": "string", "minLength": 1 },
     "startedAt": { "type": "string", "format": "date-time" },
     "operator": { "type": "string", "minLength": 1 },
     "bindings": { "$ref": "#/$defs/bindings" },
+    "canonicalContractSha256": { "$ref": "#/$defs/sha256" },
+    "gateBindings": { "$ref": "#/$defs/gateBindings" },
     "candidateLabels": { "const": ["candidate-a", "candidate-b"] },
     "assignment": { "$ref": "#/$defs/assignment" },
     "evaluationRandomization": { "$ref": "#/$defs/evaluationRandomization" },
@@ -55,13 +59,23 @@
     "budgets": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["builder", "reviewer", "fixer", "tester", "evaluator"],
+      "required": [
+        "builder",
+        "reviewer",
+        "fixer",
+        "tester",
+        "evaluator",
+        "unblinder",
+        "git_worker"
+      ],
       "properties": {
         "builder": { "$ref": "#/$defs/builderBudget" },
         "reviewer": { "$ref": "#/$defs/reviewerBudget" },
         "fixer": { "$ref": "#/$defs/fixerBudget" },
         "tester": { "$ref": "#/$defs/testerBudget" },
-        "evaluator": { "$ref": "#/$defs/evaluatorBudget" }
+        "evaluator": { "$ref": "#/$defs/evaluatorBudget" },
+        "unblinder": { "$ref": "#/$defs/unblinderBudget" },
+        "git_worker": { "$ref": "#/$defs/gitWorkerBudget" }
       }
     },
     "deviations": {
@@ -84,6 +98,38 @@
         "commonStartCommit": { "$ref": "#/$defs/sha1" },
         "preregistrationLockCommit": { "$ref": "#/$defs/sha1" },
         "lockFileSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "gateBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "testerCommand",
+        "componentCommands",
+        "evaluatorPublicCommand",
+        "hiddenSuiteId",
+        "hiddenSuiteCommand",
+        "hiddenSuiteSha256"
+      ],
+      "properties": {
+        "testerCommand": { "const": "npm run check" },
+        "componentCommands": {
+          "const": [
+            "npm run format:check",
+            "npm run lint",
+            "npm run typecheck",
+            "npm run validate:scaffold",
+            "npm run test:protocol",
+            "npm run test:public:if-implemented",
+            "npm run build"
+          ]
+        },
+        "evaluatorPublicCommand": { "const": "npm run test:public" },
+        "hiddenSuiteId": { "const": "permissions-playground-sealed-v2" },
+        "hiddenSuiteCommand": { "const": "node sealed-hidden-suite/run.mjs" },
+        "hiddenSuiteSha256": {
+          "const": "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b"
+        }
       }
     },
     "assignment": {
@@ -145,14 +191,14 @@
       "additionalProperties": false,
       "required": [
         "wallSecondsMaximum",
-        "tokenCeiling",
-        "tokenCeilingUnavailableReason",
+        "maxTokens",
+        "maxTokensUnavailableReason",
         "turnLimit"
       ],
       "properties": {
         "wallSecondsMaximum": { "type": "integer" },
-        "tokenCeiling": { "const": null },
-        "tokenCeilingUnavailableReason": { "type": "string", "minLength": 1 },
+        "maxTokens": { "const": null },
+        "maxTokensUnavailableReason": { "type": "string", "minLength": 1 },
         "turnLimit": { "const": 1 }
       }
     },
@@ -184,6 +230,18 @@
       "allOf": [
         { "$ref": "#/$defs/budgetBase" },
         { "properties": { "wallSecondsMaximum": { "const": 1800 } } }
+      ]
+    },
+    "unblinderBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 300 } } }
+      ]
+    },
+    "gitWorkerBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 600 } } }
       ]
     }
   }

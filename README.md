@@ -1,15 +1,15 @@
 # Permissions Playground review-loop experiment
 
-This repository is the frozen common-start scaffold for protocol version 2.0.0-frozen. It tests a treatment-only review loop after two independent builders create the same React permissions-policy playground from an identical neutral prompt and configuration.
+This repository is the prospective common-start scaffold for protocol version 2.1.0. It tests a treatment-only review loop after two independent builders create the same React permissions-policy playground from an identical neutral prompt and configuration.
 
 ## Status
 
-- Phase: protocol 2.0.0-frozen, commitments locked before builder exposure
+- Phase: protocol 2.1.0 cross-contract remediation, provisional before builder exposure
 - Product: intentionally not implemented on this branch
 - Public contract tests: committed but gated until all required implementation files exist
 - Hidden tests: sealed externally; the v2 commitment is not yet recorded
 - Treatment algorithm: exact skill-v1 flow incorporated and content-addressed
-- Experiment lock: frozen against content commit `a236d2643ec8ffc05e0e956d914fbe12cd376b5d`; the post-merge common-start binding is recorded later in run manifests
+- Experiment lock: the prior `2.0.0-frozen` lock is explicitly superseded; refreeze awaits the corrected skill commitment and new lock-parent commit
 - License: none has been granted; no license file is included
 
 Do not present this branch as a completed application or executable experiment. A passing scaffold check establishes internal consistency only.
@@ -51,12 +51,14 @@ The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact t
 - [`docs/permissions-playground-spec.md`](docs/permissions-playground-spec.md): unchanged frozen product semantics
 - [`docs/public-test-contract.md`](docs/public-test-contract.md): unchanged activation and public-test contract
 - [`experiment/protocol.md`](experiment/protocol.md): assignment, freshness, budgets, evidence, evaluation, and invalidation
+- [`experiment/canonical-contract.json`](experiment/canonical-contract.json): machine-readable transcription of the normative public protocol
+- [`experiment/golden-run/`](experiment/golden-run/): synthetic prospective execution-mode conformance record
 - [`experiment/rubric.md`](experiment/rubric.md): unchanged 100-point 50/15/15/10/10 rubric
 - [`experiment/prompts/neutral-builder.md`](experiment/prompts/neutral-builder.md) and [`experiment/builder-config.json`](experiment/builder-config.json): identical neutral construction inputs
 - [`experiment/treatment-loop-algorithm.md`](experiment/treatment-loop-algorithm.md): exact frozen skill-v1 flow
 - [`experiment/schemas/`](experiment/schemas/): machine-readable artifact contracts and the authoritative finding schema
 - [`experiment/templates/`](experiment/templates/): prospective, non-evidentiary artifact examples
-- [`experiment/lock.json`](experiment/lock.json): frozen non-self-referential commitments
+- [`experiment/lock.json`](experiment/lock.json): provisional commitments; execution is prohibited until refrozen
 
 ## Architecture and boundaries
 

@@ -13,6 +13,35 @@ export const readJson = (relativePath) =>
 const sha256 = (value) =>
   createHash("sha256").update(value, "utf8").digest("hex");
 const sha256Bytes = (value) => createHash("sha256").update(value).digest("hex");
+const canonicalDomain = Buffer.from(
+  "permissions-playground/canonical-json-v1\0",
+  "ascii",
+);
+const compareUtf8 = (left, right) =>
+  Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
+
+export function canonicalJson(value) {
+  if (value === null || typeof value === "boolean" || typeof value === "string")
+    return JSON.stringify(value);
+  if (typeof value === "number") {
+    if (!Number.isSafeInteger(value))
+      throw new TypeError("canonical JSON numbers must be safe integers");
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (typeof value === "object") {
+    return `{${Object.keys(value)
+      .sort(compareUtf8)
+      .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`)
+      .join(",")}}`;
+  }
+  throw new TypeError(`unsupported canonical JSON type: ${typeof value}`);
+}
+
+export const canonicalHash = (value) =>
+  sha256Bytes(
+    Buffer.concat([canonicalDomain, Buffer.from(canonicalJson(value), "utf8")]),
+  );
 const uint64be = (value) => {
   const buffer = Buffer.alloc(8);
   buffer.writeBigUInt64BE(BigInt(value));
@@ -302,6 +331,8 @@ export function validateCostSemantics(cost) {
     fixer: 1500,
     tester: 900,
     evaluator: 1800,
+    unblinder: 300,
+    git_worker: 600,
   };
   if (cost.wallSecondsMaximum !== maxima[cost.role])
     failures.push("role wall budget does not match protocol");
@@ -319,6 +350,301 @@ export function validateCostSemantics(cost) {
     failures.push("non-cycle role cost must have a null cycle");
   if (cost.role === "evaluator" && cost.packageLabel !== null)
     failures.push("one evaluator turn covers all X/Y/Z packages");
+  if (cost.maxTokens !== null || !cost.maxTokensUnavailableReason)
+    failures.push("unavailable maxTokens must be null with a reason");
+  if (!cost.environmentSha256)
+    failures.push("every cost record must bind the environment hash");
+  if (
+    ["builder", "reviewer", "fixer", "tester", "evaluator"].includes(
+      cost.role,
+    ) &&
+    !cost.modelConfigSha256
+  )
+    failures.push("model role cost must bind the model/config hash");
+  if (
+    ["unblinder", "git_worker"].includes(cost.role) &&
+    cost.modelConfigSha256 === null &&
+    !cost.modelConfigUnavailableReason
+  )
+    failures.push("non-model role must explain unavailable model/config hash");
+  return failures;
+}
+
+const walkValues = (value, visit, pathParts = []) => {
+  visit(value, pathParts);
+  if (Array.isArray(value))
+    value.forEach((item, index) =>
+      walkValues(item, visit, [...pathParts, index]),
+    );
+  else if (value && typeof value === "object")
+    Object.entries(value).forEach(([key, item]) =>
+      walkValues(item, visit, [...pathParts, key]),
+    );
+};
+
+export function validateArtifactMode(value, mode, templateValues = []) {
+  if (!new Set(["template", "execution"]).has(mode))
+    return ["validation mode must be explicitly template or execution"];
+  if (mode === "template") return [];
+  const failures = [];
+  walkValues(value, (item, pathParts) => {
+    if (typeof item !== "string") return;
+    const location = pathParts.join(".");
+    if (/^(0{40}|0{64})$/.test(item))
+      failures.push(`execution record contains zero hash/seed at ${location}`);
+    if (/required-at-run|template-|placeholder|sentinel/i.test(item))
+      failures.push(
+        `execution record contains a template sentinel at ${location}`,
+      );
+    if (pathParts.at(-1) === "freezeState" && item === "provisional")
+      failures.push("execution record cannot use a provisional lock");
+  });
+  for (const template of templateValues) {
+    if (canonicalJson(value) === canonicalJson(template))
+      failures.push("execution record is unchanged from a template");
+  }
+  return failures;
+}
+
+export function validateCanonicalContract(contract) {
+  const failures = [];
+  const findingSchema = readJson("experiment/schemas/finding.schema.json");
+  const exactFindingFields = [
+    "id",
+    "severity",
+    "title",
+    "evidence",
+    "expected",
+    "actual",
+    "rubricItems",
+    "verification",
+    "duplicateOf",
+  ];
+  if (
+    JSON.stringify(contract.finding.requiredFields) !==
+      JSON.stringify(exactFindingFields) ||
+    JSON.stringify(findingSchema.required) !==
+      JSON.stringify(exactFindingFields)
+  )
+    failures.push("canonical finding fields diverge from finding.schema.json");
+  if (
+    JSON.stringify(contract.finding.severities) !==
+    JSON.stringify(["critical", "high", "medium", "low"])
+  )
+    failures.push("canonical finding severities diverge");
+  if (contract.stopping.baselineStopReason !== "baseline-zero-cycles")
+    failures.push("canonical baseline stop reason diverges");
+  if (
+    contract.evaluationRandomization.domainUtf8 !==
+      "permissions-playground/protocol-v2/evaluation\n" ||
+    contract.evaluationRandomization.rankMaterial !==
+      "64 lowercase digest-hex ASCII bytes followed by newline and snapshot-name UTF-8 bytes" ||
+    JSON.stringify(contract.evaluationRandomization.labelsByRank) !==
+      JSON.stringify(["X", "Y", "Z"])
+  )
+    failures.push("canonical X/Y/Z randomization bytes or ordering diverge");
+  if (
+    contract.evidenceChain.sequenceStartsAt !== 0 ||
+    contract.evidenceChain.firstPreviousSha256 !== null ||
+    contract.evidenceChain.linkRule !==
+      "entry[n].previousSha256 equals entry[n-1].artifactSha256"
+  )
+    failures.push("canonical evidence-chain algorithm diverges");
+  const expectedRubric = Object.entries(rubricMaxima).map(([id, maximum]) => ({
+    id,
+    maximum,
+    anchors: allowedScores[id],
+  }));
+  if (
+    JSON.stringify(contract.evaluation.rubricItems) !==
+    JSON.stringify(expectedRubric)
+  )
+    failures.push("canonical rubric IDs, anchors, or maxima diverge");
+  if (
+    JSON.stringify(contract.evaluation.sectionMaxima) !==
+    JSON.stringify({
+      functional: 50,
+      robustnessSecurity: 15,
+      accessibilityUsability: 15,
+      testEffectiveness: 10,
+      maintainabilityDocs: 10,
+    })
+  )
+    failures.push("canonical rubric section maxima diverge");
+  const expectedRoleBudgets = {
+    builder: 2400,
+    reviewer: 900,
+    fixer: 1500,
+    tester: 900,
+    evaluator: 1800,
+    unblinder: 300,
+    git_worker: 600,
+  };
+  for (const [role, maximum] of Object.entries(expectedRoleBudgets)) {
+    if (contract.roles[role]?.wallSecondsMaximum !== maximum)
+      failures.push(`canonical ${role} wall budget diverges`);
+  }
+  if (
+    contract.costPolicy.maxTokens !== null ||
+    contract.costPolicy.maxTokensUnavailableReasonRequired !== true
+  )
+    failures.push("canonical unavailable maxTokens policy diverges");
+  const expectedGates = [
+    "npm run format:check",
+    "npm run lint",
+    "npm run typecheck",
+    "npm run validate:scaffold",
+    "npm run test:protocol",
+    "npm run test:public:if-implemented",
+    "npm run build",
+  ];
+  if (
+    contract.gates.testerCommand !== "npm run check" ||
+    contract.gates.evaluatorPublicCommand !== "npm run test:public" ||
+    JSON.stringify(contract.gates.componentCommands) !==
+      JSON.stringify(expectedGates)
+  )
+    failures.push("canonical public gate commands diverge");
+  if (
+    contract.hiddenSuite.id !== "permissions-playground-sealed-v2" ||
+    contract.hiddenSuite.command !== "node sealed-hidden-suite/run.mjs" ||
+    contract.hiddenSuite.sha256 !==
+      "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b"
+  )
+    failures.push("canonical hidden-suite binding diverges");
+  return failures;
+}
+
+const resolveArtifactKey = (fixture, artifactKey) =>
+  artifactKey.split(".").reduce((value, key) => value?.[key], fixture);
+
+export function validateGoldenRun(fixture, contract) {
+  const failures = validateArtifactMode(fixture, "execution", [
+    readJson("experiment/templates/experiment-manifest.json"),
+    readJson("experiment/templates/run-manifest.json"),
+    readJson("experiment/templates/evaluation.json"),
+    readJson("experiment/templates/outcome.json"),
+    readJson("experiment/templates/cost.json"),
+  ]);
+  if (fixture.fixtureKind !== "prospective-conformance")
+    failures.push("golden fixture kind must be prospective-conformance");
+  if (fixture.canonicalContractSha256 !== canonicalHash(contract))
+    failures.push("golden fixture canonical-contract hash mismatch");
+  const bindings = fixture.bindings;
+  if (
+    JSON.stringify(bindings.publicGates) !==
+      JSON.stringify(contract.gates.componentCommands) ||
+    bindings.testerCommand !== contract.gates.testerCommand ||
+    bindings.evaluatorPublicCommand !== contract.gates.evaluatorPublicCommand ||
+    bindings.evaluatorHiddenCommand !== contract.hiddenSuite.command ||
+    bindings.hiddenSuiteId !== contract.hiddenSuite.id ||
+    bindings.hiddenSuiteSha256 !== contract.hiddenSuite.sha256
+  )
+    failures.push("golden fixture gate or hidden-suite binding diverges");
+
+  const workerIds = fixture.workers.map(({ workerId }) => workerId);
+  if (new Set(workerIds).size !== workerIds.length)
+    failures.push("golden fixture worker IDs must be unique");
+  const roleSet = [...new Set(fixture.workers.map(({ role }) => role))].sort();
+  if (
+    JSON.stringify(roleSet) !==
+    JSON.stringify(Object.keys(contract.roles).sort())
+  )
+    failures.push("golden fixture worker registry must cover all seven roles");
+
+  failures.push(...validateAssignmentSemantics(fixture));
+  for (const [snapshot, rankDigest] of Object.entries(
+    fixture.evaluationRandomization.rankDigests,
+  )) {
+    const expected = sha256(
+      `${fixture.evaluationRandomization.digestSha256}\n${snapshot}`,
+    );
+    if (rankDigest !== expected)
+      failures.push(`golden ${snapshot} rank digest diverges`);
+  }
+
+  const baseline = fixture.runs["candidate-a"];
+  if (
+    baseline.assignedArm !== "baseline" ||
+    baseline.stopReason !== "baseline-zero-cycles" ||
+    baseline.cycles.length !== 0 ||
+    !sameSnapshot(baseline.initialSnapshot, baseline.finalSnapshot)
+  )
+    failures.push("golden baseline must freeze at zero cycles");
+  const treatment = fixture.runs["candidate-b"];
+  if (
+    treatment.assignedArm !== "treatment" ||
+    treatment.cycles.length !== 1 ||
+    treatment.cycles[0].reviewFindingCount !== 0 ||
+    treatment.cycles[0].decision !== "zero-findings" ||
+    treatment.cycles[0].fixerWorkerId !== null ||
+    treatment.cycles[0].testerWorkerId !== null ||
+    treatment.stopReason !== "zero-findings" ||
+    treatment.convergence !== true
+  )
+    failures.push("golden treatment zero-findings cycle diverges");
+  if (
+    fixture.reviews.length !== 1 ||
+    fixture.reviews[0].findings.length !== 0 ||
+    fixture.fixes.length !== 0 ||
+    fixture.tests.length !== 0
+  )
+    failures.push("golden zero-findings run must not invoke fixer or tester");
+
+  const labels = fixture.packages.map(({ packageLabel }) => packageLabel);
+  if (JSON.stringify(labels) !== JSON.stringify(["X", "Y", "Z"]))
+    failures.push("golden packages must be exactly X/Y/Z");
+  fixture.evaluations.forEach((evaluation, index) => {
+    failures.push(...validateEvaluationSemantics(evaluation));
+    if (evaluation.packageLabel !== fixture.packages[index].packageLabel)
+      failures.push("golden evaluation/package label mismatch");
+    if (evaluation.packageSha256 !== canonicalHash(fixture.packages[index]))
+      failures.push("golden evaluation package hash mismatch");
+    if (
+      evaluation.publicTests.command !== contract.gates.evaluatorPublicCommand
+    )
+      failures.push("golden evaluator public command diverges");
+    if (evaluation.hiddenTests.command !== contract.hiddenSuite.command)
+      failures.push("golden evaluator hidden command diverges");
+  });
+  failures.push(...validateOutcomeSemantics(fixture.outcome));
+  for (const [label, artifactHash] of Object.entries(
+    fixture.outcome.evaluationArtifactHashes,
+  )) {
+    const evaluation = fixture.evaluations.find(
+      ({ packageLabel }) => packageLabel === label,
+    );
+    if (!evaluation || artifactHash !== canonicalHash(evaluation))
+      failures.push(`golden outcome evaluation hash mismatch for ${label}`);
+  }
+
+  const costWorkerIds = fixture.costs.map(({ workerId }) => workerId);
+  if (new Set(costWorkerIds).size !== costWorkerIds.length)
+    failures.push("golden cost worker IDs must be unique across invocations");
+  fixture.costs.forEach((cost) => {
+    failures.push(...validateCostSemantics(cost));
+    if (cost.environmentSha256 !== fixture.environment.environmentSha256)
+      failures.push("golden cost environment hash diverges");
+  });
+
+  fixture.evidenceChain.forEach((entry, index) => {
+    if (entry.sequence !== index)
+      failures.push(
+        "golden evidence sequence must start at zero and be contiguous",
+      );
+    const expectedPrevious =
+      index === 0 ? null : fixture.evidenceChain[index - 1].artifactSha256;
+    if (entry.previousSha256 !== expectedPrevious)
+      failures.push("golden evidence predecessor hash mismatch");
+    const artifact = resolveArtifactKey(fixture, entry.artifactKey);
+    if (
+      artifact === undefined ||
+      entry.artifactSha256 !== canonicalHash(artifact)
+    )
+      failures.push(
+        `golden evidence artifact hash mismatch at ${entry.artifactKey}`,
+      );
+  });
   return failures;
 }
 
@@ -330,6 +656,9 @@ export function validateScaffold() {
     "docs/public-test-contract.md",
     "experiment/protocol.md",
     "experiment/rubric.md",
+    "experiment/canonical-contract.json",
+    "experiment/golden-run/README.md",
+    "experiment/golden-run/golden-run.json",
     "experiment/lock.json",
     "experiment/builder-config.json",
     "experiment/treatment-loop-algorithm.md",
@@ -415,6 +744,7 @@ export function validateScaffold() {
         failures.push(
           `${dataPath} does not validate: ${ajv.errorsText(validate.errors)}`,
         );
+      failures.push(...validateArtifactMode(readJson(dataPath), "template"));
     } catch (error) {
       failures.push(
         `${schemaPath} could not be compiled: ${error instanceof Error ? error.message : String(error)}`,
@@ -437,32 +767,41 @@ export function validateScaffold() {
     readFileSync(path.join(root, "experiment/builder-config.json"), "utf8"),
   );
   const actualAlgorithmHash = sha256(algorithmText);
-  const finalCommitments = {
-    protocolVersion: "2.0.0-frozen",
-    protocolStatus: "locked",
-    lockParentCommit: "a236d2643ec8ffc05e0e956d914fbe12cd376b5d",
+  const canonicalContract = readJson("experiment/canonical-contract.json");
+  const goldenRun = readJson("experiment/golden-run/golden-run.json");
+  const provisionalCommitments = {
+    protocolVersion: "2.1.0",
+    protocolStatus: "draft",
+    supersedesLockCommit: "c19c5b3ec96e70b8cedfb15b188394165f4a2759",
+    lockParentCommit: null,
+    hiddenSuiteId: "permissions-playground-sealed-v2",
     hiddenSuiteSha256:
       "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
-    treatmentSkillCommit: "de1747fb46ed5b052e5507d2cd3c5c02cf87d73b",
-    treatmentSkillTree: "d53d15935764d36a3f9272bbc0ae5c5c30008288",
-    treatmentSkillManifestSha256:
-      "45ccaed2d7812d646595c2cc7c27ff1c942ceefad8006d2093448a18e3e1ccb2",
+    treatmentSkillCommit: null,
+    treatmentSkillTree: null,
+    treatmentSkillManifestSha256: null,
     treatmentAlgorithmSha256: actualAlgorithmHash,
     neutralBuilderPromptSha256: actualPromptHash,
     neutralBuilderConfigSha256: actualConfigHash,
-    freezeState: "frozen",
+    canonicalContractSha256: canonicalHash(canonicalContract),
+    goldenFixtureSha256: canonicalHash(goldenRun),
+    freezeState: "provisional",
   };
-  for (const [key, expected] of Object.entries(finalCommitments)) {
+  for (const [key, expected] of Object.entries(provisionalCommitments)) {
     if (lock[key] !== expected)
-      failures.push(`${key} does not match the final protocol lock`);
+      failures.push(`${key} does not match the provisional remediation lock`);
   }
+  failures.push(
+    ...validateCanonicalContract(canonicalContract),
+    ...validateGoldenRun(goldenRun, canonicalContract),
+  );
 
   const builderConfig = readJson("experiment/builder-config.json");
   if (
     builderConfig.turnLimit !== 1 ||
     builderConfig.wallSecondsMaximum !== 2400 ||
-    builderConfig.tokenCeiling !== null ||
-    !builderConfig.tokenCeilingUnavailableReason
+    builderConfig.maxTokens !== null ||
+    !builderConfig.maxTokensUnavailableReason
   )
     failures.push(
       "neutral builder config violates prospective budget invariants",
@@ -517,6 +856,6 @@ if (isEntrypoint) {
     process.exit(1);
   }
   console.log(
-    `Protocol 2.0.0-frozen scaffold validation passed (${schemaPairCount} schema/data pairs; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.1.0 provisional scaffold validation passed (${schemaPairCount} schema/data pairs; golden execution fixture accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }

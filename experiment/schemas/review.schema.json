@@ -9,6 +9,7 @@
     "cycle",
     "snapshotCommit",
     "roleInstanceId",
+    "workerId",
     "startedAt",
     "completedAt",
     "checksRun",
@@ -21,6 +22,7 @@
     "cycle": { "type": "integer", "minimum": 1, "maximum": 5 },
     "snapshotCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
     "roleInstanceId": { "type": "string", "pattern": "^cycle-[1-5]-reviewer$" },
+    "workerId": { "type": "string", "minLength": 8 },
     "startedAt": { "type": "string", "format": "date-time" },
     "completedAt": { "type": "string", "format": "date-time" },
     "checksRun": {

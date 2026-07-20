@@ -1,29 +1,42 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/cost.schema.json",
-  "title": "One-turn role cost and duration record",
+  "title": "Canonical one-turn role cost record",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "workerId",
+    "role",
     "candidateLabel",
     "packageLabel",
-    "role",
     "cycle",
     "turnLimit",
     "wallSecondsMaximum",
-    "tokenCeiling",
-    "tokenCeilingUnavailableReason",
+    "maxTokens",
+    "maxTokensUnavailableReason",
+    "environmentSha256",
+    "modelConfigSha256",
+    "modelConfigUnavailableReason",
     "startedAt",
     "completedAt",
     "wallSeconds",
-    "inputTokens",
-    "cachedInputTokens",
-    "outputTokens",
     "totalTokens",
     "usd",
     "source"
   ],
   "properties": {
+    "workerId": { "type": "string", "minLength": 8 },
+    "role": {
+      "enum": [
+        "builder",
+        "reviewer",
+        "fixer",
+        "tester",
+        "evaluator",
+        "unblinder",
+        "git_worker"
+      ]
+    },
     "candidateLabel": {
       "type": ["string", "null"],
       "pattern": "^candidate-[a-z0-9-]+$"
@@ -32,18 +45,23 @@
       "type": ["string", "null"],
       "enum": [null, "X", "Y", "Z"]
     },
-    "role": { "enum": ["builder", "reviewer", "fixer", "tester", "evaluator"] },
     "cycle": { "type": ["integer", "null"], "minimum": 1, "maximum": 5 },
     "turnLimit": { "const": 1 },
-    "wallSecondsMaximum": { "enum": [900, 1500, 1800, 2400] },
-    "tokenCeiling": { "const": null },
-    "tokenCeilingUnavailableReason": { "type": "string", "minLength": 1 },
+    "wallSecondsMaximum": { "enum": [300, 600, 900, 1500, 1800, 2400] },
+    "maxTokens": { "const": null },
+    "maxTokensUnavailableReason": { "type": "string", "minLength": 1 },
+    "environmentSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "modelConfigSha256": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "modelConfigUnavailableReason": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
     "startedAt": { "type": "string", "format": "date-time" },
     "completedAt": { "type": "string", "format": "date-time" },
     "wallSeconds": { "type": "number", "minimum": 0 },
-    "inputTokens": { "type": ["integer", "null"], "minimum": 0 },
-    "cachedInputTokens": { "type": ["integer", "null"], "minimum": 0 },
-    "outputTokens": { "type": ["integer", "null"], "minimum": 0 },
     "totalTokens": { "type": ["integer", "null"], "minimum": 0 },
     "usd": { "type": ["number", "null"], "minimum": 0 },
     "source": { "enum": ["provider-reported", "unavailable"] }

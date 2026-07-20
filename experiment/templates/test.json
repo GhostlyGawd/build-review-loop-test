@@ -2,6 +2,7 @@
   "candidateLabel": "candidate-b",
   "cycle": 1,
   "roleInstanceId": "cycle-1-tester",
+  "workerId": "template-tester-worker-id",
   "snapshotCommit": "0000000000000000000000000000000000000000",
   "startedAt": "2026-07-20T00:00:00Z",
   "completedAt": "2026-07-20T00:00:00Z",

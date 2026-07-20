@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  canonicalHash,
   readJson,
+  validateArtifactMode,
   validateAssignmentSemantics,
+  validateCanonicalContract,
   validateCostSemantics,
   validateEvaluationSemantics,
+  validateGoldenRun,
   validateOutcomeSemantics,
   validateRunManifestSemantics,
   validateScaffold,
@@ -20,7 +24,7 @@ const snapshot = (number) => ({
   packageProcedure: "frozen-test-procedure",
 });
 
-describe("protocol 2.0.0-frozen semantic validation", () => {
+describe("protocol 2.1.0 cross-contract validation", () => {
   it("accepts the prospective scaffold and seeded assignment algorithms", () => {
     assert.deepEqual(validateScaffold().failures, []);
     assert.deepEqual(
@@ -148,6 +152,131 @@ describe("protocol 2.0.0-frozen semantic validation", () => {
     assert.deepEqual(validateCostSemantics(cost), []);
     cost.wallSecondsMaximum = 5400;
     assert.match(validateCostSemantics(cost).join("\n"), /wall budget/);
+  });
+
+  it("accepts the canonical contract and golden fixture in execution mode", () => {
+    const contract = readJson("experiment/canonical-contract.json");
+    const golden = readJson("experiment/golden-run/golden-run.json");
+    assert.deepEqual(validateCanonicalContract(contract), []);
+    assert.deepEqual(validateGoldenRun(golden, contract), []);
+    assert.equal(golden.canonicalContractSha256, canonicalHash(contract));
+  });
+
+  it("rejects authoritative finding-field and severity divergence", () => {
+    const contract = readJson("experiment/canonical-contract.json");
+    contract.finding.requiredFields.splice(5, 1);
+    contract.finding.severities = ["critical", "major", "minor", "note"];
+    const failures = validateCanonicalContract(contract).join("\n");
+    assert.match(failures, /finding fields/);
+    assert.match(failures, /finding severities/);
+  });
+
+  it("rejects baseline stop-reason divergence", () => {
+    const contract = readJson("experiment/canonical-contract.json");
+    contract.stopping.baselineStopReason = "baseline-frozen";
+    assert.match(
+      validateCanonicalContract(contract).join("\n"),
+      /baseline stop reason/,
+    );
+  });
+
+  it("rejects X/Y/Z domain bytes and ordering divergence", () => {
+    const contract = readJson("experiment/canonical-contract.json");
+    contract.evaluationRandomization.domainUtf8 = "wrong-domain\n";
+    contract.evaluationRandomization.labelsByRank = ["Z", "Y", "X"];
+    assert.match(
+      validateCanonicalContract(contract).join("\n"),
+      /X\/Y\/Z randomization/,
+    );
+  });
+
+  it("rejects evidence sequence, predecessor, and artifact-hash divergence", () => {
+    const contract = readJson("experiment/canonical-contract.json");
+    const golden = readJson("experiment/golden-run/golden-run.json");
+    golden.evidenceChain[0].sequence = 1;
+    golden.evidenceChain[1].previousSha256 = "f".repeat(64);
+    golden.evidenceChain[2].artifactSha256 = "e".repeat(64);
+    const failures = validateGoldenRun(golden, contract).join("\n");
+    assert.match(failures, /sequence/);
+    assert.match(failures, /predecessor/);
+    assert.match(failures, /artifact hash/);
+  });
+
+  it("rejects evaluation shape, anchors, arithmetic, and tie-policy divergence", () => {
+    const contract = readJson("experiment/canonical-contract.json");
+    const golden = readJson("experiment/golden-run/golden-run.json");
+    golden.evaluations[0].items[0].id = "A2";
+    golden.evaluations[0].items[1].score = 1;
+    golden.evaluations[0].sectionTotals.functional = 49;
+    golden.outcome.mainSelection = "treatment";
+    const failures = validateGoldenRun(golden, contract).join("\n");
+    assert.match(failures, /rubric ID|rubric anchor|subtotal/);
+    assert.match(failures, /main selection/);
+  });
+
+  it("rejects role-budget and maxTokens divergence", () => {
+    const contract = readJson("experiment/canonical-contract.json");
+    contract.roles.unblinder.wallSecondsMaximum = 301;
+    contract.costPolicy.maxTokens = 1;
+    const failures = validateCanonicalContract(contract).join("\n");
+    assert.match(failures, /unblinder wall budget/);
+    assert.match(failures, /maxTokens policy/);
+  });
+
+  it("rejects public-gate and hidden-suite binding divergence", () => {
+    const contract = readJson("experiment/canonical-contract.json");
+    contract.gates.testerCommand = "npm test";
+    contract.hiddenSuite.sha256 = "f".repeat(64);
+    const failures = validateCanonicalContract(contract).join("\n");
+    assert.match(failures, /public gate commands/);
+    assert.match(failures, /hidden-suite binding/);
+  });
+
+  it("rejects zero hashes and seeds in execution mode", () => {
+    const failures = validateArtifactMode(
+      { snapshotSha256: "0".repeat(64), seedHex: "0".repeat(64) },
+      "execution",
+    );
+    assert.equal(failures.length, 2);
+  });
+
+  it("rejects required-at-run, placeholder, and sentinel IDs", () => {
+    const failures = validateArtifactMode(
+      {
+        operator: "required-at-run",
+        workerId: "template-worker-id",
+        snapshotId: "sentinel-snapshot",
+      },
+      "execution",
+    );
+    assert.equal(failures.length, 3);
+  });
+
+  it("rejects duplicate worker IDs", () => {
+    const contract = readJson("experiment/canonical-contract.json");
+    const golden = readJson("experiment/golden-run/golden-run.json");
+    golden.workers[1].workerId = golden.workers[0].workerId;
+    assert.match(
+      validateGoldenRun(golden, contract).join("\n"),
+      /worker IDs must be unique/,
+    );
+  });
+
+  it("rejects unchanged templates in execution mode", () => {
+    const template = readJson("experiment/templates/run-manifest.json");
+    assert.match(
+      validateArtifactMode(template, "execution", [template]).join("\n"),
+      /unchanged from a template/,
+    );
+  });
+
+  it("rejects a provisional lock in execution mode", () => {
+    assert.match(
+      validateArtifactMode(readJson("experiment/lock.json"), "execution").join(
+        "\n",
+      ),
+      /provisional lock/,
+    );
   });
 });
 

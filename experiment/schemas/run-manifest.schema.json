@@ -1,13 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/run-manifest.schema.json",
-  "title": "Protocol 2.0.0-frozen candidate run manifest",
+  "title": "Protocol 2.1.0 candidate run manifest",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "protocolVersion",
     "candidateLabel",
     "bindings",
+    "canonicalContractSha256",
+    "gateBindingSha256",
+    "builderWorkerId",
     "assignedArm",
     "assignmentRecordHash",
     "neutralPromptSha256",
@@ -23,9 +26,12 @@
     "deviations"
   ],
   "properties": {
-    "protocolVersion": { "const": "2.0.0-frozen" },
+    "protocolVersion": { "const": "2.1.0" },
     "candidateLabel": { "enum": ["candidate-a", "candidate-b"] },
     "bindings": { "$ref": "#/$defs/bindings" },
+    "canonicalContractSha256": { "$ref": "#/$defs/sha256" },
+    "gateBindingSha256": { "$ref": "#/$defs/sha256" },
+    "builderWorkerId": { "type": "string", "minLength": 8 },
     "assignedArm": {
       "type": ["string", "null"],
       "enum": [null, "baseline", "treatment"]
@@ -105,6 +111,9 @@
         "number",
         "inputSnapshot",
         "reviewArtifactSha256",
+        "reviewerWorkerId",
+        "fixerWorkerId",
+        "testerWorkerId",
         "reviewFindingCount",
         "fixArtifactSha256",
         "testArtifactSha256",
@@ -115,6 +124,9 @@
         "number": { "type": "integer", "minimum": 1, "maximum": 5 },
         "inputSnapshot": { "$ref": "#/$defs/snapshot" },
         "reviewArtifactSha256": { "$ref": "#/$defs/sha256" },
+        "reviewerWorkerId": { "type": "string", "minLength": 8 },
+        "fixerWorkerId": { "type": ["string", "null"], "minLength": 8 },
+        "testerWorkerId": { "type": ["string", "null"], "minLength": 8 },
         "reviewFindingCount": { "type": "integer", "minimum": 0 },
         "fixArtifactSha256": {
           "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sha256" }]

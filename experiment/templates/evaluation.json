@@ -1,6 +1,7 @@
 {
   "packageLabel": "X",
   "packageSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "evaluatorWorkerId": "template-evaluator-worker-id",
   "evaluatedAt": "2026-07-20T00:00:00Z",
   "publicTests": {
     "passed": 0,

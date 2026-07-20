@@ -1,0 +1,952 @@
+{
+  "fixtureVersion": "1.0.0",
+  "fixtureKind": "prospective-conformance",
+  "protocolVersion": "2.1.0",
+  "canonicalContractSha256": "89b0d3776f2e54f5fba87cb041b4fae0518dbfd51a4b63150dd52a6d4c6478c6",
+  "bindings": {
+    "commonStartCommit": "79454a133f990982253744a85ccb8516d62f5a19",
+    "preregistrationLockCommit": "7443e27c48488e269e9fb7ad28b308a1313e5703",
+    "lockFileSha256": "7f403c9f8f208135bb8f0089458ea8eaac7bdd3341237e5a8c4b31ab39c8d71a",
+    "hiddenSuiteId": "permissions-playground-sealed-v2",
+    "hiddenSuiteSha256": "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
+    "publicGates": [
+      "npm run format:check",
+      "npm run lint",
+      "npm run typecheck",
+      "npm run validate:scaffold",
+      "npm run test:protocol",
+      "npm run test:public:if-implemented",
+      "npm run build"
+    ],
+    "testerCommand": "npm run check",
+    "evaluatorPublicCommand": "npm run test:public",
+    "evaluatorHiddenCommand": "node sealed-hidden-suite/run.mjs"
+  },
+  "environment": {
+    "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+    "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+    "node": "22.x",
+    "npm": "11.11.0"
+  },
+  "workers": [
+    {
+      "workerId": "worker-01-builder-a-7b4c",
+      "role": "builder",
+      "invoked": true
+    },
+    {
+      "workerId": "worker-02-builder-b-91e2",
+      "role": "builder",
+      "invoked": true
+    },
+    {
+      "workerId": "worker-03-reviewer-6f8d",
+      "role": "reviewer",
+      "invoked": true
+    },
+    { "workerId": "worker-04-fixer-31a9", "role": "fixer", "invoked": false },
+    { "workerId": "worker-05-tester-c472", "role": "tester", "invoked": false },
+    {
+      "workerId": "worker-06-evaluator-2d5b",
+      "role": "evaluator",
+      "invoked": true
+    },
+    {
+      "workerId": "worker-07-unblinder-8aa1",
+      "role": "unblinder",
+      "invoked": true
+    },
+    {
+      "workerId": "worker-08-git-worker-5c03",
+      "role": "git_worker",
+      "invoked": true
+    }
+  ],
+  "builderFreezes": {
+    "candidate-a": {
+      "candidateLabel": "candidate-a",
+      "workerId": "worker-01-builder-a-7b4c",
+      "promptSha256": "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82",
+      "configSha256": "60c5969f08108a9763868f9917eebe4e9b14dfbc98dc717502e1d4056a63c535",
+      "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
+      "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
+      "sealedAt": "2026-07-20T01:00:00Z"
+    },
+    "candidate-b": {
+      "candidateLabel": "candidate-b",
+      "workerId": "worker-02-builder-b-91e2",
+      "promptSha256": "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82",
+      "configSha256": "60c5969f08108a9763868f9917eebe4e9b14dfbc98dc717502e1d4056a63c535",
+      "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
+      "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
+      "sealedAt": "2026-07-20T01:00:00Z"
+    }
+  },
+  "assignment": {
+    "frozenInitialEvidenceHashes": {
+      "candidate-a": "233e05a3e0b5991bf7f2904ae6d1897df0f5eb294c280e398db02dff0e0a12a2",
+      "candidate-b": "19c43e1b0384dc3265776e0c86376ca2d91ca700fe2685a0ec28e4814d83d0b3"
+    },
+    "seedHex": "4f8c49a049cdb2bef7fed4950c9bbe8127160599d5b72c549b6d2878e4706b02",
+    "digestSha256": "aec4dcdcdefeae6fdda5dccb89d0cf2203e4d9ae200cb7f48650b8cea64f748e",
+    "draw": 0,
+    "generatedAt": "2026-07-20T01:01:00Z",
+    "generator": "node:crypto.randomBytes-compatible synthetic conformance source",
+    "mapping": { "candidate-a": "baseline", "candidate-b": "treatment" }
+  },
+  "evaluationRandomization": {
+    "seedHex": "f0f09f423ebce85f0535a0dd95faa92891fdc19bd817b2a5c99e5238fe59056b",
+    "digestSha256": "69cf99a370b35420718c4721755405d5c942e5b13a48984fcc9a9e3aac7acf0c",
+    "rankDigests": {
+      "B0": "50498035a0d077023e1701eb756ddc61164d342147673693d9f19ac5955c781c",
+      "T0": "a7213a33cdb5a7c268a77f025e538ce4a5340365f63ed0917366f3e3446b8fe1",
+      "Tfinal": "cee406dc354796bc4f26adff1b40928de09887bb1ac459474bbdc7e25d4de1bf"
+    },
+    "order": ["X", "Y", "Z"],
+    "mapping": { "X": "B0", "Y": "T0", "Z": "Tfinal" }
+  },
+  "runs": {
+    "candidate-a": {
+      "candidateLabel": "candidate-a",
+      "assignedArm": "baseline",
+      "builderWorkerId": "worker-01-builder-a-7b4c",
+      "initialSnapshot": {
+        "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
+        "sealedAt": "2026-07-20T01:00:00Z",
+        "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
+        "packageProcedure": "canonical source package v1"
+      },
+      "finalSnapshot": {
+        "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
+        "sealedAt": "2026-07-20T01:00:00Z",
+        "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
+        "packageProcedure": "canonical source package v1"
+      },
+      "cycles": [],
+      "stopReason": "baseline-zero-cycles",
+      "convergence": null,
+      "status": "valid"
+    },
+    "candidate-b": {
+      "candidateLabel": "candidate-b",
+      "assignedArm": "treatment",
+      "builderWorkerId": "worker-02-builder-b-91e2",
+      "initialSnapshot": {
+        "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
+        "sealedAt": "2026-07-20T01:00:00Z",
+        "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
+        "packageProcedure": "canonical source package v1"
+      },
+      "finalSnapshot": {
+        "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
+        "sealedAt": "2026-07-20T01:00:00Z",
+        "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
+        "packageProcedure": "canonical source package v1"
+      },
+      "cycles": [
+        {
+          "number": 1,
+          "reviewerWorkerId": "worker-03-reviewer-6f8d",
+          "fixerWorkerId": null,
+          "testerWorkerId": null,
+          "reviewFindingCount": 0,
+          "decision": "zero-findings"
+        }
+      ],
+      "stopReason": "zero-findings",
+      "convergence": true,
+      "status": "valid"
+    }
+  },
+  "reviews": [
+    {
+      "candidateLabel": "candidate-b",
+      "cycle": 1,
+      "snapshotCommit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
+      "roleInstanceId": "cycle-1-reviewer",
+      "workerId": "worker-03-reviewer-6f8d",
+      "startedAt": "2026-07-20T01:02:00Z",
+      "completedAt": "2026-07-20T01:10:00Z",
+      "checksRun": [],
+      "evidenceExamined": ["synthetic source inspection conformance evidence"],
+      "coverageGaps": [],
+      "findings": []
+    }
+  ],
+  "fixes": [],
+  "tests": [],
+  "packages": [
+    {
+      "packageLabel": "X",
+      "snapshotRole": "B0",
+      "sourceCommit": "0d977cbeeb1df357e500f254108535ba025577d7",
+      "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
+      "historyFree": true
+    },
+    {
+      "packageLabel": "Y",
+      "snapshotRole": "T0",
+      "sourceCommit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
+      "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
+      "historyFree": true
+    },
+    {
+      "packageLabel": "Z",
+      "snapshotRole": "Tfinal",
+      "sourceCommit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
+      "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
+      "historyFree": true
+    }
+  ],
+  "evaluations": [
+    {
+      "packageLabel": "X",
+      "packageSha256": "2ead643fcb670f73e7a189e566f463a42df44db4ecec83905d7fa8928495ec4d",
+      "evaluatorWorkerId": "worker-06-evaluator-2d5b",
+      "evaluatedAt": "2026-07-20T01:30:00Z",
+      "publicTests": {
+        "passed": 20,
+        "failed": 0,
+        "command": "npm run test:public",
+        "exitCode": 0,
+        "rawOutputSha256": "5a9d223ff5fb17e7a4d61e157bb3fcdbb8572a687b3c61a0a88b74bfcf8fd7b5"
+      },
+      "hiddenTests": {
+        "passed": 20,
+        "failed": 0,
+        "command": "node sealed-hidden-suite/run.mjs",
+        "exitCode": 0,
+        "rawOutputSha256": "b223e1dfcbd2cd69282c3bc1d82cd7cbb2259a8d61383d96b19d4956f4e906a6"
+      },
+      "items": [
+        {
+          "id": "A1",
+          "score": 6,
+          "maximum": 6,
+          "evidence": ["synthetic A1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A2",
+          "score": 8,
+          "maximum": 8,
+          "evidence": ["synthetic A2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A3",
+          "score": 10,
+          "maximum": 10,
+          "evidence": ["synthetic A3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A4",
+          "score": 10,
+          "maximum": 10,
+          "evidence": ["synthetic A4"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A5",
+          "score": 7,
+          "maximum": 7,
+          "evidence": ["synthetic A5"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A6",
+          "score": 7,
+          "maximum": 7,
+          "evidence": ["synthetic A6"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A7",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic A7"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B1",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B2",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B3",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C1",
+          "score": 6,
+          "maximum": 6,
+          "evidence": ["synthetic C1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C2",
+          "score": 4,
+          "maximum": 4,
+          "evidence": ["synthetic C2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C3",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic C3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D1",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic D1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D2",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic D2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D3",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic D3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E1",
+          "score": 3,
+          "maximum": 3,
+          "evidence": ["synthetic E1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E2",
+          "score": 2,
+          "maximum": 3,
+          "evidence": ["synthetic E2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E3",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic E3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E4",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic E4"],
+          "rationale": "conformance"
+        }
+      ],
+      "sectionTotals": {
+        "functional": 50,
+        "robustnessSecurity": 15,
+        "accessibilityUsability": 15,
+        "testEffectiveness": 6,
+        "maintainabilityDocs": 9
+      },
+      "uncappedTotal": 95,
+      "capConditions": {
+        "buildFailedOrCannotRender": false,
+        "defaultAllow": false,
+        "executableInjectionOrUnexpectedNetwork": false
+      },
+      "capsApplied": [],
+      "finalTotal": 95,
+      "uncertainties": [],
+      "evidenceHash": "8e82a96f19ee870a104c850ac061799539672200318386133321ea8c148e90b9"
+    },
+    {
+      "packageLabel": "Y",
+      "packageSha256": "76b3ec7289368fc1a26b7e82f4d22807dfea6435318ba637c6216f80cc28fd31",
+      "evaluatorWorkerId": "worker-06-evaluator-2d5b",
+      "evaluatedAt": "2026-07-20T01:40:00Z",
+      "publicTests": {
+        "passed": 18,
+        "failed": 2,
+        "command": "npm run test:public",
+        "exitCode": 1,
+        "rawOutputSha256": "49f58ccca98b452d459ab54ec869b28582ce55ad414aa192c9fb00be4b68d1cb"
+      },
+      "hiddenTests": {
+        "passed": 18,
+        "failed": 2,
+        "command": "node sealed-hidden-suite/run.mjs",
+        "exitCode": 1,
+        "rawOutputSha256": "984f87fbfb9c1793a22f315ff21c38d3f53d5b5d5c2df169d71524bc3ab91fc8"
+      },
+      "items": [
+        {
+          "id": "A1",
+          "score": 6,
+          "maximum": 6,
+          "evidence": ["synthetic A1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A2",
+          "score": 8,
+          "maximum": 8,
+          "evidence": ["synthetic A2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A3",
+          "score": 7,
+          "maximum": 10,
+          "evidence": ["synthetic A3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A4",
+          "score": 7,
+          "maximum": 10,
+          "evidence": ["synthetic A4"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A5",
+          "score": 7,
+          "maximum": 7,
+          "evidence": ["synthetic A5"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A6",
+          "score": 7,
+          "maximum": 7,
+          "evidence": ["synthetic A6"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A7",
+          "score": 1,
+          "maximum": 2,
+          "evidence": ["synthetic A7"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B1",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B2",
+          "score": 3,
+          "maximum": 5,
+          "evidence": ["synthetic B2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B3",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C1",
+          "score": 6,
+          "maximum": 6,
+          "evidence": ["synthetic C1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C2",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic C2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C3",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic C3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D1",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic D1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D2",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic D2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D3",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic D3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E1",
+          "score": 3,
+          "maximum": 3,
+          "evidence": ["synthetic E1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E2",
+          "score": 2,
+          "maximum": 3,
+          "evidence": ["synthetic E2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E3",
+          "score": 1,
+          "maximum": 2,
+          "evidence": ["synthetic E3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E4",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic E4"],
+          "rationale": "conformance"
+        }
+      ],
+      "sectionTotals": {
+        "functional": 43,
+        "robustnessSecurity": 13,
+        "accessibilityUsability": 13,
+        "testEffectiveness": 6,
+        "maintainabilityDocs": 8
+      },
+      "uncappedTotal": 83,
+      "capConditions": {
+        "buildFailedOrCannotRender": false,
+        "defaultAllow": false,
+        "executableInjectionOrUnexpectedNetwork": false
+      },
+      "capsApplied": [],
+      "finalTotal": 83,
+      "uncertainties": [],
+      "evidenceHash": "515e7e5ee820b909c20cbdbab2cb173beb0e998f28ae848f811bde5cefc3f0c7"
+    },
+    {
+      "packageLabel": "Z",
+      "packageSha256": "02827ac286660fbf195489e92fbb3b5fd9b38f4bd4d6090002d07c885e111239",
+      "evaluatorWorkerId": "worker-06-evaluator-2d5b",
+      "evaluatedAt": "2026-07-20T01:50:00Z",
+      "publicTests": {
+        "passed": 18,
+        "failed": 2,
+        "command": "npm run test:public",
+        "exitCode": 1,
+        "rawOutputSha256": "6f8d182e9ba84789a283e135ad1bac0a0c91255af454900662bb453a26db8a06"
+      },
+      "hiddenTests": {
+        "passed": 18,
+        "failed": 2,
+        "command": "node sealed-hidden-suite/run.mjs",
+        "exitCode": 1,
+        "rawOutputSha256": "57e7470b892546acd11645e16bbba2f6cef1633d6094ae7ff9edce59264b9aad"
+      },
+      "items": [
+        {
+          "id": "A1",
+          "score": 6,
+          "maximum": 6,
+          "evidence": ["synthetic A1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A2",
+          "score": 8,
+          "maximum": 8,
+          "evidence": ["synthetic A2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A3",
+          "score": 7,
+          "maximum": 10,
+          "evidence": ["synthetic A3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A4",
+          "score": 7,
+          "maximum": 10,
+          "evidence": ["synthetic A4"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A5",
+          "score": 7,
+          "maximum": 7,
+          "evidence": ["synthetic A5"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A6",
+          "score": 7,
+          "maximum": 7,
+          "evidence": ["synthetic A6"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A7",
+          "score": 1,
+          "maximum": 2,
+          "evidence": ["synthetic A7"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B1",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B2",
+          "score": 3,
+          "maximum": 5,
+          "evidence": ["synthetic B2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B3",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C1",
+          "score": 6,
+          "maximum": 6,
+          "evidence": ["synthetic C1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C2",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic C2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C3",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic C3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D1",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic D1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D2",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic D2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D3",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic D3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E1",
+          "score": 3,
+          "maximum": 3,
+          "evidence": ["synthetic E1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E2",
+          "score": 2,
+          "maximum": 3,
+          "evidence": ["synthetic E2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E3",
+          "score": 1,
+          "maximum": 2,
+          "evidence": ["synthetic E3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E4",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic E4"],
+          "rationale": "conformance"
+        }
+      ],
+      "sectionTotals": {
+        "functional": 43,
+        "robustnessSecurity": 13,
+        "accessibilityUsability": 13,
+        "testEffectiveness": 6,
+        "maintainabilityDocs": 8
+      },
+      "uncappedTotal": 83,
+      "capConditions": {
+        "buildFailedOrCannotRender": false,
+        "defaultAllow": false,
+        "executableInjectionOrUnexpectedNetwork": false
+      },
+      "capsApplied": [],
+      "finalTotal": 83,
+      "uncertainties": [],
+      "evidenceHash": "a9e2f8379d3f95c1c4cc25bf0cf4e66bb729e4cf8c4d1bb1fae7bbf3ad4c8a18"
+    }
+  ],
+  "outcome": {
+    "packageMapping": { "X": "B0", "Y": "T0", "Z": "Tfinal" },
+    "scores": { "B0": 95, "T0": 83, "Tfinal": 83 },
+    "primaryTfinalMinusB0": -12,
+    "secondaryTfinalMinusT0": 0,
+    "mainSelection": "baseline",
+    "tiePolicy": "baseline",
+    "evaluationArtifactHashes": {
+      "X": "70fe7ac2545b28bf72e85f94fc247ecad6aef15db4e831fcc081fe76a1a126cc",
+      "Y": "26de3fb48d3ad0cb417614d168a94001eac5730b0e21e3031886a8913e516c85",
+      "Z": "b0455ea53c94e18db049c786ef46d460081f6266d884763fdd756da8bb8ea4af"
+    },
+    "evidenceHash": "c32db5e73d59ee2230927b039599848ae48413174361a3dd1af84a4ec74fce1e",
+    "unblinderWorkerId": "worker-07-unblinder-8aa1",
+    "gitWorkerId": "worker-08-git-worker-5c03"
+  },
+  "costs": [
+    {
+      "workerId": "worker-01-builder-a-7b4c",
+      "role": "builder",
+      "candidateLabel": "candidate-a",
+      "packageLabel": null,
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 2400,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "provider does not expose an enforceable per-role ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+      "modelConfigUnavailableReason": null,
+      "startedAt": "2026-07-20T00:20:00Z",
+      "completedAt": "2026-07-20T01:00:00Z",
+      "wallSeconds": 2400,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-02-builder-b-91e2",
+      "role": "builder",
+      "candidateLabel": "candidate-b",
+      "packageLabel": null,
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 2400,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "provider does not expose an enforceable per-role ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+      "modelConfigUnavailableReason": null,
+      "startedAt": "2026-07-20T00:20:00Z",
+      "completedAt": "2026-07-20T01:00:00Z",
+      "wallSeconds": 2400,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-03-reviewer-6f8d",
+      "role": "reviewer",
+      "candidateLabel": "candidate-b",
+      "packageLabel": null,
+      "cycle": 1,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 900,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "provider does not expose an enforceable per-role ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+      "modelConfigUnavailableReason": null,
+      "startedAt": "2026-07-20T01:02:00Z",
+      "completedAt": "2026-07-20T01:10:00Z",
+      "wallSeconds": 480,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-06-evaluator-2d5b",
+      "role": "evaluator",
+      "candidateLabel": null,
+      "packageLabel": null,
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 1800,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "provider does not expose an enforceable per-role ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+      "modelConfigUnavailableReason": null,
+      "startedAt": "2026-07-20T01:20:00Z",
+      "completedAt": "2026-07-20T01:50:00Z",
+      "wallSeconds": 1800,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-07-unblinder-8aa1",
+      "role": "unblinder",
+      "candidateLabel": null,
+      "packageLabel": null,
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 300,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "role is deterministic and has no model token ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": null,
+      "modelConfigUnavailableReason": "deterministic unblinding role does not use a model",
+      "startedAt": "2026-07-20T01:51:00Z",
+      "completedAt": "2026-07-20T01:53:00Z",
+      "wallSeconds": 120,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-08-git-worker-5c03",
+      "role": "git_worker",
+      "candidateLabel": null,
+      "packageLabel": null,
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 600,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "role is deterministic and has no model token ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": null,
+      "modelConfigUnavailableReason": "deterministic git role does not use a model",
+      "startedAt": "2026-07-20T01:54:00Z",
+      "completedAt": "2026-07-20T01:58:00Z",
+      "wallSeconds": 240,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    }
+  ],
+  "evidenceChain": [
+    {
+      "sequence": 0,
+      "artifactKey": "builderFreezes.candidate-a",
+      "artifactSha256": "233e05a3e0b5991bf7f2904ae6d1897df0f5eb294c280e398db02dff0e0a12a2",
+      "previousSha256": null
+    },
+    {
+      "sequence": 1,
+      "artifactKey": "builderFreezes.candidate-b",
+      "artifactSha256": "19c43e1b0384dc3265776e0c86376ca2d91ca700fe2685a0ec28e4814d83d0b3",
+      "previousSha256": "233e05a3e0b5991bf7f2904ae6d1897df0f5eb294c280e398db02dff0e0a12a2"
+    },
+    {
+      "sequence": 2,
+      "artifactKey": "assignment",
+      "artifactSha256": "9806af75148f168c4e7f441ab5678824f2470b26c0c8ca0c0512574fc5b98dd3",
+      "previousSha256": "19c43e1b0384dc3265776e0c86376ca2d91ca700fe2685a0ec28e4814d83d0b3"
+    },
+    {
+      "sequence": 3,
+      "artifactKey": "reviews.0",
+      "artifactSha256": "e18d3960d1bea8be590499a40934e9b07824abdc391ba17b8b9ba9af85788267",
+      "previousSha256": "9806af75148f168c4e7f441ab5678824f2470b26c0c8ca0c0512574fc5b98dd3"
+    },
+    {
+      "sequence": 4,
+      "artifactKey": "packages.0",
+      "artifactSha256": "2ead643fcb670f73e7a189e566f463a42df44db4ecec83905d7fa8928495ec4d",
+      "previousSha256": "e18d3960d1bea8be590499a40934e9b07824abdc391ba17b8b9ba9af85788267"
+    },
+    {
+      "sequence": 5,
+      "artifactKey": "packages.1",
+      "artifactSha256": "76b3ec7289368fc1a26b7e82f4d22807dfea6435318ba637c6216f80cc28fd31",
+      "previousSha256": "2ead643fcb670f73e7a189e566f463a42df44db4ecec83905d7fa8928495ec4d"
+    },
+    {
+      "sequence": 6,
+      "artifactKey": "packages.2",
+      "artifactSha256": "02827ac286660fbf195489e92fbb3b5fd9b38f4bd4d6090002d07c885e111239",
+      "previousSha256": "76b3ec7289368fc1a26b7e82f4d22807dfea6435318ba637c6216f80cc28fd31"
+    },
+    {
+      "sequence": 7,
+      "artifactKey": "evaluations.0",
+      "artifactSha256": "70fe7ac2545b28bf72e85f94fc247ecad6aef15db4e831fcc081fe76a1a126cc",
+      "previousSha256": "02827ac286660fbf195489e92fbb3b5fd9b38f4bd4d6090002d07c885e111239"
+    },
+    {
+      "sequence": 8,
+      "artifactKey": "evaluations.1",
+      "artifactSha256": "26de3fb48d3ad0cb417614d168a94001eac5730b0e21e3031886a8913e516c85",
+      "previousSha256": "70fe7ac2545b28bf72e85f94fc247ecad6aef15db4e831fcc081fe76a1a126cc"
+    },
+    {
+      "sequence": 9,
+      "artifactKey": "evaluations.2",
+      "artifactSha256": "b0455ea53c94e18db049c786ef46d460081f6266d884763fdd756da8bb8ea4af",
+      "previousSha256": "26de3fb48d3ad0cb417614d168a94001eac5730b0e21e3031886a8913e516c85"
+    },
+    {
+      "sequence": 10,
+      "artifactKey": "outcome",
+      "artifactSha256": "05593bce8f7783a0311a2a8380f23351151c84e20c277874620e1d61eb68737f",
+      "previousSha256": "b0455ea53c94e18db049c786ef46d460081f6266d884763fdd756da8bb8ea4af"
+    },
+    {
+      "sequence": 11,
+      "artifactKey": "costs",
+      "artifactSha256": "3a42b239a651351f203d2017325ace64f7f0a86fefbfb7dca97d3dc2d10ff873",
+      "previousSha256": "05593bce8f7783a0311a2a8380f23351151c84e20c277874620e1d61eb68737f"
+    }
+  ]
+}

@@ -7,6 +7,7 @@
   "required": [
     "packageLabel",
     "packageSha256",
+    "evaluatorWorkerId",
     "evaluatedAt",
     "publicTests",
     "hiddenTests",
@@ -22,6 +23,7 @@
   "properties": {
     "packageLabel": { "enum": ["X", "Y", "Z"] },
     "packageSha256": { "$ref": "#/$defs/sha256" },
+    "evaluatorWorkerId": { "type": "string", "minLength": 8 },
     "evaluatedAt": { "type": "string", "format": "date-time" },
     "publicTests": { "$ref": "#/$defs/testResult" },
     "hiddenTests": { "$ref": "#/$defs/testResult" },

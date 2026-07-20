@@ -1,6 +1,6 @@
 # Preregistered neutral-build versus review-loop protocol
 
-Protocol version: 2.0.0-frozen
+Protocol version: 2.1.0 (provisional until corrected skill commitment and refreeze)
 
 Design: paired, blinded pilot with two independent neutral builds, post-build random assignment, and treatment-only iterative review
 
@@ -18,9 +18,9 @@ The three scored snapshots are:
 
 The primary estimand is `score(Tfinal) - score(B0)`. The secondary within-treatment estimand is `score(Tfinal) - score(T0)`. Negative values favor the comparator. For promotion to `main`, select the higher of `B0` and `Tfinal`; an exact tie selects `B0` (baseline).
 
-## 2. Frozen status and lock boundary
+## 2. Canonical contract and provisional lock boundary
 
-Version 2.0.0-frozen has all external commitments recorded in `experiment/lock.json`. The completed lock procedure, performed before any builder sees task materials, MUST:
+This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. The earlier 2.0.0-frozen lock is superseded; version 2.1.0 MUST NOT execute while the lock is provisional. Refreeze, performed before any builder sees task materials, MUST:
 
 1. pass `npm ci` and `npm run check` on Node 22;
 2. record the exact lock-parent commit;
@@ -83,13 +83,15 @@ The exact skill-v1 flow is stored in `experiment/treatment-loop-algorithm.md`. I
 - tester runs `npm run check` exactly, records every component gate, does not edit, and does not independently create findings;
 - every invoked role produces a schema-valid artifact and evidence-chain link.
 
-## 7. Immutable gates and evidence chains
+## 7. Immutable gates, canonical JSON, and evidence chains
 
 Public gates are immutable: `docs/permissions-playground-spec.md`, `docs/public-test-contract.md`, `tests/public/**`, `scripts/run-public-tests.mjs`, dependency versions/lockfile, rubric weights and anchors, protocol/prompts/schemas/validator, CI, and the activation file list. Builders and treatment roles may change implementation files, application documentation, and candidate-added tests only.
 
-Every snapshot and role artifact is content-addressed. The run manifest links, in order: common-start triple; neutral prompt/config hashes; initial source commit and tree hash; assignment record hash; each cycle input commit; role prompt hash; transcript hash when available; review/fix/test artifact hashes; output commit/tree hash; exact check commands/exit codes; and cost-record hash. The evaluator chain links each neutral package hash, public/hidden suite hashes, raw test outputs, rubric artifact hash, and evaluator transcript hash when available. Missing provider transcripts are recorded as `null`, not fabricated.
+Every snapshot and role artifact is content-addressed. The run manifest links, in order: common-start triple; canonical-contract and gate bindings; neutral prompt/config hashes; initial source commit and tree hash; assignment record hash; each cycle input commit; role prompt hash; transcript hash when available; review/fix/test artifact hashes; output commit/tree hash; exact check commands/exit codes; and cost-record hash. The evaluator chain links each neutral package hash, public/hidden suite hashes, raw test outputs, rubric artifact hash, and evaluator transcript hash when available. Missing provider transcripts are recorded as `null`, not fabricated.
 
-An evidence hash is SHA-256 over the exact artifact bytes. A source-tree hash uses the frozen packaging procedure declared in the manifest. Each link names its predecessor hash, yielding an auditable append-only chain. Any mismatch is an invalidation event.
+Canonical JSON `utf8-sorted-json-v1` accepts only null, booleans, safe integers, strings, arrays, and objects. Object keys sort by ascending UTF-8 bytes; arrays preserve order; strings use JSON escaping; and output contains no insignificant whitespace or trailing newline. Artifact SHA-256 input is the ASCII/byte domain `permissions-playground/canonical-json-v1\x00` followed by those canonical JSON bytes. A source-tree hash uses the frozen packaging procedure declared in the manifest.
+
+Evidence sequence begins at 0 and increases by one. The first `previousSha256` is null; every later value equals the immediately preceding entry's `artifactSha256`. Each artifact hash uses the canonical JSON algorithm above. Any mismatch is an invalidation event.
 
 ## 8. Blind X/Y/Z evaluation
 
@@ -125,6 +127,14 @@ Report:
 - deviations, invalid runs, hashes, and raw rubric artifacts.
 
 Do not combine score and cost into an unregistered composite.
+
+## 10.1 Canonical roles, costs, and gates
+
+The seven role names and maximum wall seconds are exact: `builder` 2400, `reviewer` 900, `fixer` 1500, `tester` 900, `evaluator` 1800, `unblinder` 300, and `git_worker` 600. Each invocation has one unique worker ID, one turn, the bound environment hash, and the same model/config hash when the role uses a model. `maxTokens` is null when unavailable and requires a nonempty unavailability reason; usage remains recorded when exposed.
+
+The tester command is exactly `npm run check`, invoking in order `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run validate:scaffold`, `npm run test:protocol`, `npm run test:public:if-implemented`, and `npm run build`. The evaluator public command is exactly `npm run test:public`. The sealed hidden suite ID is `permissions-playground-sealed-v2`, its command is `node sealed-hidden-suite/run.mjs`, and its SHA-256 commitment is `a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b`. Run records bind all of these values and the canonical-contract hash.
+
+Templates are non-executable examples and validate only in explicit `template` mode. `execution` mode rejects a provisional lock, zero hashes/seeds, sentinel or `required-at-run` values, template-equal records, duplicate worker IDs, invalid snapshots, and any divergence from this contract.
 
 ## 11. Invalidation rules
 

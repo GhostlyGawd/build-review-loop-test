@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "2.0.0-frozen",
+  "protocolVersion": "2.1.0",
   "experimentId": "pilot-001",
   "startedAt": "2026-07-20T00:00:00Z",
   "operator": "operator-id-required-at-run",
@@ -7,6 +7,23 @@
     "commonStartCommit": "0000000000000000000000000000000000000000",
     "preregistrationLockCommit": "0000000000000000000000000000000000000000",
     "lockFileSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "canonicalContractSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "gateBindings": {
+    "testerCommand": "npm run check",
+    "componentCommands": [
+      "npm run format:check",
+      "npm run lint",
+      "npm run typecheck",
+      "npm run validate:scaffold",
+      "npm run test:protocol",
+      "npm run test:public:if-implemented",
+      "npm run build"
+    ],
+    "evaluatorPublicCommand": "npm run test:public",
+    "hiddenSuiteId": "permissions-playground-sealed-v2",
+    "hiddenSuiteCommand": "node sealed-hidden-suite/run.mjs",
+    "hiddenSuiteSha256": "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b"
   },
   "candidateLabels": ["candidate-a", "candidate-b"],
   "assignment": {
@@ -37,32 +54,44 @@
   "budgets": {
     "builder": {
       "wallSecondsMaximum": 2400,
-      "tokenCeiling": null,
-      "tokenCeilingUnavailableReason": "provider-orchestrator-does-not-expose-an-enforceable-per-role-token-ceiling",
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
       "turnLimit": 1
     },
     "reviewer": {
       "wallSecondsMaximum": 900,
-      "tokenCeiling": null,
-      "tokenCeilingUnavailableReason": "provider-orchestrator-does-not-expose-an-enforceable-per-role-token-ceiling",
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
       "turnLimit": 1
     },
     "fixer": {
       "wallSecondsMaximum": 1500,
-      "tokenCeiling": null,
-      "tokenCeilingUnavailableReason": "provider-orchestrator-does-not-expose-an-enforceable-per-role-token-ceiling",
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
       "turnLimit": 1
     },
     "tester": {
       "wallSecondsMaximum": 900,
-      "tokenCeiling": null,
-      "tokenCeilingUnavailableReason": "provider-orchestrator-does-not-expose-an-enforceable-per-role-token-ceiling",
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
       "turnLimit": 1
     },
     "evaluator": {
       "wallSecondsMaximum": 1800,
-      "tokenCeiling": null,
-      "tokenCeilingUnavailableReason": "provider-orchestrator-does-not-expose-an-enforceable-per-role-token-ceiling",
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
+      "turnLimit": 1
+    },
+    "unblinder": {
+      "wallSecondsMaximum": 300,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
+      "turnLimit": 1
+    },
+    "git_worker": {
+      "wallSecondsMaximum": 600,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
       "turnLimit": 1
     }
   },

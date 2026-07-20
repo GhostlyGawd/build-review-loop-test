@@ -12,6 +12,8 @@
     "mainSelection",
     "tiePolicy",
     "evaluationArtifactHashes",
+    "unblinderWorkerId",
+    "gitWorkerId",
     "evidenceHash"
   ],
   "properties": {
@@ -57,6 +59,8 @@
         "Z": { "$ref": "#/$defs/sha256" }
       }
     },
+    "unblinderWorkerId": { "type": "string", "minLength": 8 },
+    "gitWorkerId": { "type": "string", "minLength": 8 },
     "evidenceHash": { "$ref": "#/$defs/sha256" }
   },
   "$defs": { "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
