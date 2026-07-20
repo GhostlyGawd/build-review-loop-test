@@ -1,0 +1,13 @@
+{
+  "candidateLabel": "candidate-b",
+  "role": "builder",
+  "startedAt": "2026-07-20T21:46:29.3392208Z",
+  "completedAt": "2026-07-20T22:20:24.7101653Z",
+  "wallSeconds": 2035.371,
+  "inputTokens": null,
+  "cachedInputTokens": null,
+  "outputTokens": null,
+  "totalTokens": null,
+  "usd": null,
+  "source": "unavailable"
+}

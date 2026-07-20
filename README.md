@@ -80,7 +80,7 @@ The page uses one `h1`, labeled regions and controls, a live decision status, se
 
 Product behavior is governed by the frozen [`docs/permissions-playground-spec.md`](docs/permissions-playground-spec.md) and [`docs/public-test-contract.md`](docs/public-test-contract.md). The source and documentation are original experiment materials. Dependency identities and integrity hashes are recorded in `package-lock.json`; the implementation does not add or upgrade dependencies.
 
-Screenshot source revision: `PENDING_BUILD_SNAPSHOT` (finalized in the candidate run artifact after the implementation commit).
+Screenshot source revision: `cd66ab1c9f76eeb72167e58722be96d199ecb635`.
 
 ## License and support
 
