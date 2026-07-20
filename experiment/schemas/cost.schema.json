@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/cost.schema.json",
+  "title": "Role cost and duration record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidateLabel",
+    "role",
+    "startedAt",
+    "completedAt",
+    "wallSeconds",
+    "inputTokens",
+    "cachedInputTokens",
+    "outputTokens",
+    "totalTokens",
+    "usd",
+    "source"
+  ],
+  "properties": {
+    "candidateLabel": { "type": "string", "pattern": "^candidate-[a-z0-9-]+$" },
+    "role": {
+      "enum": ["builder", "reviewer-F", "reviewer-Q", "fixer", "evaluator"]
+    },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": "string", "format": "date-time" },
+    "wallSeconds": { "type": "number", "minimum": 0 },
+    "inputTokens": { "type": ["integer", "null"], "minimum": 0 },
+    "cachedInputTokens": { "type": ["integer", "null"], "minimum": 0 },
+    "outputTokens": { "type": ["integer", "null"], "minimum": 0 },
+    "totalTokens": { "type": ["integer", "null"], "minimum": 0 },
+    "usd": { "type": ["number", "null"], "minimum": 0 },
+    "source": { "enum": ["provider-reported", "unavailable"] }
+  }
+}

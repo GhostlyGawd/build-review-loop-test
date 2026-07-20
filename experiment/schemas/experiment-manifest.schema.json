@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/experiment-manifest.schema.json",
+  "title": "Private operator experiment manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "experimentId",
+    "startedAt",
+    "operator",
+    "commonStartCommit",
+    "preregistrationLockCommit",
+    "lockFileSha256",
+    "randomizationDraw",
+    "buildOrder",
+    "blindMapping",
+    "environment",
+    "deviations"
+  ],
+  "properties": {
+    "experimentId": { "type": "string", "minLength": 1 },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "operator": { "type": "string", "minLength": 1 },
+    "commonStartCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "preregistrationLockCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "lockFileSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "randomizationDraw": { "type": "integer", "minimum": 0, "maximum": 1 },
+    "buildOrder": {
+      "type": "array",
+      "prefixItems": [
+        { "enum": ["baseline", "treatment"] },
+        { "enum": ["baseline", "treatment"] }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true
+    },
+    "blindMapping": {
+      "type": "object",
+      "additionalProperties": { "enum": ["baseline", "treatment"] },
+      "minProperties": 2,
+      "maxProperties": 2
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "provider",
+        "reasoningSetting",
+        "node",
+        "npm",
+        "os",
+        "networkPolicy",
+        "toolPolicy"
+      ],
+      "properties": {
+        "model": { "type": "string", "minLength": 1 },
+        "provider": { "type": "string", "minLength": 1 },
+        "reasoningSetting": { "type": "string", "minLength": 1 },
+        "node": { "type": "string", "minLength": 1 },
+        "npm": { "type": "string", "minLength": 1 },
+        "os": { "type": "string", "minLength": 1 },
+        "networkPolicy": { "type": "string", "minLength": 1 },
+        "toolPolicy": { "type": "string", "minLength": 1 }
+      }
+    },
+    "deviations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

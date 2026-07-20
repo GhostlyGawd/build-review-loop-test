@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/run-manifest.schema.json",
+  "title": "Candidate run manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidateLabel",
+    "commonStartCommit",
+    "preregistrationLockCommit",
+    "lockFileSha256",
+    "buildSnapshot",
+    "finalSnapshot",
+    "status",
+    "promptSha256",
+    "checks",
+    "deviations"
+  ],
+  "properties": {
+    "candidateLabel": { "type": "string", "pattern": "^candidate-[a-z0-9-]+$" },
+    "commonStartCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "preregistrationLockCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "lockFileSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "buildSnapshot": { "$ref": "#/$defs/snapshot" },
+    "finalSnapshot": { "$ref": "#/$defs/snapshot" },
+    "status": { "enum": ["pending", "valid", "invalid", "blocked"] },
+    "promptSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "checks": { "type": "array", "items": { "$ref": "#/$defs/check" } },
+    "deviations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "snapshot": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["commit", "sealedAt", "treeSha256"],
+          "properties": {
+            "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+            "sealedAt": { "type": "string", "format": "date-time" },
+            "treeSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        }
+      ]
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "command", "exitCode"],
+      "properties": {
+        "stage": { "enum": ["build", "final"] },
+        "command": { "type": "string", "minLength": 1 },
+        "exitCode": { "type": "integer" }
+      }
+    }
+  }
+}

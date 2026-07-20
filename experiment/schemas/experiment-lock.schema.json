@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/experiment-lock.schema.json",
+  "title": "Experiment lock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocolVersion",
+    "lockParentCommit",
+    "hiddenSuiteSha256",
+    "treatmentSkillCommit",
+    "treatmentSkillManifestSha256",
+    "commonStartCommitPolicy",
+    "nodeVersion",
+    "packageManager",
+    "freezeState"
+  ],
+  "properties": {
+    "protocolVersion": { "const": "1.0.0-frozen" },
+    "lockParentCommit": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{40}|UNSET_LOCK_PARENT_COMMIT)$"
+    },
+    "hiddenSuiteSha256": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{64}|UNSET_HIDDEN_SUITE_SHA256)$"
+    },
+    "treatmentSkillCommit": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{40}|UNSET_TREATMENT_SKILL_COMMIT)$"
+    },
+    "treatmentSkillManifestSha256": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{64}|UNSET_TREATMENT_SKILL_MANIFEST_SHA256)$"
+    },
+    "commonStartCommitPolicy": {
+      "const": "Record the final GitHub commonStartCommit post-merge in the experiment and run manifests, together with this preregistration lock commit and lock-file SHA-256."
+    },
+    "nodeVersion": { "const": "22.x" },
+    "packageManager": {
+      "type": "string",
+      "pattern": "^npm@[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "freezeState": { "enum": ["provisional", "frozen"] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "freezeState": { "const": "frozen" } } },
+      "then": {
+        "properties": {
+          "lockParentCommit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "hiddenSuiteSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "treatmentSkillCommit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "treatmentSkillManifestSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    }
+  ]
+}
