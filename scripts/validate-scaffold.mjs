@@ -423,16 +423,6 @@ export function validateScaffold() {
   }
 
   const lock = readJson("experiment/lock.json");
-  const commitmentKeys = [
-    "lockParentCommit",
-    "hiddenSuiteSha256",
-    "treatmentSkillCommit",
-    "treatmentSkillTree",
-    "treatmentSkillManifestSha256",
-    "treatmentAlgorithmSha256",
-    "neutralBuilderPromptSha256",
-    "neutralBuilderConfigSha256",
-  ];
   const algorithmText = readFileSync(
     path.join(root, "experiment/treatment-loop-algorithm.md"),
     "utf8",
@@ -447,45 +437,24 @@ export function validateScaffold() {
     readFileSync(path.join(root, "experiment/builder-config.json"), "utf8"),
   );
   const actualAlgorithmHash = sha256(algorithmText);
-  if (
-    !lock.neutralBuilderPromptSha256.startsWith("UNSET_") &&
-    lock.neutralBuilderPromptSha256 !== actualPromptHash
-  )
-    failures.push("neutral builder prompt hash mismatch");
-  if (
-    !lock.neutralBuilderConfigSha256.startsWith("UNSET_") &&
-    lock.neutralBuilderConfigSha256 !== actualConfigHash
-  )
-    failures.push("neutral builder config hash mismatch");
-  if (
-    !lock.treatmentAlgorithmSha256.startsWith("UNSET_") &&
-    lock.treatmentAlgorithmSha256 !== actualAlgorithmHash
-  )
-    failures.push("treatment algorithm hash mismatch");
-  const finalSkillCommitments = {
+  const finalCommitments = {
+    protocolVersion: "2.0.0-frozen",
+    protocolStatus: "locked",
+    lockParentCommit: "a236d2643ec8ffc05e0e956d914fbe12cd376b5d",
+    hiddenSuiteSha256:
+      "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
     treatmentSkillCommit: "de1747fb46ed5b052e5507d2cd3c5c02cf87d73b",
     treatmentSkillTree: "d53d15935764d36a3f9272bbc0ae5c5c30008288",
     treatmentSkillManifestSha256:
       "45ccaed2d7812d646595c2cc7c27ff1c942ceefad8006d2093448a18e3e1ccb2",
+    treatmentAlgorithmSha256: actualAlgorithmHash,
+    neutralBuilderPromptSha256: actualPromptHash,
+    neutralBuilderConfigSha256: actualConfigHash,
+    freezeState: "frozen",
   };
-  for (const [key, expected] of Object.entries(finalSkillCommitments)) {
-    if (!lock[key].startsWith("UNSET_") && lock[key] !== expected)
-      failures.push(`${key} does not match the supplied final skill-v1 freeze`);
-  }
-  if (lock.freezeState === "provisional") {
-    if (!commitmentKeys.some((key) => lock[key].startsWith("UNSET_")))
-      failures.push(
-        "provisional lock must retain at least one explicit UNSET commitment",
-      );
-  } else {
-    if (commitmentKeys.some((key) => lock[key].startsWith("UNSET_")))
-      failures.push("frozen lock contains an UNSET commitment");
-    if (lock.neutralBuilderPromptSha256 !== actualPromptHash)
-      failures.push("locked neutral builder prompt hash mismatch");
-    if (lock.neutralBuilderConfigSha256 !== actualConfigHash)
-      failures.push("locked neutral builder config hash mismatch");
-    if (lock.treatmentAlgorithmSha256 !== actualAlgorithmHash)
-      failures.push("locked treatment algorithm hash mismatch");
+  for (const [key, expected] of Object.entries(finalCommitments)) {
+    if (lock[key] !== expected)
+      failures.push(`${key} does not match the final protocol lock`);
   }
 
   const builderConfig = readJson("experiment/builder-config.json");
@@ -548,6 +517,6 @@ if (isEntrypoint) {
     process.exit(1);
   }
   console.log(
-    `Protocol 2.0.0 scaffold validation passed (${schemaPairCount} schema/data pairs; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.0.0-frozen scaffold validation passed (${schemaPairCount} schema/data pairs; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }

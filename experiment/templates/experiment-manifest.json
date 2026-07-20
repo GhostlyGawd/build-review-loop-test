@@ -1,8 +1,8 @@
 {
-  "protocolVersion": "2.0.0",
+  "protocolVersion": "2.0.0-frozen",
   "experimentId": "pilot-001",
   "startedAt": "2026-07-20T00:00:00Z",
-  "operator": "UNSET_OPERATOR",
+  "operator": "operator-id-required-at-run",
   "bindings": {
     "commonStartCommit": "0000000000000000000000000000000000000000",
     "preregistrationLockCommit": "0000000000000000000000000000000000000000",
@@ -14,7 +14,7 @@
     "digestSha256": "909e5426e26a7fec5e0dafaca44f295cfffe12e8e5064fda2f7c16b8da968248",
     "draw": 0,
     "generatedAt": "2026-07-20T00:00:00Z",
-    "generator": "UNSET_OS_CSPRNG_API",
+    "generator": "os-csprng-api-and-version-required-at-run",
     "mapping": { "candidate-a": "baseline", "candidate-b": "treatment" }
   },
   "evaluationRandomization": {
@@ -24,14 +24,14 @@
     "mapping": { "X": "T0", "Y": "Tfinal", "Z": "B0" }
   },
   "environment": {
-    "model": "UNSET_MODEL",
-    "provider": "UNSET_PROVIDER",
-    "reasoningSetting": "UNSET_REASONING",
+    "model": "inherited-model-id-required-at-run",
+    "provider": "provider-and-version-required-at-run",
+    "reasoningSetting": "inherited-reasoning-setting-required-at-run",
     "node": "22.x",
-    "npm": "UNSET_NPM",
-    "os": "UNSET_OS",
-    "networkPolicy": "UNSET_NETWORK_POLICY",
-    "toolPolicy": "UNSET_TOOL_POLICY",
+    "npm": "exact-npm-version-required-at-run",
+    "os": "exact-os-version-required-at-run",
+    "networkPolicy": "frozen-network-policy-required-at-run",
+    "toolPolicy": "frozen-tool-policy-required-at-run",
     "builderConfigSha256": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   "budgets": {

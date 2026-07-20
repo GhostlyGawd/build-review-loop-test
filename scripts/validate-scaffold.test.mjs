@@ -20,7 +20,7 @@ const snapshot = (number) => ({
   packageProcedure: "frozen-test-procedure",
 });
 
-describe("protocol 2.0.0 semantic validation", () => {
+describe("protocol 2.0.0-frozen semantic validation", () => {
   it("accepts the prospective scaffold and seeded assignment algorithms", () => {
     assert.deepEqual(validateScaffold().failures, []);
     assert.deepEqual(

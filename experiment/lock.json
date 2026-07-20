@@ -1,8 +1,8 @@
 {
-  "protocolVersion": "2.0.0",
-  "protocolStatus": "draft",
-  "lockParentCommit": "UNSET_LOCK_PARENT_COMMIT",
-  "hiddenSuiteSha256": "UNSET_HIDDEN_SUITE_SHA256",
+  "protocolVersion": "2.0.0-frozen",
+  "protocolStatus": "locked",
+  "lockParentCommit": "a236d2643ec8ffc05e0e956d914fbe12cd376b5d",
+  "hiddenSuiteSha256": "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
   "treatmentSkillCommit": "de1747fb46ed5b052e5507d2cd3c5c02cf87d73b",
   "treatmentSkillTree": "d53d15935764d36a3f9272bbc0ae5c5c30008288",
   "treatmentSkillManifestSha256": "45ccaed2d7812d646595c2cc7c27ff1c942ceefad8006d2093448a18e3e1ccb2",
@@ -12,5 +12,5 @@
   "commonStartCommitPolicy": "Record the final GitHub commonStartCommit post-merge in the experiment and run manifests, together with this preregistration lock commit and lock-file SHA-256.",
   "nodeVersion": "22.x",
   "packageManager": "npm@11.11.0",
-  "freezeState": "provisional"
+  "freezeState": "frozen"
 }

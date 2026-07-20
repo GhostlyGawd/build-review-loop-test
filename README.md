@@ -1,15 +1,15 @@
 # Permissions Playground review-loop experiment
 
-This repository is the prospective common-start scaffold for protocol version 2.0.0. It tests a frozen treatment-only review loop after two independent builders create the same React permissions-policy playground from an identical neutral prompt and configuration.
+This repository is the frozen common-start scaffold for protocol version 2.0.0-frozen. It tests a treatment-only review loop after two independent builders create the same React permissions-policy playground from an identical neutral prompt and configuration.
 
 ## Status
 
-- Phase: protocol 2.0.0 draft, before commitment lock or builder exposure
+- Phase: protocol 2.0.0-frozen, commitments locked before builder exposure
 - Product: intentionally not implemented on this branch
 - Public contract tests: committed but gated until all required implementation files exist
 - Hidden tests: sealed externally; the v2 commitment is not yet recorded
 - Treatment algorithm: exact skill-v1 flow incorporated and content-addressed
-- Experiment lock: provisional until the hidden suite, lock parent, and final common-start binding are resealed
+- Experiment lock: frozen against content commit `a236d2643ec8ffc05e0e956d914fbe12cd376b5d`; the post-merge common-start binding is recorded later in run manifests
 - License: none has been granted; no license file is included
 
 Do not present this branch as a completed application or executable experiment. A passing scaffold check establishes internal consistency only.
@@ -53,10 +53,10 @@ The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact t
 - [`experiment/protocol.md`](experiment/protocol.md): assignment, freshness, budgets, evidence, evaluation, and invalidation
 - [`experiment/rubric.md`](experiment/rubric.md): unchanged 100-point 50/15/15/10/10 rubric
 - [`experiment/prompts/neutral-builder.md`](experiment/prompts/neutral-builder.md) and [`experiment/builder-config.json`](experiment/builder-config.json): identical neutral construction inputs
-- [`experiment/treatment-loop-algorithm.md`](experiment/treatment-loop-algorithm.md): draft exact placeholder pending skill-v1
+- [`experiment/treatment-loop-algorithm.md`](experiment/treatment-loop-algorithm.md): exact frozen skill-v1 flow
 - [`experiment/schemas/`](experiment/schemas/): machine-readable artifact contracts and the authoritative finding schema
 - [`experiment/templates/`](experiment/templates/): prospective, non-evidentiary artifact examples
-- [`experiment/lock.json`](experiment/lock.json): provisional external commitments
+- [`experiment/lock.json`](experiment/lock.json): frozen non-self-referential commitments
 
 ## Architecture and boundaries
 

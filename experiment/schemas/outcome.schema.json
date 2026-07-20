@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/outcome.schema.json",
-  "title": "Unblinded protocol 2.0.0 outcome",
+  "title": "Unblinded protocol 2.0.0-frozen outcome",
   "type": "object",
   "additionalProperties": false,
   "required": [

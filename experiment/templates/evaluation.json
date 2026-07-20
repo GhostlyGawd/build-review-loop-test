@@ -12,7 +12,7 @@
   "hiddenTests": {
     "passed": 0,
     "failed": 0,
-    "command": "UNSET_HIDDEN_COMMAND",
+    "command": "sealed-hidden-suite-command-required-at-run",
     "exitCode": 0,
     "rawOutputSha256": "0000000000000000000000000000000000000000000000000000000000000000"
   },

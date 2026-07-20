@@ -1,6 +1,6 @@
 # Preregistered neutral-build versus review-loop protocol
 
-Protocol version: 2.0.0 (draft until commitments lock)
+Protocol version: 2.0.0-frozen
 
 Design: paired, blinded pilot with two independent neutral builds, post-build random assignment, and treatment-only iterative review
 
@@ -18,9 +18,9 @@ The three scored snapshots are:
 
 The primary estimand is `score(Tfinal) - score(B0)`. The secondary within-treatment estimand is `score(Tfinal) - score(T0)`. Negative values favor the comparator. For promotion to `main`, select the higher of `B0` and `Tfinal`; an exact tie selects `B0` (baseline).
 
-## 2. Prospective status and lock boundary
+## 2. Frozen status and lock boundary
 
-Version 2.0.0 remains a draft until every external commitment is present and the lock is changed from `provisional` to `frozen`. Before any builder sees task materials, the lock procedure MUST:
+Version 2.0.0-frozen has all external commitments recorded in `experiment/lock.json`. The completed lock procedure, performed before any builder sees task materials, MUST:
 
 1. pass `npm ci` and `npm run check` on Node 22;
 2. record the exact lock-parent commit;
@@ -148,4 +148,4 @@ Because `n=1` per arm, do not report p-values, confidence intervals, significanc
 
 ## 13. Amendments
 
-Before builders start, a change requires a new protocol version, rationale, diff, timestamp, operator identity, new lock, and updated common-start binding. After builders start, do not amend in place; apply section 11. Resealing the final skill-v1 and hidden-suite commitments is required draft-to-lock work, not experiment evidence.
+Before builders start, a change requires a new protocol version, rationale, diff, timestamp, operator identity, new lock, and updated common-start binding. After builders start, do not amend in place; apply section 11.
