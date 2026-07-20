@@ -1,0 +1,114 @@
+{
+  "candidateLabel": "candidate-a",
+  "role": "builder",
+  "commonStartCommit": "1b1375e5fa182abd667ddbf77efc27358b162ff7",
+  "preregistrationLockCommit": "b5d6538b75680888709d86d15041dc41ecde8712",
+  "lockFileSha256": "74f65bc6b74dfb0ce0b73437f1e302f9ba72052dd73172de9891e3f9eda0bf3b",
+  "buildSnapshotCommit": "7cb67854353fb61e4c1dec57d6c12d0dd666929f",
+  "buildSnapshotGitTree": "1e58c91bbf3194555c9efa6c396cf9ae77a768cd",
+  "buildSnapshotTreeSha256": "3a37a5e89f96dc6791cc9286d2abda477bc3af01a668755d4fd66169f609f3fd",
+  "environment": {
+    "modelFamily": "Codex based on GPT-5",
+    "exactModelDeployment": null,
+    "reasoningSetting": null,
+    "modelConfigUnavailableReason": "The exact deployment identifier and reasoning setting were not exposed to the builder.",
+    "operatingSystem": "Windows",
+    "node": "22.23.1",
+    "npm": "11.11.0",
+    "toolPermissions": "Filesystem unrestricted; approval policy never",
+    "networkPolicy": "Builder tools had network access; the product made no external requests during browser verification."
+  },
+  "usage": {
+    "inputTokens": null,
+    "cachedInputTokens": null,
+    "outputTokens": null,
+    "totalTokens": null,
+    "usd": null,
+    "unavailableReason": "Provider-reported token and cost counters were not exposed to the builder; no values were estimated."
+  },
+  "verification": [
+    {
+      "command": "Node 22.23.1 node.exe npm-cli.js ci",
+      "exitCode": 0,
+      "outcome": "240 packages installed from the committed lockfile; audit found 0 vulnerabilities."
+    },
+    {
+      "command": "Node 22.23.1 node.exe npm-cli.js run check",
+      "exitCode": 0,
+      "outcome": "Prettier, ESLint, strict TypeScript, 7 schema/data pairs, 14 public assertions, 9 added assertions, and the Vite production build passed."
+    },
+    {
+      "command": "npx playwright test browser-evidence.spec.ts --reporter=line --workers=1",
+      "exitCode": 0,
+      "outcome": "The locally served production bundle passed one scripted end-to-end case: all regions and 36 cells rendered; explicit deny and allow interactions matched rule-4/rule-3; 320px document did not overflow; the matrix scrolled internally; focus worked; console errors and external requests were both empty. The temporary test and no-save Playwright package were removed after capture."
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "outcome": "No whitespace errors."
+    }
+  ],
+  "developmentGateFailures": [
+    {
+      "command": "npx node@22 npm-cli.js ci; npx node@22 npm-cli.js run check",
+      "exitCode": 124,
+      "outcome": "The combined wrapper timed out without usable output; direct Node 22 executable invocations replaced it."
+    },
+    {
+      "command": "Node 22.23.1 node.exe npm-cli.js run check (initial added-test glob)",
+      "exitCode": 1,
+      "outcome": "Vitest received the Windows wildcard literally. The added-test script was changed to exact paths, after which the full gate passed."
+    },
+    {
+      "command": "npx playwright test browser-evidence.spec.ts --reporter=line --workers=1 (initial 320px probe)",
+      "exitCode": 1,
+      "outcome": "The probe measured 1132px document width at a 320px viewport. Constraining the grid panel intrinsic width fixed the issue; the post-fix browser run passed."
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "docs/screenshots/permissions-allow.png",
+      "capturedAt": "2026-07-20T22:08:57.9227514Z",
+      "viewportCssPixels": "1440x1000",
+      "state": "Ben / Budget / Share — Allowed by rule-3",
+      "sha256": "6b487d354e159839ecc1f9f11243a8a4f8884d7aadc29d2492f70b44490d217e",
+      "altText": "Permissions Playground showing the add-rule controls, Ben allowed to share the Budget by rule-3, and the effective-permissions matrix.",
+      "provenance": "Real Playwright capture of the locally served npm run build output from build snapshot 7cb67854353fb61e4c1dec57d6c12d0dd666929f; original UI and fictional fixture; no third-party visual assets."
+    },
+    {
+      "path": "docs/screenshots/permissions-explicit-deny.png",
+      "capturedAt": "2026-07-20T22:08:57.8004298Z",
+      "viewportCssPixels": "1440x1000",
+      "state": "Ben / Runbook / Edit — Denied by rule-4",
+      "sha256": "e42be839039b2b5dd45e7c465e90a2c2dd79d3a7ec5bec82e00f4537b564888e",
+      "altText": "Permissions Playground showing the add-rule controls, Ben denied edit access to the Runbook by explicit rule-4, and the effective-permissions matrix.",
+      "provenance": "Real Playwright capture of the same local production build and fixed viewport; original UI and fictional fixture; no third-party visual assets."
+    }
+  ],
+  "changedFiles": [
+    "README.md",
+    "docs/screenshots/permissions-allow.png",
+    "docs/screenshots/permissions-explicit-deny.png",
+    "index.html",
+    "package.json",
+    "src/PermissionsPlayground.tsx",
+    "src/main.tsx",
+    "src/permissions/evaluate.ts",
+    "src/permissions/model.ts",
+    "src/playground.css",
+    "src/scaffold.css (removed)",
+    "tests/evaluate.additional.test.ts",
+    "tests/setup.ts",
+    "tests/ui.additional.test.tsx"
+  ],
+  "limitations": [
+    "This is an educational closed-domain evaluator, not a production authorization system.",
+    "Policy state is local and in memory; users, groups, resources, imports, persistence, authentication, and enforcement are out of scope.",
+    "The dense matrix uses an internal horizontal scroller at narrow widths.",
+    "No general license has been granted and no LICENSE file is present."
+  ],
+  "deviations": [
+    "The default shell exposed Node 24.14.1; authoritative install and validation used Node 22.23.1.",
+    "Explicit Testing Library cleanup was added to the shared setup to isolate the frozen public test renders; frozen public test files and their activation runner were unchanged."
+  ]
+}
