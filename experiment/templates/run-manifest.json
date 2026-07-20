@@ -1,0 +1,10 @@
+{
+  "candidateLabel": "candidate-x",
+  "startCommit": "0000000000000000000000000000000000000000",
+  "buildSnapshot": null,
+  "finalSnapshot": null,
+  "status": "pending",
+  "promptSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "checks": [],
+  "deviations": []
+}

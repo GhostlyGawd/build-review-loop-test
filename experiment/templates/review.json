@@ -1,0 +1,11 @@
+{
+  "candidateLabel": "candidate-x",
+  "snapshotCommit": "0000000000000000000000000000000000000000",
+  "reviewerId": "F",
+  "focus": "functional correctness and tests",
+  "startedAt": "2026-07-20T00:00:00Z",
+  "completedAt": "2026-07-20T00:00:00Z",
+  "checksRun": [],
+  "coverageGaps": [],
+  "findings": []
+}

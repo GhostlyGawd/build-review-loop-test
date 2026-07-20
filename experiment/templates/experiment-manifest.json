@@ -1,0 +1,23 @@
+{
+  "experimentId": "pilot-001",
+  "startedAt": "2026-07-20T00:00:00Z",
+  "operator": "UNSET_OPERATOR",
+  "lockFileSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "randomizationDraw": 0,
+  "buildOrder": ["baseline", "treatment"],
+  "blindMapping": {
+    "candidate-x": "baseline",
+    "candidate-y": "treatment"
+  },
+  "environment": {
+    "model": "UNSET_MODEL",
+    "provider": "UNSET_PROVIDER",
+    "reasoningSetting": "UNSET_REASONING",
+    "node": "22.x",
+    "npm": "UNSET_NPM",
+    "os": "UNSET_OS",
+    "networkPolicy": "UNSET_NETWORK_POLICY",
+    "toolPolicy": "UNSET_TOOL_POLICY"
+  },
+  "deviations": []
+}

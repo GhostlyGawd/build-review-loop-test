@@ -1,0 +1,12 @@
+{
+  "candidateLabel": "candidate-x",
+  "startCommit": "0000000000000000000000000000000000000000",
+  "finalCommit": null,
+  "startedAt": "2026-07-20T00:00:00Z",
+  "completedAt": "2026-07-20T00:00:00Z",
+  "dispositions": [],
+  "changedFiles": [],
+  "checks": [],
+  "remainingDefects": [],
+  "deviations": []
+}

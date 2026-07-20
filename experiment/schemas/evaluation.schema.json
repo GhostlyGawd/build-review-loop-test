@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/evaluation.schema.json",
+  "title": "Blinded rubric evaluation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidateLabel",
+    "snapshotCommit",
+    "evaluatedAt",
+    "publicTests",
+    "hiddenTests",
+    "items",
+    "sectionTotals",
+    "uncappedTotal",
+    "capsApplied",
+    "finalTotal",
+    "uncertainties",
+    "evidenceHash"
+  ],
+  "properties": {
+    "candidateLabel": { "type": "string", "pattern": "^candidate-[a-z0-9-]+$" },
+    "snapshotCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "evaluatedAt": { "type": "string", "format": "date-time" },
+    "publicTests": { "$ref": "#/$defs/testResult" },
+    "hiddenTests": { "$ref": "#/$defs/testResult" },
+    "items": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "score", "maximum", "evidence", "rationale"],
+        "properties": {
+          "id": {
+            "enum": [
+              "A1",
+              "A2",
+              "A3",
+              "A4",
+              "A5",
+              "A6",
+              "A7",
+              "B1",
+              "B2",
+              "B3",
+              "C1",
+              "C2",
+              "C3",
+              "D1",
+              "D2",
+              "D3",
+              "E1",
+              "E2",
+              "E3",
+              "E4"
+            ]
+          },
+          "score": { "type": "integer", "minimum": 0, "maximum": 10 },
+          "maximum": { "type": "integer", "minimum": 2, "maximum": 10 },
+          "evidence": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "rationale": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "sectionTotals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "functional",
+        "robustnessSecurity",
+        "accessibilityUsability",
+        "testEffectiveness",
+        "maintainabilityDocs"
+      ],
+      "properties": {
+        "functional": { "type": "integer", "minimum": 0, "maximum": 50 },
+        "robustnessSecurity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "accessibilityUsability": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "testEffectiveness": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "maintainabilityDocs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        }
+      }
+    },
+    "uncappedTotal": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "capsApplied": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "finalTotal": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "uncertainties": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "evidenceHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "$defs": {
+    "testResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "failed", "command", "exitCode"],
+      "properties": {
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "command": { "type": "string", "minLength": 1 },
+        "exitCode": { "type": "integer" }
+      }
+    }
+  }
+}

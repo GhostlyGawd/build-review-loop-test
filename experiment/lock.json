@@ -1,0 +1,10 @@
+{
+  "protocolVersion": "1.0.0-frozen",
+  "commonStartCommit": "UNSET_COMMON_START_COMMIT",
+  "hiddenSuiteSha256": "UNSET_HIDDEN_SUITE_SHA256",
+  "treatmentSkillCommit": "UNSET_TREATMENT_SKILL_COMMIT",
+  "treatmentSkillManifestSha256": "UNSET_TREATMENT_SKILL_MANIFEST_SHA256",
+  "nodeVersion": "22.x",
+  "packageManager": "npm@11.11.0",
+  "freezeState": "provisional"
+}
