@@ -215,7 +215,7 @@ $stdoutPath = Resolve-Beneath $evidenceRoot $physical.stdoutPath
 $stderrPath = Resolve-Beneath $evidenceRoot $physical.stderrPath
 $evidencePath = Resolve-Beneath $evidenceRoot $physical.evidencePath
 if ([System.IO.Directory]::Exists($evidenceRoot) -and $null -ne (Get-ChildItem -LiteralPath $evidenceRoot -Force | Select-Object -First 1)) { throw "Evidence root must be fresh and empty" }
-$argv = @("-a", "never", "-m", "gpt-5.4", "-c", 'model_reasoning_effort="xhigh"', "exec", "--ephemeral", "--ignore-user-config", "--skip-git-repo-check", "--sandbox", $contract.sandboxMode, "--json", "--add-dir", $physical.tempRoot, "--add-dir", $physical.cacheRoot, "--add-dir", $physical.dependencyRoot, "-C", $workdir, "-o", $finalPath, "-")
+$argv = @("-a", "never", "-m", "gpt-5.4", "-c", 'model_reasoning_effort="xhigh"', "-c", 'windows.sandbox="elevated"', "-c", "sandbox_workspace_write.network_access=false", "exec", "--ephemeral", "--ignore-user-config", "--ignore-rules", "--skip-git-repo-check", "--sandbox", $contract.sandboxMode, "--json", "--add-dir", $physical.tempRoot, "--add-dir", $physical.cacheRoot, "--add-dir", $physical.dependencyRoot, "-C", $workdir, "-o", $finalPath, "-")
 $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
 $startInfo.FileName = $contract.cliPath
 $startInfo.WorkingDirectory = $workdir

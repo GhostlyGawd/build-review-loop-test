@@ -1,6 +1,6 @@
-# Public protocol-v2.5 artifact contract
+# Public protocol-v2.7 artifact contract
 
-The bundled [canonical-contract.json](canonical-contract.json) is authoritative. Its domain-separated canonical SHA-256 is `2303f8fc8963fdfa132ee84acd8388e7a081f6a1cbdd5907c37ea8077f62a9c3`. The byte-exact golden execution fixture has canonical SHA-256 `e8379542e0380d15bbef577ef8d2f8b318c6ba23387cb92b97b6a04e5ec7c34c`; the invalid-current fixture has canonical SHA-256 `babdbd087f5ce4c14a344d6dc1fc5f3731751306d398f2736ab567ba45d7761e`.
+The bundled [canonical-contract.json](canonical-contract.json) is authoritative. Its domain-separated canonical SHA-256 is `803ef84dadde7280c338ff0fd886e2dd532edf04d746527dd697e1310b38bb2e`. The byte-exact golden execution fixture has canonical SHA-256 `ba53b413b157c919052bf42bfd8102bd4e50d8f022344b6d878429fe5b671534`; the invalid-current fixture has canonical SHA-256 `049bf6fde3315383d0f4f431952c7d30886e9aef8b82b09fbf26b061d0302f7e`.
 
 ## Frozen runtime
 
@@ -9,11 +9,12 @@ Bind:
 - PowerShell host: `C:\Users\rhenm\AppData\Local\pwsh7\pwsh.exe`, version `7.6.2`, SHA-256 `99ec38d8c4910fd5f2feeeec4dedb5076ff39a08ca21e12642822bc8d989e316`; launch `pwsh -NoProfile -File`.
 - Codex CLI: `C:\Users\rhenm\.codex\plugins\.plugin-appserver\codex.exe`, version `codex-cli 0.145.0-alpha.18`, SHA-256 `20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4`; auth status `Logged in using ChatGPT`.
 - Model/reasoning: `gpt-5.4` and `xhigh`, pinned in exact argv after approval mode and before `exec`.
-- Builder prompt/config: `bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd` and `f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4`.
+- Builder prompt/config: `5ed878d3be56824f94d3a72a40606c111dbfdfc1631bdf98b6ca7fe75ffebd56` and `8d64a062c76ba8bdbd436b99d42cd7566ae2601821e009315afe8e37800f323b`.
 - Smoke prompt: `135c5fc59fe72b4b37d924cd6f1a14e4f2a3b7b59711cc12294e81f52cbfd6a2`; harmless smoke only.
 - Canonical path helper: `194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e`.
-- Builder runner/schema: `b2e848a193c28d93893829a3dceeba323999193a0d96acee8848d0eff06e70b7` / `3678f9482e5082b8ae19ff31c5dd1c4405d60bb75891d372d2b6dae5a1c0c716`.
-- Role runner/schema/evidence schema: `f78ec27cc30f66a58464be6f5b60a4437808b97ec85186916171ee22e9b6b3b4` / `7dfdbb16b8f3c760c123fdb3981d7253f28feb57e0c7751eced9f6bb4d650da3` / `6a6a79d47617208a49e75b6f48a4a67be083a7e6482e26923ccc99c863611af5`.
+- Builder runner/schema: `a87972d1f12f301c51ec531ce3a5f4b611cf4d10dc8d62e9f2e5ef687c1a9fd0` / `af1442dcf1cb0ffa8d7f3d0d082b6b43ed75924e8bea4970bedbf080adba6316`.
+- Role runner/schema/evidence schema: `e0bcef63b939e961bbe7ded794658948d70251c73c0dbaacaadb7691b168eca2` / `11bfdd9d33cdfa0fa0053d74c6e2222180fa6aa02b9a7a12123cf5af24875a06` / `b722627806b07254e995d5ae3a38ba921d69abba46651e41132fd8b9d7691d32`.
+- Actual-exec probe evidence/script/schema: `1ffa7412800fa2134169f641ba5d978cb09845edc137b852cb351b209052cb47` / `6ade4210d63206e85c742b470a03a68988e4fc9991490361af01fece8e93f4c1` / `9423ca50210ed63f70496026a0ade4f1f7b4e938557b44ca9d211d04ee9eea6a`. It proves workspace/add-dir writes and the protected-boundary/supervisor checks; its retained attestation does not independently bind the Git/Node/npm command events or outputs requested by the prompt.
 - Projection allowlist/schema/preparer: `37af679c4f3f71cbd9e28b810897d4ff82c7c47cf4421a9d661b8b90947aef5b` / `b044646ede4fef4543a4950e5842f51997dc3b65e6bfabad7eeb1ff84caf0bb5` / `68e186914a0dd99e0b91f0851d45f8081086fffadae8d2949050e29ea1b832b3`.
 
 Every successful supervision record binds the contract, invocation, observed process/thread, exact argv and prompt, raw stdout/stderr/final hashes, lifecycle, schema/artifact result, isolation policy, and trusted usage/metadata or explicit absence reasons. Every model role is fresh, ephemeral, one turn, and never resumed.

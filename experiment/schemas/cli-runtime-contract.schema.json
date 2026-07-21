@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/cli-runtime-contract.schema.json",
-  "title": "Protocol 2.6 external CLI runtime contract",
+  "title": "Protocol 2.7 external CLI runtime contract",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -83,9 +83,14 @@
         "gpt-5.4",
         "-c",
         "model_reasoning_effort=\"xhigh\"",
+        "-c",
+        "windows.sandbox=\"elevated\"",
+        "-c",
+        "sandbox_workspace_write.network_access=false",
         "exec",
         "--ephemeral",
         "--ignore-user-config",
+        "--ignore-rules",
         "--skip-git-repo-check",
         "--sandbox",
         "workspace-write",

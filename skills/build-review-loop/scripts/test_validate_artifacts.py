@@ -137,6 +137,20 @@ class ValidatorTests(unittest.TestCase):
     def test_bundled_public_sources_have_exact_hashes(self) -> None:
         self.assertEqual([], validator.validate_bundles())
 
+    def test_portable_lock_commitments_are_cross_bound(self) -> None:
+        lock = validator.load_json(validator.PROTOCOL_LOCK_PATH)
+        self.assertEqual([], validator.validate_portable_lock(lock))
+        lock["goldenFixtureSha256"] = "0" * 64
+        self.assertTrue(any("goldenFixtureSha256" in error
+                            for error in validator.validate_portable_lock(lock)))
+
+    def test_artifact_contract_hashes_are_cross_bound(self) -> None:
+        contract = validator.ARTIFACT_CONTRACT_PATH.read_text(encoding="utf-8")
+        self.assertEqual([], validator.validate_artifact_contract(contract))
+        contract = contract.replace(validator.CLI_RUNNER_SHA256, "0" * 64)
+        self.assertTrue(any("CLI runner" in error
+                            for error in validator.validate_artifact_contract(contract)))
+
     def test_manifest_uses_git_blobs_not_crlf_smudged_worktree_bytes(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory)

@@ -1,0 +1,27 @@
+{
+  "recordVersion": "1.0.0",
+  "protocolVersion": "2.6.0",
+  "lockCommit": "a45a257a1039c6de2729d23fff2ef427ce59e784",
+  "disposition": "invalidated-before-assignment",
+  "defect": {
+    "code": "actual-exec-windows-sandbox-backend-unattested",
+    "privateEvidenceSha256Prefixes": ["761fe3e3", "91030f9f"],
+    "neutralPromptSha256": "5ed878d3be56824f94d3a72a40606c111dbfdfc1631bdf98b6ca7fe75ffebd56",
+    "runtimeContractSha256Prefix": "9657a377",
+    "summary": "Two fresh neutral builders ran the exact frozen codex exec command concurrently and both exited zero, but their actual model sessions reported a read-only workspace. apply_patch and npm execution were blocked; neither worktree changed and neither received a supervisor child commit. The lower-level no-model sandbox probe had passed but did not attest the permissions of the actual codex exec session."
+  },
+  "executionState": {
+    "candidateLaunches": 2,
+    "modelInvocations": 2,
+    "validInitialBuilds": 0,
+    "worktreeChanges": 0,
+    "childCommits": 0,
+    "assignmentSeedDrawn": false,
+    "assignmentPerformed": false,
+    "treatmentStarted": false,
+    "evaluationStarted": false,
+    "outcomeDataProduced": false,
+    "hiddenSuiteAccessed": false
+  },
+  "replacementPolicy": "Preserve protocol 2.6.0 history and preregister a corrected successor that attests the exact harmless codex exec permission boundary with the same pinned runtime dimensions before any replacement builder launch."
+}
