@@ -1,15 +1,15 @@
 # Permissions Playground review-loop experiment
 
-This repository is the prospective common-start scaffold for protocol version 2.2.0. It tests a treatment-only review loop after two independent builders create the same React permissions-policy playground from an identical neutral prompt and configuration.
+This repository is the prospective common-start scaffold for protocol version 2.2.0-frozen. It tests a treatment-only review loop after two independent builders create the same React permissions-policy playground from an identical neutral prompt and configuration.
 
 ## Status
 
-- Phase: protocol 2.2.0 validation/invalidation remediation, provisional before builder exposure
+- Phase: protocol 2.2.0-frozen preregistration lock, before builder exposure
 - Product: intentionally not implemented on this branch
 - Public contract tests: committed but gated until all required implementation files exist
 - Hidden tests: sealed externally; the existing v2 commitment remains unchanged
 - Treatment algorithm: exact skill-v1 flow incorporated and content-addressed
-- Experiment lock: the prior `2.1.0-frozen` lock is superseded; refreeze awaits a corrected integrated skill commitment and new content binding
+- Experiment lock: 2.2.0-frozen, bound to the corrected integrated skill and content parent
 - License: none has been granted; no license file is included
 
 Do not present this branch as a completed application or executable experiment. A passing scaffold check establishes internal consistency only.
@@ -58,7 +58,7 @@ The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact t
 - [`experiment/treatment-loop-algorithm.md`](experiment/treatment-loop-algorithm.md): exact frozen skill-v1 flow
 - [`experiment/schemas/`](experiment/schemas/): machine-readable artifact contracts and the authoritative finding schema
 - [`experiment/templates/`](experiment/templates/): prospective, non-evidentiary artifact examples
-- [`experiment/lock.json`](experiment/lock.json): provisional commitments; execution is prohibited until refrozen
+- [`experiment/lock.json`](experiment/lock.json): final preregistration commitments
 
 ## Architecture and boundaries
 

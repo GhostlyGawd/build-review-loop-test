@@ -916,23 +916,26 @@ export function validateScaffold() {
   const actualAlgorithmHash = sha256(algorithmText);
   const canonicalContract = readJson("experiment/canonical-contract.json");
   const goldenRun = readJson("experiment/golden-run/golden-run.json");
+  const invalidCurrent = readJson("experiment/golden-run/invalid-current.json");
   const finalCommitments = {
-    protocolVersion: "2.2.0",
-    protocolStatus: "draft",
+    protocolVersion: "2.2.0-frozen",
+    protocolStatus: "locked",
     supersedesLockCommit: "b5c1d5f21e3d2f7e4ecf67dfee1eeb365ee041b9",
-    lockParentCommit: null,
+    lockParentCommit: "bc0a704d94f739d55d7cda2eff42253df4440142",
     hiddenSuiteId: "permissions-playground-sealed-v2",
     hiddenSuiteSha256:
       "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
-    treatmentSkillCommit: null,
-    treatmentSkillTree: null,
-    treatmentSkillManifestSha256: null,
+    treatmentSkillCommit: "7f313955de0dc2c85f66c8efb5d0ca4badf423c8",
+    treatmentSkillTree: "8ce31af123de1e537e2e9aa84fc33909004212fd",
+    treatmentSkillManifestSha256:
+      "f4ae6da4ee8335a9a798e9ab1113d6760cd7ce58a3e6dbaedfa18f60194e76eb",
     treatmentAlgorithmSha256: actualAlgorithmHash,
     neutralBuilderPromptSha256: actualPromptHash,
     neutralBuilderConfigSha256: actualConfigHash,
     canonicalContractSha256: canonicalHash(canonicalContract),
     goldenFixtureSha256: canonicalHash(goldenRun),
-    freezeState: "provisional",
+    invalidCurrentFixtureSha256: canonicalHash(invalidCurrent),
+    freezeState: "frozen",
   };
   for (const [key, expected] of Object.entries(finalCommitments)) {
     if (lock[key] !== expected)
@@ -941,9 +944,7 @@ export function validateScaffold() {
   failures.push(
     ...validateCanonicalContract(canonicalContract),
     ...validateGoldenRun(goldenRun, canonicalContract, lock),
-    ...validateExperimentConclusion(
-      readJson("experiment/golden-run/invalid-current.json"),
-    ),
+    ...validateExperimentConclusion(invalidCurrent),
   );
 
   const builderConfig = readJson("experiment/builder-config.json");
@@ -1078,6 +1079,6 @@ if (isEntrypoint) {
     process.exit(1);
   }
   console.log(
-    `Protocol 2.2.0 provisional scaffold validation passed (${schemaPairCount} schema/data pairs; golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.2.0-frozen scaffold validation passed (${schemaPairCount} schema/data pairs; golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }

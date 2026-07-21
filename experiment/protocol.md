@@ -1,6 +1,6 @@
 # Preregistered neutral-build versus review-loop protocol
 
-Protocol version: 2.2.0 (provisional until integrated skill refreeze)
+Protocol version: 2.2.0-frozen
 
 Design: paired, blinded pilot with two independent neutral builds, post-build random assignment, and treatment-only iterative review
 
@@ -18,9 +18,9 @@ The three scored snapshots are:
 
 The primary estimand is `score(Tfinal) - score(B0)`. The secondary within-treatment estimand is `score(Tfinal) - score(T0)`. Negative values favor the comparator. For promotion to `main`, select the higher of `B0` and `Tfinal`; an exact tie selects `B0` (baseline).
 
-## 2. Canonical contract and provisional lock boundary
+## 2. Canonical contract and frozen lock boundary
 
-This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. The earlier 2.1.0-frozen lock is superseded; version 2.2.0 MUST NOT execute while its integrated skill fields and lock parent remain provisional. Refreeze, performed before any builder sees task materials, MUST:
+This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. The earlier 2.1.0-frozen lock is superseded by the integrated 2.2.0-frozen lock. Before any builder sees task materials, the frozen lock MUST:
 
 1. pass `npm ci` and `npm run check` on Node 22;
 2. record the exact lock-parent commit;
