@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/experiment-status.schema.json",
-  "title": "Protocol 2.2.0 completed experiment status",
+  "title": "Protocol 2.3.0-frozen completed experiment status",
   "type": "object",
   "additionalProperties": false,
   "required": [
