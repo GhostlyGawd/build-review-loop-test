@@ -19,7 +19,7 @@ Freeze the exact global argv order:
 
 Append the three exact `--add-dir <temp/cache/dependency-root>` pairs, then only `-C <workdir> -o <final-path> -`. Keep approval at `never`, use the explicit Windows elevated backend, and disable workspace-write network by CLI override. Write the exact neutral builder prompt bytes to stdin without prefix/suffix/substitution/wrapper, then close stdin. Never resume. Before task exposure, require the frozen harmless actual-exec attestation to match these permission-relevant dimensions and prove workspace/add-dir writes, protected `.git`, unchanged private/outside canaries, and the hook-free supervisor handoff. The prompt requests Git/Node/npm checks, but the retained attestation does not independently bind their events or outputs.
 
-The sandboxed model must not modify `.git` or commit. After one successful turn, the trusted supervisor uses the hash-bound commit helper with an external temporary index, hooks/signing disabled, frozen-path rejection, and atomic expected-parent advancement. Require exactly one child commit and a clean worktree.
+The sandboxed model must not modify `.git` or commit. After one successful turn, the trusted supervisor uses the hash-bound commit helper with an external temporary index, hooks/signing disabled, frozen-path rejection, and atomic expected-parent advancement. Parse exactly one helper JSON object and fail closed on nonzero, empty, malformed, null, or multiple-object output. Require exactly one child commit, an evidence-bound commit identity, and a clean worktree.
 
 ## Treatment-role boundary
 

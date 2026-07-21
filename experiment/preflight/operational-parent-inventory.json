@@ -1,15 +1,15 @@
 {
-  "protocolCommit": "889de57980cf8e39109c8a95ea6348aafdac3cfb",
-  "protocolTree": "feed01bfd5c440024d7cffa12290474b4f852dbd",
-  "fileCount": 49,
+  "protocolCommit": "1383584b9c47d11234b9bced5c0dc7062c85f8be",
+  "protocolTree": "44569af6687b73ed0d182b821d87304bc405824a",
+  "fileCount": 50,
   "allMatch": true,
   "files": [
     {
       "source": "experiment/canonical-contract.json",
       "bundled": "skills/build-review-loop/references/canonical-contract.json",
-      "gitBlob": "c92b8c404b5888715468572b46b35f55abf659b7",
-      "bundledBlob": "c92b8c404b5888715468572b46b35f55abf659b7",
-      "sha256": "8638231a471a442b8a024e0e8ad9757b443f5f3ec9576040c282804a02985ff6",
+      "gitBlob": "613297414dabe4dfebd078f31550bb8919c9ec19",
+      "bundledBlob": "613297414dabe4dfebd078f31550bb8919c9ec19",
+      "sha256": "bd419566f3c978b4c57e251b622dd9498322b52fbc6469d653df7463b4203681",
       "match": true
     },
     {
@@ -23,17 +23,17 @@
     {
       "source": "experiment/golden-run/golden-run.json",
       "bundled": "skills/build-review-loop/tests/fixtures/golden-run.json",
-      "gitBlob": "6a617e8570db49108cf73cac48916e074c0763ce",
-      "bundledBlob": "6a617e8570db49108cf73cac48916e074c0763ce",
-      "sha256": "c4aebb2aad31567c42ff52ace1d8e8a614b2b0d15baeba4228921f863e75f321",
+      "gitBlob": "857cc562de40c682c1b10690487bb0d48bf00828",
+      "bundledBlob": "857cc562de40c682c1b10690487bb0d48bf00828",
+      "sha256": "ee3520cdc336c7a47a163c6645db8fc78a18d29d093c243b9e848fbb38018274",
       "match": true
     },
     {
       "source": "experiment/golden-run/invalid-current.json",
       "bundled": "skills/build-review-loop/tests/fixtures/invalid-current.json",
-      "gitBlob": "0f048b22214e75ec505176850ee0e05ba6ff83ed",
-      "bundledBlob": "0f048b22214e75ec505176850ee0e05ba6ff83ed",
-      "sha256": "3fbeb3a38f2689a3990ac13de999aadb9dfa4a2131fcd5e0b3f156a4998a9941",
+      "gitBlob": "a490c62cc3e7df5ff89564f44053acba086b54b2",
+      "bundledBlob": "a490c62cc3e7df5ff89564f44053acba086b54b2",
+      "sha256": "1c1fb3afc45aad585bcbc6ce14f264c332350443e8a81c1cc28de2915b52806f",
       "match": true
     },
     {
@@ -95,9 +95,9 @@
     {
       "source": "experiment/schemas/cli-runtime-contract.schema.json",
       "bundled": "skills/build-review-loop/references/cli-runtime-contract.schema.json",
-      "gitBlob": "f6737ad826f24c74e2b826f23670186605cc8246",
-      "bundledBlob": "f6737ad826f24c74e2b826f23670186605cc8246",
-      "sha256": "af1442dcf1cb0ffa8d7f3d0d082b6b43ed75924e8bea4970bedbf080adba6316",
+      "gitBlob": "f3f7a9c26cfb0a7bdb7109dc3137bf0a869e47c3",
+      "bundledBlob": "f3f7a9c26cfb0a7bdb7109dc3137bf0a869e47c3",
+      "sha256": "528afafa2841bca334223709ca8cbeed0ffc075395e043fe951d72c5410eaa8b",
       "match": true
     },
     {
@@ -111,9 +111,9 @@
     {
       "source": "experiment/schemas/role-runtime-contract.schema.json",
       "bundled": "skills/build-review-loop/references/role-runtime-contract.schema.json",
-      "gitBlob": "338f955eb650a1eb1e969994a58f08b9ed4cb96e",
-      "bundledBlob": "338f955eb650a1eb1e969994a58f08b9ed4cb96e",
-      "sha256": "11bfdd9d33cdfa0fa0053d74c6e2222180fa6aa02b9a7a12123cf5af24875a06",
+      "gitBlob": "f1d61298de216eae0fad41bd1e4f6445fff4901b",
+      "bundledBlob": "f1d61298de216eae0fad41bd1e4f6445fff4901b",
+      "sha256": "8299ae086c66368543916d510fea3ffef0203bfda996f916715df27782756521",
       "match": true
     },
     {
@@ -127,9 +127,9 @@
     {
       "source": "experiment/schemas/cli-supervision-evidence.schema.json",
       "bundled": "skills/build-review-loop/references/cli-supervision-evidence.schema.json",
-      "gitBlob": "34dd5299b2624cc376247bb1e77997bcd3c2f121",
-      "bundledBlob": "34dd5299b2624cc376247bb1e77997bcd3c2f121",
-      "sha256": "b722627806b07254e995d5ae3a38ba921d69abba46651e41132fd8b9d7691d32",
+      "gitBlob": "fdc50e73f83e9ca25f790d7d8ac3cec777b5f7d5",
+      "bundledBlob": "fdc50e73f83e9ca25f790d7d8ac3cec777b5f7d5",
+      "sha256": "934d2229bead568ef70eeb3334e4125d7999ee23d5f7a4976fbfbf4d5bfa5d58",
       "match": true
     },
     {
@@ -215,17 +215,17 @@
     {
       "source": "scripts/run-cli-builders.ps1",
       "bundled": "skills/build-review-loop/scripts/run-cli-builders.ps1",
-      "gitBlob": "1922800e9cf6d6725e5d3d70a346f3e9ed4c0af5",
-      "bundledBlob": "1922800e9cf6d6725e5d3d70a346f3e9ed4c0af5",
-      "sha256": "a87972d1f12f301c51ec531ce3a5f4b611cf4d10dc8d62e9f2e5ef687c1a9fd0",
+      "gitBlob": "87830133ed74c7056a942f31c15ed53f28f1fdbc",
+      "bundledBlob": "87830133ed74c7056a942f31c15ed53f28f1fdbc",
+      "sha256": "27aad97dd9a82df4436eef538b9f5c234c653f385c934e4e6e33f69e9574e44a",
       "match": true
     },
     {
       "source": "scripts/run-cli-role.ps1",
       "bundled": "skills/build-review-loop/scripts/run-cli-role.ps1",
-      "gitBlob": "2bdb8ee54968ce94b00724970f76a9b503a4decd",
-      "bundledBlob": "2bdb8ee54968ce94b00724970f76a9b503a4decd",
-      "sha256": "e0bcef63b939e961bbe7ded794658948d70251c73c0dbaacaadb7691b168eca2",
+      "gitBlob": "234307e93b740bb6a64c6a137da1056c0c593bdb",
+      "bundledBlob": "234307e93b740bb6a64c6a137da1056c0c593bdb",
+      "sha256": "890f057b8433322f1875e79cb045bf8701c944418e02f8f29094290fa482bf1e",
       "match": true
     },
     {
@@ -271,9 +271,9 @@
     {
       "source": "experiment/protocol.md",
       "bundled": "skills/build-review-loop/references/protocol.md",
-      "gitBlob": "dbf20da63d4747c5c6acfa305bd29459b02edc72",
-      "bundledBlob": "dbf20da63d4747c5c6acfa305bd29459b02edc72",
-      "sha256": "6ac70d2cfb46df1605b232e4e5df7dc44d50f4214a69f88605b34128f9abb628",
+      "gitBlob": "83575c2b26c43c5b3471a94dc3606a41e944dde0",
+      "bundledBlob": "83575c2b26c43c5b3471a94dc3606a41e944dde0",
+      "sha256": "15a74c710a2f78dbb7763877d501731483320c3c12722419d9df0683276a1c09",
       "match": true
     },
     {
@@ -394,6 +394,14 @@
       "gitBlob": "a6bbf6ea4873dac0c9873b9c1f4f985eb1e33f89",
       "bundledBlob": "a6bbf6ea4873dac0c9873b9c1f4f985eb1e33f89",
       "sha256": "bb8696bcb50d7a6febec9924d2402e2a1a595315e6730c55dd4799bf4e5c01e0",
+      "match": true
+    },
+    {
+      "source": "experiment/preflight/aborted-lock-2.7.0.json",
+      "bundled": "skills/build-review-loop/references/aborted-lock-2.7.0.json",
+      "gitBlob": "0a782b4919f598e0ba534e82851852dc1251b05f",
+      "bundledBlob": "0a782b4919f598e0ba534e82851852dc1251b05f",
+      "sha256": "2cbbf2713990c26500ec58b5b78cbb2c7e11e03d6e259ff28575de506b741710",
       "match": true
     }
   ]

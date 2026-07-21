@@ -1,7 +1,7 @@
 {
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-invalid-current",
-  "protocolVersion": "2.7.0",
+  "protocolVersion": "2.8.0",
   "status": "invalid",
   "activeInvalidation": {
     "invalidationId": "invalidation-001",

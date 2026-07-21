@@ -1,8 +1,8 @@
 {
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-conformance",
-  "protocolVersion": "2.7.0",
-  "canonicalContractSha256": "803ef84dadde7280c338ff0fd886e2dd532edf04d746527dd697e1310b38bb2e",
+  "protocolVersion": "2.8.0",
+  "canonicalContractSha256": "3746ce11f3e88da50bf14baaaceaa1275fd85316cc253f48a316b5d90f8d9702",
   "status": "valid",
   "activeInvalidation": null,
   "invalidAttempts": [
@@ -84,7 +84,7 @@
     "lockPath": "C:\\synthetic\\protocol\\experiment\\lock.json",
     "lockSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "contractSchemaPath": "C:\\synthetic\\protocol\\experiment\\schemas\\cli-runtime-contract.schema.json",
-    "contractSchemaSha256": "af1442dcf1cb0ffa8d7f3d0d082b6b43ed75924e8bea4970bedbf080adba6316",
+    "contractSchemaSha256": "528afafa2841bca334223709ca8cbeed0ffc075395e043fe951d72c5410eaa8b",
     "canonicalPathHelperPath": "C:\\synthetic\\protocol\\scripts\\canonicalize-paths.mjs",
     "canonicalPathHelperSha256": "194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e",
     "sourceCommonStartCommit": "29454a133f990982253744a85ccb8516d62f5a19",
