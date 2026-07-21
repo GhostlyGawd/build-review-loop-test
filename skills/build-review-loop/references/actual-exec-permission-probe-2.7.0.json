@@ -1,6 +1,6 @@
 {
   "protocolVersion": "2.7.0",
-  "probeVersion": "2.0.0",
+  "probeVersion": "2.1.0",
   "executedAt": "2026-07-21T19:23:33.8036767+00:00",
   "completedAt": "2026-07-21T19:25:43.4367049+00:00",
   "actualModelCall": true,
@@ -53,7 +53,7 @@
   "turnCompleted": true,
   "ordinaryWorkspaceWrite": true,
   "addDirWrites": true,
-  "gitNodeNpm": true,
+  "toolExecutionIndependentlyAttested": false,
   "gitMetadataUnchangedBeforeSupervisor": true,
   "privateCanaryUnchanged": true,
   "outsideCanaryUnchanged": true,

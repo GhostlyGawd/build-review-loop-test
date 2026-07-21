@@ -158,7 +158,7 @@ $valid = $process.ExitCode -eq 0 -and $rawJsonlValid -and $threadIds.Count -eq 1
 
 $attestation = [ordered]@{
   protocolVersion = "2.7.0"
-  probeVersion = "2.0.0"
+  probeVersion = "2.1.0"
   executedAt = $startedAt.ToString("o")
   completedAt = $exitedAt.ToString("o")
   actualModelCall = $true
@@ -186,7 +186,7 @@ $attestation = [ordered]@{
   turnCompleted = $turnCompleted
   ordinaryWorkspaceWrite = $writesValid
   addDirWrites = $writesValid
-  gitNodeNpm = $writesValid
+  toolExecutionIndependentlyAttested = $false
   gitMetadataUnchangedBeforeSupervisor = $gitMetadataUnchangedBeforeSupervisor
   privateCanaryUnchanged = $privateUnchanged
   outsideCanaryUnchanged = $outsideUnchanged

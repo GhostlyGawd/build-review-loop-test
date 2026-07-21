@@ -1,6 +1,6 @@
 {
-  "protocolCommit": "2c4b2344f76b7f34b3ba6af7695e0f3e2bb952eb",
-  "protocolTree": "bf2b9bfa1109c010d30cc0d707854d8b64ed0381",
+  "protocolCommit": "889de57980cf8e39109c8a95ea6348aafdac3cfb",
+  "protocolTree": "feed01bfd5c440024d7cffa12290474b4f852dbd",
   "fileCount": 49,
   "allMatch": true,
   "files": [
@@ -271,9 +271,9 @@
     {
       "source": "experiment/protocol.md",
       "bundled": "skills/build-review-loop/references/protocol.md",
-      "gitBlob": "5ad2f242a50744baac670e661e106e5dc1737816",
-      "bundledBlob": "5ad2f242a50744baac670e661e106e5dc1737816",
-      "sha256": "f613e5bb051d864c2a38082a1701d057815936f7bb4b88f2119cb0a123c3c9e9",
+      "gitBlob": "dbf20da63d4747c5c6acfa305bd29459b02edc72",
+      "bundledBlob": "dbf20da63d4747c5c6acfa305bd29459b02edc72",
+      "sha256": "6ac70d2cfb46df1605b232e4e5df7dc44d50f4214a69f88605b34128f9abb628",
       "match": true
     },
     {
@@ -367,25 +367,25 @@
     {
       "source": "experiment/preflight/actual-exec-permission-probe-2.7.0.json",
       "bundled": "skills/build-review-loop/references/actual-exec-permission-probe-2.7.0.json",
-      "gitBlob": "b56865b9976be55e49497f6bfd8cd9153128a56f",
-      "bundledBlob": "b56865b9976be55e49497f6bfd8cd9153128a56f",
-      "sha256": "3a302500033ecaaa284a7b6a833ceee94c62a72b4c995d94fe38d89f9d65b688",
+      "gitBlob": "c2374242734b98190f602b66d7ea749597a9fc90",
+      "bundledBlob": "c2374242734b98190f602b66d7ea749597a9fc90",
+      "sha256": "1ffa7412800fa2134169f641ba5d978cb09845edc137b852cb351b209052cb47",
       "match": true
     },
     {
       "source": "experiment/schemas/actual-exec-permission-probe.schema.json",
       "bundled": "skills/build-review-loop/references/actual-exec-permission-probe.schema.json",
-      "gitBlob": "94ce63dba18d0abc1699da890474e41105d23ed3",
-      "bundledBlob": "94ce63dba18d0abc1699da890474e41105d23ed3",
-      "sha256": "e22b85b6c20de96de404a63816d862d6ad5198715515016016c93fee64c0b9cd",
+      "gitBlob": "3bdc054b36d40783251bbc8e70257b85dff10ed2",
+      "bundledBlob": "3bdc054b36d40783251bbc8e70257b85dff10ed2",
+      "sha256": "9423ca50210ed63f70496026a0ade4f1f7b4e938557b44ca9d211d04ee9eea6a",
       "match": true
     },
     {
       "source": "scripts/verify-cli-exec-permissions.ps1",
       "bundled": "skills/build-review-loop/scripts/verify-cli-exec-permissions.ps1",
-      "gitBlob": "2e7004177540223c25768b4bd2683ed6d3e43f51",
-      "bundledBlob": "2e7004177540223c25768b4bd2683ed6d3e43f51",
-      "sha256": "da1dc96f2bf02a8419d658de3a4d23bafc1fc8f550b283a61184c728b1e1975d",
+      "gitBlob": "0554eb18235ee394482252c1ebc192295bda0653",
+      "bundledBlob": "0554eb18235ee394482252c1ebc192295bda0653",
+      "sha256": "6ade4210d63206e85c742b470a03a68988e4fc9991490361af01fece8e93f4c1",
       "match": true
     },
     {

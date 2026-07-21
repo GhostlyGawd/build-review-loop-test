@@ -1,10 +1,10 @@
 build-review-loop skill v2 / protocol 2.7.0-draft validation evidence
 validated: 2026-07-21 America/New_York
-skill base commit: 2c4b2344f76b7f34b3ba6af7695e0f3e2bb952eb
-skill base tree: bf2b9bfa1109c010d30cc0d707854d8b64ed0381
+skill base commit: 889de57980cf8e39109c8a95ea6348aafdac3cfb
+skill base tree: feed01bfd5c440024d7cffa12290474b4f852dbd
 skill branch: agent/protocol-v2.7-actual-exec
-protocol source commit: 2c4b2344f76b7f34b3ba6af7695e0f3e2bb952eb
-protocol source tree: bf2b9bfa1109c010d30cc0d707854d8b64ed0381
+protocol source commit: 889de57980cf8e39109c8a95ea6348aafdac3cfb
+protocol source tree: feed01bfd5c440024d7cffa12290474b4f852dbd
 candidate access: no replacement builder access after the two invalid 2.6 launches; no assignment, treatment, hidden access, evaluation, or outcome
 push/PR/publication: none
 
@@ -26,7 +26,7 @@ Hardened runtime coverage
 - builder preflight rejects ignored or untracked visible contamination, private inputs inside mutable roots, containment-graph overlap, and non-exact projected state.
 - builder supervision binds deterministic post-model visible-filesystem snapshots and the exact evidence-root parent closure.
 - model roles keep approval at never and do not write `.git`; exact external temp/cache/dependency roots are passed with `--add-dir`.
-- the authoritative harmless actual `codex exec` probe uses the pinned binary/model/reasoning, approval never, workspace-write, explicit Windows elevated backend, network false, ignored user config/rules, and builder-identical environment/add-dir dimensions; it confirms model-session workspace/add-dir writes, Git/Node/npm, protected Git metadata, unchanged private/outside canaries, and a trusted clean one-child commit handoff.
+- the authoritative harmless actual `codex exec` probe uses the pinned binary/model/reasoning, approval never, workspace-write, explicit Windows elevated backend, network false, ignored user config/rules, and builder-identical environment/add-dir dimensions; it confirms model-session workspace/add-dir writes, protected Git metadata, unchanged private/outside canaries, and a trusted clean one-child commit handoff. Its prompt requested Git/Node/npm checks, but the retained attestation does not independently bind command events or outputs.
 - the no-model sandbox probe remains secondary evidence and is not treated as proof of actual model-session permissions.
 - the trusted supervisor commit helper rejects frozen paths and in-worktree indexes, disables hooks/signing, advances only the expected parent, and requires a clean one-child history.
 - role supervision charges pre-launch delay, uses a strict UTC absolute deadline, binds actual OS exit separately from completion observation, and preserves the two-second observation/termination tolerance only.

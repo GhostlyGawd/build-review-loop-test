@@ -50,6 +50,8 @@ PROTOCOL_LOCK_PATH = SKILL_ROOT / "references" / "protocol-lock.json"
 EXPERIMENT_LOCK_SCHEMA_PATH = SKILL_ROOT / "references" / "experiment-lock.schema.json"
 PROTOCOL_PATH = SKILL_ROOT / "references" / "protocol.md"
 GOLDEN_README_PATH = SKILL_ROOT / "references" / "golden-run.README.md"
+ARTIFACT_CONTRACT_PATH = SKILL_ROOT / "references" / "artifact-contract.md"
+ISOLATION_PATH = SKILL_ROOT / "references" / "isolation.md"
 PROJECTION_PATHS = (
     SKILL_ROOT / "references" / "projection" / "index.html",
     SKILL_ROOT / "references" / "projection" / "src" / "main.tsx",
@@ -73,9 +75,9 @@ CLI_TEMPLATE_RAW_SHA256 = "7bdeea71d9765d044a689debd8ef561bdd70159dcc140026089e9
 CLI_RUNNER_SHA256 = "a87972d1f12f301c51ec531ce3a5f4b611cf4d10dc8d62e9f2e5ef687c1a9fd0"
 CANONICAL_PATH_HELPER_SHA256 = "194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e"
 COMMIT_HELPER_SHA256 = "813e0f79c92aa997a803e6b3822d45ab5ba58f501faeb1a496f59c7e21ed351f"
-PERMISSION_PROBE_SCRIPT_SHA256 = "da1dc96f2bf02a8419d658de3a4d23bafc1fc8f550b283a61184c728b1e1975d"
-PERMISSION_PROBE_SHA256 = "3a302500033ecaaa284a7b6a833ceee94c62a72b4c995d94fe38d89f9d65b688"
-PERMISSION_PROBE_SCHEMA_SHA256 = "e22b85b6c20de96de404a63816d862d6ad5198715515016016c93fee64c0b9cd"
+PERMISSION_PROBE_SCRIPT_SHA256 = "6ade4210d63206e85c742b470a03a68988e4fc9991490361af01fece8e93f4c1"
+PERMISSION_PROBE_SHA256 = "1ffa7412800fa2134169f641ba5d978cb09845edc137b852cb351b209052cb47"
+PERMISSION_PROBE_SCHEMA_SHA256 = "9423ca50210ed63f70496026a0ade4f1f7b4e938557b44ca9d211d04ee9eea6a"
 SECONDARY_PERMISSION_PROBE_SCRIPT_SHA256 = "770fe1ec68a3b599b497d08346e1caf19064a5d3c90b2d418fdba22f1914f893"
 SECONDARY_PERMISSION_PROBE_SHA256 = "7d7b716012aa95d79eafcd3a22d4ce81e998172e6fe3584ea091d7ae9d7fec0c"
 ACTUAL_EXEC_PROMPT_SHA256 = "6a0bfb5c28aea871ab7bece541da24745cd0543a662a8059bffa9887411a0da5"
@@ -98,10 +100,12 @@ BUILDER_MANIFEST_SCHEMA_SHA256 = "b044646ede4fef4543a4950e5842f51997dc3b65e6bfab
 BUILDER_PREPARER_SHA256 = "68e186914a0dd99e0b91f0851d45f8081086fffadae8d2949050e29ea1b832b3"
 BUNDLE_EXTRA_HASHES = {
     BUILDER_PACKAGE_PATH: "be233b856939e83840a4807c22f59e8883643c2dd80cddb90166db655cd98143",
-    PROTOCOL_LOCK_PATH: "5c463b371a2974cae2694f8707f4b1bce447b7ff6e20d54b8462bbee1109964f",
+    PROTOCOL_LOCK_PATH: "270a7a11ca6547c4ff4535a1845eeaf984b7d8b303f23ad78cea697ea547a7c8",
     EXPERIMENT_LOCK_SCHEMA_PATH: "625e7eeda8914b19bd5619428e876f2e00aab1d39447fb9c734decb4a8f8a292",
-    PROTOCOL_PATH: "f613e5bb051d864c2a38082a1701d057815936f7bb4b88f2119cb0a123c3c9e9",
+    PROTOCOL_PATH: "6ac70d2cfb46df1605b232e4e5df7dc44d50f4214a69f88605b34128f9abb628",
     GOLDEN_README_PATH: "7cb32b826cbd0919fa7eaf65154de833da7fe9c830a24451f3063b2dde672b55",
+    ARTIFACT_CONTRACT_PATH: "e02e069f8ab021026345981b176d58624357faadf8b866d44ba06c4b8848b4f5",
+    ISOLATION_PATH: "4ea90fed851547e0e13ac2876e7b92afbdfc3a5135f13f2109184ffdbeea0365",
     COMMIT_HELPER_PATH: COMMIT_HELPER_SHA256,
     PERMISSION_PROBE_SCRIPT_PATH: PERMISSION_PROBE_SCRIPT_SHA256,
     PERMISSION_PROBE_PATH: PERMISSION_PROBE_SHA256,
@@ -297,6 +301,71 @@ def evaluation_randomization(seed_hex: str) -> tuple[str, dict[str, str], dict[s
     return digest, ranks, dict(zip(("X", "Y", "Z"), ranked, strict=True))
 
 
+def validate_portable_lock(lock: Any) -> list[str]:
+    errors: list[str] = []
+    expected = {
+        "protocolVersion": "2.7.0-draft",
+        "protocolStatus": "provisional",
+        "treatmentSkillAttributesSha256": "23302dd90b8bb74b44d365fafef8df20f809b61cb347023951ecf60a88a29651",
+        "canonicalContractSha256": CONTRACT_CANONICAL_SHA256,
+        "goldenFixtureSha256": GOLDEN_CANONICAL_SHA256,
+        "invalidCurrentFixtureSha256": INVALID_CANONICAL_SHA256,
+        "neutralBuilderPromptSha256": BUILDER_PROMPT_SHA256,
+        "runnerSmokePromptSha256": SMOKE_PROMPT_SHA256,
+        "neutralBuilderConfigSha256": BUILDER_CONFIG_SHA256,
+        "builderInputAllowlistSha256": BUILDER_ALLOWLIST_SHA256,
+        "builderInputManifestSchemaSha256": BUILDER_MANIFEST_SCHEMA_SHA256,
+        "builderInputPreparationScriptSha256": BUILDER_PREPARER_SHA256,
+        "cliRuntimeSchemaSha256": CLI_SCHEMA_SHA256,
+        "cliRunnerSha256": CLI_RUNNER_SHA256,
+        "canonicalPathHelperSha256": CANONICAL_PATH_HELPER_SHA256,
+        "candidateCommitScriptSha256": COMMIT_HELPER_SHA256,
+        "actualExecProbePromptSha256": ACTUAL_EXEC_PROMPT_SHA256,
+        "permissionProbeSha256": PERMISSION_PROBE_SHA256,
+        "permissionProbeScriptSha256": PERMISSION_PROBE_SCRIPT_SHA256,
+        "permissionProbeSchemaSha256": PERMISSION_PROBE_SCHEMA_SHA256,
+        "secondaryPermissionProbeSha256": SECONDARY_PERMISSION_PROBE_SHA256,
+        "secondaryPermissionProbeScriptSha256": SECONDARY_PERMISSION_PROBE_SCRIPT_SHA256,
+        "roleRuntimeSchemaSha256": ROLE_SCHEMA_SHA256,
+        "roleRunnerSha256": ROLE_RUNNER_SHA256,
+        "supervisionEvidenceSchemaSha256": EVIDENCE_SCHEMA_SHA256,
+        "blindedPackageSchemaSha256": PACKAGE_SCHEMA_SHA256,
+        "blindedPackageMappingSchemaSha256": MAPPING_SCHEMA_SHA256,
+        "blindedPackageScriptSha256": PACKAGER_SHA256,
+        "freezeState": "provisional",
+    }
+    if not isinstance(lock, dict):
+        return ["portable protocol lock must be an object"]
+    for key, value in expected.items():
+        require(lock.get(key) == value, f"portable protocol lock {key} diverges", errors)
+    return errors
+
+
+def validate_artifact_contract(value: str) -> list[str]:
+    errors: list[str] = []
+    require(value.startswith("# Public protocol-v2.7 artifact contract\n"),
+            "artifact contract version heading diverges", errors)
+    for label, digest in {
+        "canonical contract": CONTRACT_CANONICAL_SHA256,
+        "golden fixture": GOLDEN_CANONICAL_SHA256,
+        "invalid-current fixture": INVALID_CANONICAL_SHA256,
+        "builder prompt": BUILDER_PROMPT_SHA256,
+        "builder config": BUILDER_CONFIG_SHA256,
+        "CLI runner": CLI_RUNNER_SHA256,
+        "CLI schema": CLI_SCHEMA_SHA256,
+        "role runner": ROLE_RUNNER_SHA256,
+        "role schema": ROLE_SCHEMA_SHA256,
+        "supervision schema": EVIDENCE_SCHEMA_SHA256,
+        "actual-exec evidence": PERMISSION_PROBE_SHA256,
+        "actual-exec script": PERMISSION_PROBE_SCRIPT_SHA256,
+        "actual-exec schema": PERMISSION_PROBE_SCHEMA_SHA256,
+    }.items():
+        require(digest in value, f"artifact contract {label} hash diverges", errors)
+    require("does not independently bind the Git/Node/npm command events or outputs" in value,
+            "artifact contract overstates Git/Node/npm probe evidence", errors)
+    return errors
+
+
 def validate_bundles() -> list[str]:
     errors: list[str] = []
     for path, expected, label in (
@@ -337,11 +406,18 @@ def validate_bundles() -> list[str]:
                 parsed = json.loads(raw.decode("utf-8"))
                 if path == BUILDER_ALLOWLIST_PATH:
                     errors.extend(validate_builder_allowlist(parsed))
+                elif path == PROTOCOL_LOCK_PATH:
+                    errors.extend(validate_portable_lock(parsed))
             except (UnicodeError, json.JSONDecodeError) as exc:
                 errors.append(f"bundled {label} invalid JSON: {exc}")
         elif path == NEUTRAL_PROMPT_PATH:
             try:
                 errors.extend(validate_neutral_builder_prompt(raw.decode("utf-8")))
+            except UnicodeError as exc:
+                errors.append(f"bundled {label} invalid UTF-8: {exc}")
+        elif path == ARTIFACT_CONTRACT_PATH:
+            try:
+                errors.extend(validate_artifact_contract(raw.decode("utf-8")))
             except UnicodeError as exc:
                 errors.append(f"bundled {label} invalid UTF-8: {exc}")
     for path, raw_expected, canonical_expected, label in (
