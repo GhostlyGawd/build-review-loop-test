@@ -21,6 +21,17 @@ function ConvertFrom-JsonLiteral([string]$Json) {
   return $Json | ConvertFrom-Json -DateKind String
 }
 
+# SUPERVISOR_JSON_HELPER_START
+function Convert-RequiredJsonHelperOutput([object[]]$Output, [int]$ExitCode, [string]$Label) {
+  $text = (($Output | ForEach-Object { [string]$_ }) -join [System.Environment]::NewLine).Trim()
+  if ($ExitCode -ne 0) { throw "$Label exited nonzero with code $ExitCode" }
+  if ([string]::IsNullOrWhiteSpace($text)) { throw "$Label returned empty output" }
+  try { $value = ConvertFrom-JsonLiteral $text } catch { throw "$Label returned malformed JSON: $($_.Exception.Message)" }
+  if ($null -eq $value -or $value -isnot [pscustomobject]) { throw "$Label must return exactly one JSON object" }
+  return $value
+}
+# SUPERVISOR_JSON_HELPER_END
+
 function Invoke-NativeCapture([string]$FilePath, [string[]]$Arguments) {
   $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
   $startInfo.FileName = $FilePath
@@ -357,7 +368,9 @@ foreach ($run in $runs) {
   $commitEligible = -not $contract.smokeMode -and $run.started -and $run.stdinDelivered -and -not $run.timedOut -and $exitCode -eq 0 -and $rawJsonlValid -and $threadIds.Count -eq 1 -and $turnCompleted -and [System.IO.File]::Exists($physical["$prefix.finalPath"])
   if ($commitEligible) {
     try {
-      $commitInfo = (& $candidateCommitScriptPath -Workdir $physical["$prefix.workdir"] -ExpectedParent $contract.commonStartCommit -TemporaryIndexPath (Join-Path $physical["$prefix.dependencyRoot"] "supervisor-index") -Message "Seal neutral builder output" -Timestamp ([System.DateTimeOffset]::new($run.process.ExitTime.ToUniversalTime()).ToString("o"))) | ConvertFrom-JsonLiteral
+      $LASTEXITCODE = 0
+      $commitOutput = @(& $candidateCommitScriptPath -Workdir $physical["$prefix.workdir"] -ExpectedParent $contract.commonStartCommit -TemporaryIndexPath (Join-Path $physical["$prefix.dependencyRoot"] "supervisor-index") -Message "Seal neutral builder output" -Timestamp ([System.DateTimeOffset]::new($run.process.ExitTime.ToUniversalTime()).ToString("o")))
+      $commitInfo = Convert-RequiredJsonHelperOutput $commitOutput $LASTEXITCODE "Candidate commit helper"
     } catch { $commitError = $_.Exception.ToString() }
   }
   $postState = Get-VisibleFilesystemSnapshot $physical["$prefix.workdir"] $false

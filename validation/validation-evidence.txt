@@ -1,17 +1,17 @@
-build-review-loop skill v2 / protocol 2.7.0-draft validation evidence
+build-review-loop skill v2 / protocol 2.8.0-draft validation evidence
 validated: 2026-07-21 America/New_York
-skill base commit: 889de57980cf8e39109c8a95ea6348aafdac3cfb
-skill base tree: feed01bfd5c440024d7cffa12290474b4f852dbd
-skill branch: agent/protocol-v2.7-actual-exec
-protocol source commit: 889de57980cf8e39109c8a95ea6348aafdac3cfb
-protocol source tree: feed01bfd5c440024d7cffa12290474b4f852dbd
-candidate access: no replacement builder access after the two invalid 2.6 launches; no assignment, treatment, hidden access, evaluation, or outcome
+skill base commit: 1383584b9c47d11234b9bced5c0dc7062c85f8be
+skill base tree: 44569af6687b73ed0d182b821d87304bc405824a
+skill branch: agent/protocol-v2.8-runner-evidence
+protocol source commit: 1383584b9c47d11234b9bced5c0dc7062c85f8be
+protocol source tree: 44569af6687b73ed0d182b821d87304bc405824a
+candidate access: no replacement builder access after the two invalid 2.7 launches; no assignment, treatment, hidden access, evaluation, or outcome
 push/PR/publication: none
 
 Source-byte parity
-- validation/source-parity.json records 49 protocol-derived source mappings, including the sanitized 2.6 abort record, authoritative actual-exec probe, secondary no-model probe, and trusted commit/probe helpers.
+- validation/source-parity.json records 50 protocol-derived source mappings, including the sanitized 2.7 abort record, authoritative actual-exec probe, secondary no-model probe, and trusted commit/probe helpers.
 - Each bundled Git blob equals the named protocol commit's Git blob.
-- allMatch: true; fileCount: 49.
+- allMatch: true; fileCount: 50.
 - Sources include canonical/config/golden/invalid fixtures and golden note; builder/smoke/four role prompts; builder projection allowlist/package/manifest schema/preparer; CLI/role/supervision/mapping/manifest schemas and templates; artifact schemas; protocol prose and abort/probe records; canonical path helper; both PowerShell runners; trusted commit/probe helpers; exact-HEAD packager; and frozen public projection surfaces. The provisional skill lock/schema are portable administrative files rather than P-exact parity members.
 
 Portable manifest
@@ -36,7 +36,7 @@ Hardened runtime coverage
 
 Skill validator
 command: python -m unittest -v skills/build-review-loop/scripts/test_validate_artifacts.py
-result: PASS, 34 tests, 0 failures, 0 errors
+result: PASS, 36 tests, 0 failures, 0 errors
 
 command: python skills/build-review-loop/scripts/validate_artifacts.py skills/build-review-loop/tests/fixtures/golden-run.json --mode execution --expect-golden
 result: PASS
@@ -54,9 +54,9 @@ Adversarial additions
 - canonical manifest stability across an intentionally CRLF-smudged worktree
 
 Targeted protocol-source repair suite
-command: node --test --test-name-pattern="seals allowed|accepts the frozen CLI runtime|strictly reconciles general role" scripts/validate-scaffold.test.mjs
-result: PASS, 3 tests, 0 failures
-coverage includes allowed supervisor commits, disabled hooks, clean one-child history, frozen-path and nested-index rejection, exact builder add-dir/runtime evidence, and role supervision evidence.
+command: node --test --test-name-pattern="parses populated|preserves the exact" scripts/validate-scaffold.test.mjs
+result: PASS, 2 tests, 0 failures
+coverage includes populated supervisor commit binding, fail-closed empty/malformed/nonzero output, byte-identical builder/fixer parsing, clean one-child history, and the exact five-stage candidate gate.
 candidate access: none; tests use temporary synthetic repositories.
 
 Static validation

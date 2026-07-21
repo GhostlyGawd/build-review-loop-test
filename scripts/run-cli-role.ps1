@@ -16,6 +16,16 @@ $RolePolicy = @{
 function Get-Sha256([string]$Path) { return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant() }
 function Get-TextSha256([string]$Value) { return [System.Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData([System.Text.Encoding]::UTF8.GetBytes($Value))).ToLowerInvariant() }
 function ConvertFrom-JsonLiteral([string]$Json) { return $Json | ConvertFrom-Json -DateKind String }
+# SUPERVISOR_JSON_HELPER_START
+function Convert-RequiredJsonHelperOutput([object[]]$Output, [int]$ExitCode, [string]$Label) {
+  $text = (($Output | ForEach-Object { [string]$_ }) -join [System.Environment]::NewLine).Trim()
+  if ($ExitCode -ne 0) { throw "$Label exited nonzero with code $ExitCode" }
+  if ([string]::IsNullOrWhiteSpace($text)) { throw "$Label returned empty output" }
+  try { $value = ConvertFrom-JsonLiteral $text } catch { throw "$Label returned malformed JSON: $($_.Exception.Message)" }
+  if ($null -eq $value -or $value -isnot [pscustomobject]) { throw "$Label must return exactly one JSON object" }
+  return $value
+}
+# SUPERVISOR_JSON_HELPER_END
 function Invoke-NativeCapture([string]$FilePath, [string[]]$Arguments) {
   $startInfo = [System.Diagnostics.ProcessStartInfo]::new(); $startInfo.FileName = $FilePath; $startInfo.UseShellExecute = $false; $startInfo.CreateNoWindow = $true; $startInfo.RedirectStandardOutput = $true; $startInfo.RedirectStandardError = $true
   foreach ($argument in $Arguments) { [void]$startInfo.ArgumentList.Add($argument) }
@@ -257,7 +267,9 @@ $artifactBindingValid = $false
 $commitInfo = $null; $commitError = $null
 if ($contract.role -eq "fixer" -and $started -and $stdinDelivered -and -not $timedOut -and $process.ExitCode -eq 0 -and $rawJsonlValid -and $threadIds.Count -eq 1 -and $turnEvents.Count -eq 1 -and [System.IO.File]::Exists($finalPath)) {
   try {
-    $commitInfo = (& $candidateCommitScriptPath -Workdir $workdir -ExpectedParent $contract.inputCommit -TemporaryIndexPath (Join-Path $physical.dependencyRoot "supervisor-index") -Message "Seal treatment fix cycle $($contract.cycle)" -Timestamp $completedAt.ToString("o")) | ConvertFrom-JsonLiteral
+    $LASTEXITCODE = 0
+    $commitOutput = @(& $candidateCommitScriptPath -Workdir $workdir -ExpectedParent $contract.inputCommit -TemporaryIndexPath (Join-Path $physical.dependencyRoot "supervisor-index") -Message "Seal treatment fix cycle $($contract.cycle)" -Timestamp $completedAt.ToString("o"))
+    $commitInfo = Convert-RequiredJsonHelperOutput $commitOutput $LASTEXITCODE "Candidate commit helper"
   } catch { $commitError = $_.Exception.ToString() }
 }
 if ([System.IO.File]::Exists($finalPath) -and $threadIds.Count -eq 1 -and $started) {

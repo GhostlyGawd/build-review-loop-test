@@ -1,6 +1,6 @@
-# Public protocol-v2.7 artifact contract
+# Public protocol-v2.8 artifact contract
 
-The bundled [canonical-contract.json](canonical-contract.json) is authoritative. Its domain-separated canonical SHA-256 is `803ef84dadde7280c338ff0fd886e2dd532edf04d746527dd697e1310b38bb2e`. The byte-exact golden execution fixture has canonical SHA-256 `ba53b413b157c919052bf42bfd8102bd4e50d8f022344b6d878429fe5b671534`; the invalid-current fixture has canonical SHA-256 `049bf6fde3315383d0f4f431952c7d30886e9aef8b82b09fbf26b061d0302f7e`.
+The bundled [canonical-contract.json](canonical-contract.json) is authoritative. Its domain-separated canonical SHA-256 is `3746ce11f3e88da50bf14baaaceaa1275fd85316cc253f48a316b5d90f8d9702`. The byte-exact golden execution fixture has canonical SHA-256 `f1eca7c7a007113b23a3224c932591ce4b6498aaf4a094d4a223fc04a4126a17`; the invalid-current fixture has canonical SHA-256 `ac69fe8c0cd5430961986abb0104f85d3449da356bbe6dea8b77b4425b181de1`.
 
 ## Frozen runtime
 
@@ -12,12 +12,12 @@ Bind:
 - Builder prompt/config: `5ed878d3be56824f94d3a72a40606c111dbfdfc1631bdf98b6ca7fe75ffebd56` and `8d64a062c76ba8bdbd436b99d42cd7566ae2601821e009315afe8e37800f323b`.
 - Smoke prompt: `135c5fc59fe72b4b37d924cd6f1a14e4f2a3b7b59711cc12294e81f52cbfd6a2`; harmless smoke only.
 - Canonical path helper: `194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e`.
-- Builder runner/schema: `a87972d1f12f301c51ec531ce3a5f4b611cf4d10dc8d62e9f2e5ef687c1a9fd0` / `af1442dcf1cb0ffa8d7f3d0d082b6b43ed75924e8bea4970bedbf080adba6316`.
-- Role runner/schema/evidence schema: `e0bcef63b939e961bbe7ded794658948d70251c73c0dbaacaadb7691b168eca2` / `11bfdd9d33cdfa0fa0053d74c6e2222180fa6aa02b9a7a12123cf5af24875a06` / `b722627806b07254e995d5ae3a38ba921d69abba46651e41132fd8b9d7691d32`.
+- Builder runner/schema: `27aad97dd9a82df4436eef538b9f5c234c653f385c934e4e6e33f69e9574e44a` / `528afafa2841bca334223709ca8cbeed0ffc075395e043fe951d72c5410eaa8b`.
+- Role runner/schema/evidence schema: `890f057b8433322f1875e79cb045bf8701c944418e02f8f29094290fa482bf1e` / `8299ae086c66368543916d510fea3ffef0203bfda996f916715df27782756521` / `934d2229bead568ef70eeb3334e4125d7999ee23d5f7a4976fbfbf4d5bfa5d58`.
 - Actual-exec probe evidence/script/schema: `1ffa7412800fa2134169f641ba5d978cb09845edc137b852cb351b209052cb47` / `6ade4210d63206e85c742b470a03a68988e4fc9991490361af01fece8e93f4c1` / `9423ca50210ed63f70496026a0ade4f1f7b4e938557b44ca9d211d04ee9eea6a`. It proves workspace/add-dir writes and the protected-boundary/supervisor checks; its retained attestation does not independently bind the Git/Node/npm command events or outputs requested by the prompt.
 - Projection allowlist/schema/preparer: `37af679c4f3f71cbd9e28b810897d4ff82c7c47cf4421a9d661b8b90947aef5b` / `b044646ede4fef4543a4950e5842f51997dc3b65e6bfabad7eeb1ff84caf0bb5` / `68e186914a0dd99e0b91f0851d45f8081086fffadae8d2949050e29ea1b832b3`.
 
-Every successful supervision record binds the contract, invocation, observed process/thread, exact argv and prompt, raw stdout/stderr/final hashes, lifecycle, schema/artifact result, isolation policy, and trusted usage/metadata or explicit absence reasons. Every model role is fresh, ephemeral, one turn, and never resumed.
+Every successful supervision record binds the contract, invocation, observed process/thread, exact argv and prompt, raw stdout/stderr/final hashes, lifecycle, schema/artifact result, isolation policy, and trusted usage/metadata or explicit absence reasons. Supervisor commit helper output must be one explicit JSON object; nonzero, empty, malformed, null, or multiple-object output fails closed. Every model role is fresh, ephemeral, one turn, and never resumed.
 
 ## Assignment and treatment
 

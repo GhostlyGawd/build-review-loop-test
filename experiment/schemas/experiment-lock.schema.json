@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/experiment-lock.schema.json",
-  "title": "Protocol 2.7.0 locked experiment lock",
+  "title": "Protocol 2.8.0 locked experiment lock",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -98,11 +98,11 @@
     "freezeState"
   ],
   "properties": {
-    "protocolVersion": { "const": "2.7.0" },
+    "protocolVersion": { "const": "2.8.0" },
     "protocolStatus": { "const": "locked" },
     "supersedesLockCommit": { "$ref": "#/$defs/sha1" },
     "supersedesFinalizationCommit": {
-      "const": "a45a257a1039c6de2729d23fff2ef427ce59e784"
+      "const": "e2c892e3b88702fcbd9a2049926d4a28b94efa4a"
     },
     "lockParentCommit": { "$ref": "#/$defs/sha1" },
     "lockParentTree": { "$ref": "#/$defs/sha1" },
@@ -113,9 +113,9 @@
     "treatmentSkillTree": { "$ref": "#/$defs/sha1" },
     "treatmentSkillManifestFile": { "const": "MANIFEST.sha256" },
     "treatmentSkillManifestSha256": { "$ref": "#/$defs/sha256" },
-    "treatmentSkillManifestEntryCount": { "const": 62 },
+    "treatmentSkillManifestEntryCount": { "const": 63 },
     "treatmentSkillManifestCommentLineCount": { "const": 3 },
-    "treatmentSkillManifestPhysicalLineCount": { "const": 65 },
+    "treatmentSkillManifestPhysicalLineCount": { "const": 66 },
     "treatmentSkillManifestByteSource": { "const": "canonical-git-blob" },
     "treatmentSkillManifestToolPath": {
       "const": "validation/manifest_tool.py"
@@ -123,7 +123,7 @@
     "treatmentSkillManifestToolSha256": { "$ref": "#/$defs/sha256" },
     "treatmentSkillAttributesSha256": { "$ref": "#/$defs/sha256" },
     "treatmentSkillSourceParitySha256": { "$ref": "#/$defs/sha256" },
-    "treatmentSkillSourceParityFileCount": { "const": 49 },
+    "treatmentSkillSourceParityFileCount": { "const": 50 },
     "treatmentSkillSourceParityAllMatch": { "const": true },
     "treatmentAlgorithmSha256": { "$ref": "#/$defs/sha256" },
     "neutralBuilderPromptSha256": { "$ref": "#/$defs/sha256" },
@@ -201,7 +201,7 @@
     "preflightEvidenceSchemaSha256": { "$ref": "#/$defs/sha256" },
     "gateAggregateSha256": { "$ref": "#/$defs/sha256" },
     "abortedPrelaunchRecordPath": {
-      "const": "experiment/preflight/aborted-lock-2.6.0.json"
+      "const": "experiment/preflight/aborted-lock-2.7.0.json"
     },
     "abortedPrelaunchRecordSha256": { "$ref": "#/$defs/sha256" },
     "canonicalContractSha256": { "$ref": "#/$defs/sha256" },

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/experiment-lock.schema.json",
-  "title": "Protocol 2.7.0-draft provisional experiment lock",
+  "title": "Protocol 2.8.0-draft provisional experiment lock",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -98,7 +98,7 @@
     "freezeState"
   ],
   "properties": {
-    "protocolVersion": { "const": "2.7.0-draft" },
+    "protocolVersion": { "const": "2.8.0-draft" },
     "protocolStatus": { "const": "provisional" },
     "supersedesLockCommit": { "$ref": "#/$defs/sha1" },
     "supersedesFinalizationCommit": { "type": "null" },
@@ -195,7 +195,7 @@
     "preflightEvidenceSchemaSha256": { "type": "null" },
     "gateAggregateSha256": { "type": "null" },
     "abortedPrelaunchRecordPath": {
-      "const": "experiment/preflight/aborted-lock-2.6.0.json"
+      "const": "experiment/preflight/aborted-lock-2.7.0.json"
     },
     "abortedPrelaunchRecordSha256": { "$ref": "#/$defs/sha256" },
     "canonicalContractSha256": { "$ref": "#/$defs/sha256" },
