@@ -1,15 +1,15 @@
 {
-  "protocolCommit": "18dda9691711086733d8dde1084931a9d23d5fdf",
-  "protocolTree": "04fd258a7d9ba849aa33a1f906dfff7f8b02ddbc",
-  "fileCount": 42,
+  "protocolCommit": "24b04d47ea906605e736e5b20ac1ba37eb6b7379",
+  "protocolTree": "749c66d82360f4d0b46344065b27694b7395f3a1",
+  "fileCount": 44,
   "allMatch": true,
   "files": [
     {
       "source": "experiment/canonical-contract.json",
       "bundled": "skills/build-review-loop/references/canonical-contract.json",
-      "gitBlob": "df4add9d4fa569140c19457b8042ea59631b57fc",
-      "bundledBlob": "df4add9d4fa569140c19457b8042ea59631b57fc",
-      "sha256": "f50d17a705086434cc1d8e922cfdaff73710bdc685927ba09444302b733ce660",
+      "gitBlob": "849f2f8cd40c35f5865632c24de3b77e06c0d628",
+      "bundledBlob": "849f2f8cd40c35f5865632c24de3b77e06c0d628",
+      "sha256": "77e0e66df68fac3a1f568761f749134cf55d79e832c6091211aecac6591d0241",
       "match": true
     },
     {
@@ -23,17 +23,17 @@
     {
       "source": "experiment/golden-run/golden-run.json",
       "bundled": "skills/build-review-loop/tests/fixtures/golden-run.json",
-      "gitBlob": "f74fded0498336cc94fb3a2e7f87dd8d207c1ba5",
-      "bundledBlob": "f74fded0498336cc94fb3a2e7f87dd8d207c1ba5",
-      "sha256": "4e5883870655738ceff286eee6679f29712c131d8ef1fcc48759443b757d2466",
+      "gitBlob": "47e5471107375120f7207c808aea89aa31cea7f9",
+      "bundledBlob": "47e5471107375120f7207c808aea89aa31cea7f9",
+      "sha256": "9780dbf38e78a65cf3c57bd0456306822a6771bc7a16ce09ab79953869db59b7",
       "match": true
     },
     {
       "source": "experiment/golden-run/invalid-current.json",
       "bundled": "skills/build-review-loop/tests/fixtures/invalid-current.json",
-      "gitBlob": "11b46e730630dee5b8f4ff82f5a9839af0933134",
-      "bundledBlob": "11b46e730630dee5b8f4ff82f5a9839af0933134",
-      "sha256": "645ec3f60d0004e0f60c6ef559f6fa2de0b16f408a7d72b8c265993a44909fe3",
+      "gitBlob": "b136dc5816908b816cde4cc945ac09fc47ba8d1f",
+      "bundledBlob": "b136dc5816908b816cde4cc945ac09fc47ba8d1f",
+      "sha256": "e1ea1eee4a4c9373683fc88f67b76aeeff707cd9bef04c5725f2b06f7df1f51c",
       "match": true
     },
     {
@@ -47,9 +47,9 @@
     {
       "source": "experiment/prompts/neutral-builder.md",
       "bundled": "skills/build-review-loop/references/neutral-builder.md",
-      "gitBlob": "c2542c2ca90d6e6e96393e2b0f688f35d46a489f",
-      "bundledBlob": "c2542c2ca90d6e6e96393e2b0f688f35d46a489f",
-      "sha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
+      "gitBlob": "f6f4c1d8c54c09e1024543e074ad3acdacacfdd2",
+      "bundledBlob": "f6f4c1d8c54c09e1024543e074ad3acdacacfdd2",
+      "sha256": "5ed878d3be56824f94d3a72a40606c111dbfdfc1631bdf98b6ca7fe75ffebd56",
       "match": true
     },
     {
@@ -71,9 +71,9 @@
     {
       "source": "experiment/prompts/fixer.md",
       "bundled": "skills/build-review-loop/references/fixer.md",
-      "gitBlob": "d26c8c5d5e4c472cb12d8b71db575b82ab91c327",
-      "bundledBlob": "d26c8c5d5e4c472cb12d8b71db575b82ab91c327",
-      "sha256": "ac4c0a40dbcee8b1ffe11b6eb7e81c5458849859a1ab38d09b78431aa390c9cf",
+      "gitBlob": "ffa8b4827567d5901a540bc15395329e17802f00",
+      "bundledBlob": "ffa8b4827567d5901a540bc15395329e17802f00",
+      "sha256": "7949487ec366fa042f11ab6264575826eabb875b429c4560783f03c8f1c17f99",
       "match": true
     },
     {
@@ -95,9 +95,9 @@
     {
       "source": "experiment/schemas/cli-runtime-contract.schema.json",
       "bundled": "skills/build-review-loop/references/cli-runtime-contract.schema.json",
-      "gitBlob": "e6cc89f800fd2ae0700937077ad9abab989de34d",
-      "bundledBlob": "e6cc89f800fd2ae0700937077ad9abab989de34d",
-      "sha256": "3678f9482e5082b8ae19ff31c5dd1c4405d60bb75891d372d2b6dae5a1c0c716",
+      "gitBlob": "91dc670668cf263e1760aebafbf83ed22c630620",
+      "bundledBlob": "91dc670668cf263e1760aebafbf83ed22c630620",
+      "sha256": "4524410734f2e710be193472d316e422416605f9a0f18e5d41f3a9d71038a391",
       "match": true
     },
     {
@@ -111,9 +111,9 @@
     {
       "source": "experiment/schemas/role-runtime-contract.schema.json",
       "bundled": "skills/build-review-loop/references/role-runtime-contract.schema.json",
-      "gitBlob": "c7804d51016c57c1134a0643c4019f80a52a8343",
-      "bundledBlob": "c7804d51016c57c1134a0643c4019f80a52a8343",
-      "sha256": "7dfdbb16b8f3c760c123fdb3981d7253f28feb57e0c7751eced9f6bb4d650da3",
+      "gitBlob": "a6b019892e9decb0e070e07276412e7c9e3cb6fc",
+      "bundledBlob": "a6b019892e9decb0e070e07276412e7c9e3cb6fc",
+      "sha256": "19823bc0fb835d3ac6e4b788f1e7bd87a05e2cb187c016c815b1b2828f9cd8ad",
       "match": true
     },
     {
@@ -127,17 +127,17 @@
     {
       "source": "experiment/schemas/cli-supervision-evidence.schema.json",
       "bundled": "skills/build-review-loop/references/cli-supervision-evidence.schema.json",
-      "gitBlob": "9ee76a51772c4237c05a42b72f294f430fd00408",
-      "bundledBlob": "9ee76a51772c4237c05a42b72f294f430fd00408",
-      "sha256": "6a6a79d47617208a49e75b6f48a4a67be083a7e6482e26923ccc99c863611af5",
+      "gitBlob": "497110b5f985d2a83f93906333f7a0a682af3539",
+      "bundledBlob": "497110b5f985d2a83f93906333f7a0a682af3539",
+      "sha256": "0130b72e0499967de44bca248391976db1d757a6650f173cf6aec98cb9ed9d3d",
       "match": true
     },
     {
       "source": "experiment/templates/cli-supervision-evidence.json",
       "bundled": "skills/build-review-loop/references/cli-supervision-evidence.template.json",
-      "gitBlob": "f34805f59c4a854cc13057d9753625b31253291b",
-      "bundledBlob": "f34805f59c4a854cc13057d9753625b31253291b",
-      "sha256": "ae5d0074c36067983e583fff943cebae528aadb11810cce66ae36229ef2b9863",
+      "gitBlob": "706189780e8d4a2ee0a608c36bf7c9dde41a72e5",
+      "bundledBlob": "706189780e8d4a2ee0a608c36bf7c9dde41a72e5",
+      "sha256": "7226677ea997b6e9b409ebdf2192540ffcf8995fd1db7b90ee9c3663dde56899",
       "match": true
     },
     {
@@ -215,17 +215,17 @@
     {
       "source": "scripts/run-cli-builders.ps1",
       "bundled": "skills/build-review-loop/scripts/run-cli-builders.ps1",
-      "gitBlob": "cca4fda56ad2283ea9647baebbba18d529c007e4",
-      "bundledBlob": "cca4fda56ad2283ea9647baebbba18d529c007e4",
-      "sha256": "b2e848a193c28d93893829a3dceeba323999193a0d96acee8848d0eff06e70b7",
+      "gitBlob": "54ac8b7112e4344f4c4d17e7b2f7804a011125e1",
+      "bundledBlob": "54ac8b7112e4344f4c4d17e7b2f7804a011125e1",
+      "sha256": "74761f2c2d37c346cb35fbebe6ba43aa91de3b6a9da387de7dd4e8d8d211d2e1",
       "match": true
     },
     {
       "source": "scripts/run-cli-role.ps1",
       "bundled": "skills/build-review-loop/scripts/run-cli-role.ps1",
-      "gitBlob": "5540ecfdd2d0fa67ce3ad30d3cdac04e14d7ddd5",
-      "bundledBlob": "5540ecfdd2d0fa67ce3ad30d3cdac04e14d7ddd5",
-      "sha256": "f78ec27cc30f66a58464be6f5b60a4437808b97ec85186916171ee22e9b6b3b4",
+      "gitBlob": "e94aeddad08f023380ca7bf6edf5f0e911688d00",
+      "bundledBlob": "e94aeddad08f023380ca7bf6edf5f0e911688d00",
+      "sha256": "88f4d547ca40242d35f04a9904935b78473cb9fab6c689443aca3442713992ad",
       "match": true
     },
     {
@@ -269,27 +269,11 @@
       "match": true
     },
     {
-      "source": "experiment/lock.json",
-      "bundled": "skills/build-review-loop/references/protocol-lock.json",
-      "gitBlob": "6e60471e9d09240a7d7871ee7f4621fc1283c105",
-      "bundledBlob": "6e60471e9d09240a7d7871ee7f4621fc1283c105",
-      "sha256": "0851f46d3767cedb02e9d64f4b6bdefcae717e9a92ae9fd5ac71aaa8a28c4e89",
-      "match": true
-    },
-    {
-      "source": "experiment/schemas/experiment-lock.schema.json",
-      "bundled": "skills/build-review-loop/references/experiment-lock.schema.json",
-      "gitBlob": "fa02af07049135cc932da31eae4db1668faa361e",
-      "bundledBlob": "fa02af07049135cc932da31eae4db1668faa361e",
-      "sha256": "7262357967c8de61e7c7ac3ff5915165e1adbf6431b575a29521aba94ae8cf97",
-      "match": true
-    },
-    {
       "source": "experiment/protocol.md",
       "bundled": "skills/build-review-loop/references/protocol.md",
-      "gitBlob": "dfae3e6b1025eda9237971b84676ac13f485462a",
-      "bundledBlob": "dfae3e6b1025eda9237971b84676ac13f485462a",
-      "sha256": "bbbaae6a1c7f277081c90d4dfba12938f053978717995486797218ea9a1ca99b",
+      "gitBlob": "c6bb6fb677533e0970dc9f7f36a51b2df3f3a6bd",
+      "bundledBlob": "c6bb6fb677533e0970dc9f7f36a51b2df3f3a6bd",
+      "sha256": "3887e5b73ba644da38eeb172fab6a083cac540e4059c0f3a0fd42b052f5ed533",
       "match": true
     },
     {
@@ -338,6 +322,38 @@
       "gitBlob": "66087650d0255bfb7f39f05bfd9f7531a840b8b4",
       "bundledBlob": "66087650d0255bfb7f39f05bfd9f7531a840b8b4",
       "sha256": "9e44db3f8d900d71e8ca7363fd627dc7976d6397976cef00af84a07626183c79",
+      "match": true
+    },
+    {
+      "source": "scripts/commit-candidate.ps1",
+      "bundled": "skills/build-review-loop/scripts/commit-candidate.ps1",
+      "gitBlob": "eb0db172cff88ded1851057e40a7863ad6cb8d9f",
+      "bundledBlob": "eb0db172cff88ded1851057e40a7863ad6cb8d9f",
+      "sha256": "813e0f79c92aa997a803e6b3822d45ab5ba58f501faeb1a496f59c7e21ed351f",
+      "match": true
+    },
+    {
+      "source": "scripts/verify-cli-permissions.ps1",
+      "bundled": "skills/build-review-loop/scripts/verify-cli-permissions.ps1",
+      "gitBlob": "d6cce3de1d57aac63ca63a26d0041dca18a3c590",
+      "bundledBlob": "d6cce3de1d57aac63ca63a26d0041dca18a3c590",
+      "sha256": "770fe1ec68a3b599b497d08346e1caf19064a5d3c90b2d418fdba22f1914f893",
+      "match": true
+    },
+    {
+      "source": "experiment/preflight/aborted-lock-2.5.0.json",
+      "bundled": "skills/build-review-loop/references/aborted-lock-2.5.0.json",
+      "gitBlob": "20b1674c4418e1785879f13e44a2a56c2be423f4",
+      "bundledBlob": "20b1674c4418e1785879f13e44a2a56c2be423f4",
+      "sha256": "30fd68984b0625467d5a7c64ac50256365d5db0b5f924cb2c7590d5546d7d571",
+      "match": true
+    },
+    {
+      "source": "experiment/preflight/permission-probe-2.6.0.json",
+      "bundled": "skills/build-review-loop/references/permission-probe-2.6.0.json",
+      "gitBlob": "a23e1628ccc2c338cbe518287e46ee9ebbb6c85a",
+      "bundledBlob": "a23e1628ccc2c338cbe518287e46ee9ebbb6c85a",
+      "sha256": "7d7b716012aa95d79eafcd3a22d4ce81e998172e6fe3584ea091d7ae9d7fec0c",
       "match": true
     }
   ]

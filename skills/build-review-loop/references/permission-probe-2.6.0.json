@@ -1,0 +1,22 @@
+{
+  "protocolVersion": "2.6.0",
+  "probeVersion": "1.0.0",
+  "executedAt": "2026-07-21T18:06:00Z",
+  "modelCall": false,
+  "approvalPolicy": "never",
+  "sandboxMode": "workspace-write",
+  "networkEnabled": false,
+  "cliVersion": "codex-cli 0.145.0-alpha.18",
+  "cliSha256": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
+  "probeScriptSha256": "770fe1ec68a3b599b497d08346e1caf19064a5d3c90b2d418fdba22f1914f893",
+  "commitScriptSha256": "813e0f79c92aa997a803e6b3822d45ab5ba58f501faeb1a496f59c7e21ed351f",
+  "workspaceWrite": true,
+  "gitNodeNpm": true,
+  "gitMetadataProtected": true,
+  "privateAndOutsideCanariesUnchanged": true,
+  "supervisorCommit": "9ae75a38447a4dc777cae37f24b33de76435c5cb",
+  "supervisorCommitExactlyOneChild": true,
+  "supervisorCommitClean": true,
+  "hooksDisabled": true,
+  "valid": true
+}

@@ -21,6 +21,10 @@ CLI_SCHEMA_PATH = SKILL_ROOT / "references" / "cli-runtime-contract.schema.json"
 CLI_TEMPLATE_PATH = SKILL_ROOT / "references" / "cli-runtime-contract.template.json"
 CLI_RUNNER_PATH = SKILL_ROOT / "scripts" / "run-cli-builders.ps1"
 CANONICAL_PATH_HELPER_PATH = SKILL_ROOT / "scripts" / "canonicalize-paths.mjs"
+COMMIT_HELPER_PATH = SKILL_ROOT / "scripts" / "commit-candidate.ps1"
+PERMISSION_PROBE_SCRIPT_PATH = SKILL_ROOT / "scripts" / "verify-cli-permissions.ps1"
+PERMISSION_PROBE_PATH = SKILL_ROOT / "references" / "permission-probe-2.6.0.json"
+ABORTED_25_PATH = SKILL_ROOT / "references" / "aborted-lock-2.5.0.json"
 ROLE_SCHEMA_PATH = SKILL_ROOT / "references" / "role-runtime-contract.schema.json"
 ROLE_TEMPLATE_PATH = SKILL_ROOT / "references" / "role-runtime-contract.template.json"
 ROLE_RUNNER_PATH = SKILL_ROOT / "scripts" / "run-cli-role.ps1"
@@ -54,27 +58,31 @@ ROLE_PROMPT_PATHS = {
     "tester": SKILL_ROOT / "references" / "tester.md",
     "evaluator": SKILL_ROOT / "references" / "blinded-evaluator.md",
 }
-CONTRACT_CANONICAL_SHA256 = "2303f8fc8963fdfa132ee84acd8388e7a081f6a1cbdd5907c37ea8077f62a9c3"
-GOLDEN_CANONICAL_SHA256 = "e8379542e0380d15bbef577ef8d2f8b318c6ba23387cb92b97b6a04e5ec7c34c"
-INVALID_CANONICAL_SHA256 = "babdbd087f5ce4c14a344d6dc1fc5f3731751306d398f2736ab567ba45d7761e"
-CONTRACT_RAW_SHA256 = "f50d17a705086434cc1d8e922cfdaff73710bdc685927ba09444302b733ce660"
-GOLDEN_RAW_SHA256 = "4e5883870655738ceff286eee6679f29712c131d8ef1fcc48759443b757d2466"
-INVALID_RAW_SHA256 = "645ec3f60d0004e0f60c6ef559f6fa2de0b16f408a7d72b8c265993a44909fe3"
-CLI_SCHEMA_SHA256 = "3678f9482e5082b8ae19ff31c5dd1c4405d60bb75891d372d2b6dae5a1c0c716"
+CONTRACT_CANONICAL_SHA256 = "32fdf618ca9a9b7106b9c862b9c4ebaa3f49c18b2dd0f130ff35fe8a1b0998ac"
+GOLDEN_CANONICAL_SHA256 = "6950fb99c852aaa272520287eed817b12e854ee4bc60e25f7959076f4bb7b7d0"
+INVALID_CANONICAL_SHA256 = "f7bfdf80c0db87ba4d3f4c1ad82cdd0e05274a2a088df4b08e49712791744717"
+CONTRACT_RAW_SHA256 = "77e0e66df68fac3a1f568761f749134cf55d79e832c6091211aecac6591d0241"
+GOLDEN_RAW_SHA256 = "9780dbf38e78a65cf3c57bd0456306822a6771bc7a16ce09ab79953869db59b7"
+INVALID_RAW_SHA256 = "e1ea1eee4a4c9373683fc88f67b76aeeff707cd9bef04c5725f2b06f7df1f51c"
+CLI_SCHEMA_SHA256 = "4524410734f2e710be193472d316e422416605f9a0f18e5d41f3a9d71038a391"
 CLI_TEMPLATE_RAW_SHA256 = "d0ac2fab6db1be3625c00d26bd165513adecb89dd04d04f048068c9cf7148fc5"
-CLI_RUNNER_SHA256 = "b2e848a193c28d93893829a3dceeba323999193a0d96acee8848d0eff06e70b7"
+CLI_RUNNER_SHA256 = "74761f2c2d37c346cb35fbebe6ba43aa91de3b6a9da387de7dd4e8d8d211d2e1"
 CANONICAL_PATH_HELPER_SHA256 = "194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e"
-ROLE_SCHEMA_SHA256 = "7dfdbb16b8f3c760c123fdb3981d7253f28feb57e0c7751eced9f6bb4d650da3"
+COMMIT_HELPER_SHA256 = "813e0f79c92aa997a803e6b3822d45ab5ba58f501faeb1a496f59c7e21ed351f"
+PERMISSION_PROBE_SCRIPT_SHA256 = "770fe1ec68a3b599b497d08346e1caf19064a5d3c90b2d418fdba22f1914f893"
+PERMISSION_PROBE_SHA256 = "7d7b716012aa95d79eafcd3a22d4ce81e998172e6fe3584ea091d7ae9d7fec0c"
+ABORTED_25_SHA256 = "30fd68984b0625467d5a7c64ac50256365d5db0b5f924cb2c7590d5546d7d571"
+ROLE_SCHEMA_SHA256 = "19823bc0fb835d3ac6e4b788f1e7bd87a05e2cb187c016c815b1b2828f9cd8ad"
 ROLE_TEMPLATE_RAW_SHA256 = "2218c2edbe53d793a7874e7adcc28cde63386b13219dce5455a88d1a30d5f6f3"
-ROLE_RUNNER_SHA256 = "f78ec27cc30f66a58464be6f5b60a4437808b97ec85186916171ee22e9b6b3b4"
-EVIDENCE_SCHEMA_SHA256 = "6a6a79d47617208a49e75b6f48a4a67be083a7e6482e26923ccc99c863611af5"
-EVIDENCE_TEMPLATE_RAW_SHA256 = "ae5d0074c36067983e583fff943cebae528aadb11810cce66ae36229ef2b9863"
+ROLE_RUNNER_SHA256 = "88f4d547ca40242d35f04a9904935b78473cb9fab6c689443aca3442713992ad"
+EVIDENCE_SCHEMA_SHA256 = "0130b72e0499967de44bca248391976db1d757a6650f173cf6aec98cb9ed9d3d"
+EVIDENCE_TEMPLATE_RAW_SHA256 = "7226677ea997b6e9b409ebdf2192540ffcf8995fd1db7b90ee9c3663dde56899"
 PACKAGE_SCHEMA_SHA256 = "4d9d8397fc068cdf511e99bae6980ed2d2ef5410e5128385043f1c426cdb8bd5"
 PACKAGE_TEMPLATE_RAW_SHA256 = "c35470675fadf7157d954216bba53f88b226786c204ab2d6ce575b31450acadf"
 MAPPING_SCHEMA_SHA256 = "2d0a96f27d43f511c26b57a49dfef5c05acfe0f5dfb1f8419f724d524513fb74"
 MAPPING_TEMPLATE_RAW_SHA256 = "680da1c7b4bfe0e9eb1f056b712e9cc796e9be536097a36dbe244686795d1d43"
 PACKAGER_SHA256 = "98ef96dd16f37a14fa4a56b324a0274dd3aa29010d296244e695fe42663478d7"
-BUILDER_PROMPT_SHA256 = "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd"
+BUILDER_PROMPT_SHA256 = "5ed878d3be56824f94d3a72a40606c111dbfdfc1631bdf98b6ca7fe75ffebd56"
 SMOKE_PROMPT_SHA256 = "135c5fc59fe72b4b37d924cd6f1a14e4f2a3b7b59711cc12294e81f52cbfd6a2"
 BUILDER_CONFIG_SHA256 = "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4"
 BUILDER_ALLOWLIST_SHA256 = "37af679c4f3f71cbd9e28b810897d4ff82c7c47cf4421a9d661b8b90947aef5b"
@@ -82,10 +90,14 @@ BUILDER_MANIFEST_SCHEMA_SHA256 = "b044646ede4fef4543a4950e5842f51997dc3b65e6bfab
 BUILDER_PREPARER_SHA256 = "68e186914a0dd99e0b91f0851d45f8081086fffadae8d2949050e29ea1b832b3"
 BUNDLE_EXTRA_HASHES = {
     BUILDER_PACKAGE_PATH: "be233b856939e83840a4807c22f59e8883643c2dd80cddb90166db655cd98143",
-    PROTOCOL_LOCK_PATH: "0851f46d3767cedb02e9d64f4b6bdefcae717e9a92ae9fd5ac71aaa8a28c4e89",
-    EXPERIMENT_LOCK_SCHEMA_PATH: "7262357967c8de61e7c7ac3ff5915165e1adbf6431b575a29521aba94ae8cf97",
-    PROTOCOL_PATH: "bbbaae6a1c7f277081c90d4dfba12938f053978717995486797218ea9a1ca99b",
+    PROTOCOL_LOCK_PATH: "6135e51107cfe943a9d1925cc2c5872d76c519ef798b5068404b921940a5592d",
+    EXPERIMENT_LOCK_SCHEMA_PATH: "39720dec5ea22443f36ea96aa3979449ed8e91adb2ee0a625cbfb37ca32f1859",
+    PROTOCOL_PATH: "3887e5b73ba644da38eeb172fab6a083cac540e4059c0f3a0fd42b052f5ed533",
     GOLDEN_README_PATH: "7cb32b826cbd0919fa7eaf65154de833da7fe9c830a24451f3063b2dde672b55",
+    COMMIT_HELPER_PATH: COMMIT_HELPER_SHA256,
+    PERMISSION_PROBE_SCRIPT_PATH: PERMISSION_PROBE_SCRIPT_SHA256,
+    PERMISSION_PROBE_PATH: PERMISSION_PROBE_SHA256,
+    ABORTED_25_PATH: ABORTED_25_SHA256,
     PROJECTION_PATHS[0]: "2c281ab2fc936c659323a135234622fb2c8ea1baa720fc411cca1e995b321424",
     PROJECTION_PATHS[1]: "880acfdd79d16f24b1849ed6491198926ed49b6df89af2f4cac99defe8d78e9c",
     PROJECTION_PATHS[2]: "e85aee3135740a7b5501030af2dc3ffe7c16f50d93812499759a6f60c7238ee9",
@@ -108,7 +120,7 @@ CLI_INVARIANT_ARGV = (
 MODEL_ROLE_PROMPT_SHA256 = {
     "builder": BUILDER_PROMPT_SHA256,
     "reviewer": "5bd94cc7c44165acae23675f82d74ece6bab0b4dab31f387d338d1c9a5e7dcae",
-    "fixer": "ac4c0a40dbcee8b1ffe11b6eb7e81c5458849859a1ab38d09b78431aa390c9cf",
+    "fixer": "7949487ec366fa042f11ab6264575826eabb875b429c4560783f03c8f1c17f99",
     "tester": "644ef262eb7a4c85b3a4d5636d88479082ebca37a5f082dbce165c90a9ef16c3",
     "evaluator": "ee2e0620aa9a7d55ef047dda9d6d947ee750ebd3bb3bc1f149a229eb11adbe40",
 }
@@ -370,7 +382,7 @@ def validate_contract(contract: Any) -> list[str]:
     require(contract.get("costPolicy", {}).get("maxTokens") is None and
             contract.get("costPolicy", {}).get("maxTokensUnavailableReasonRequired") is True,
             "canonical nullable maxTokens policy diverges", errors)
-    require(contract.get("protocolVersion") == "2.5.0",
+    require(contract.get("protocolVersion") == "2.6.0",
             "canonical protocol version diverges", errors)
     require(contract.get("builderFreeze") == {
         "promptSha256": BUILDER_PROMPT_SHA256,
@@ -409,7 +421,12 @@ def validate_contract(contract: Any) -> list[str]:
             runtime.get("pinnedModel") == "gpt-5.4" and
             runtime.get("pinnedReasoning") == "xhigh" and
             runtime.get("invariantArgv") == list(CLI_INVARIANT_ARGV) and
-            runtime.get("perInvocationArgv") == ["-C", "<workdir>", "-o", "<final-path>", "-"] and
+            runtime.get("perInvocationArgv") == [
+                "--add-dir", "<temp-root>", "--add-dir", "<cache-root>",
+                "--add-dir", "<dependency-root>", "-C", "<workdir>",
+                "-o", "<final-path>", "-"
+            ] and
+            runtime.get("candidateCommitScriptSha256") == COMMIT_HELPER_SHA256 and
             role_runtime.get("schemaSha256") == ROLE_SCHEMA_SHA256 and
             role_runtime.get("runnerSha256") == ROLE_RUNNER_SHA256 and
             role_runtime.get("evidenceSchemaSha256") == EVIDENCE_SCHEMA_SHA256 and
@@ -845,6 +862,8 @@ SUPERVISION_BASE_FIELDS = (
     "timedOut", "argv", "argvSha256", "promptSha256", "stdoutPath", "stdoutSha256",
     "stderrPath", "stderrSha256", "finalPath", "finalSha256", "finalSchemaValid",
     "artifactBindingValid", "threadIds", "turnCompleted", "rawJsonlValid",
+    "inputCommit", "supervisorCommit", "supervisorCommitTree",
+    "supervisorCommitScriptSha256", "supervisorCommitError",
     "unauthorizedToolOrWriteDetected", "unauthorizedToolOrWriteUnavailableReason",
     "sandboxMode", "inputDisposition", "isolationEnforcedBy", "usage",
     "usageUnavailableReason", "runtimeModel", "runtimeModelUnavailableReason",
@@ -898,6 +917,9 @@ def validate_supervision_result(result: Any, invocation: dict[str, Any], raw: An
             result.get("exitCode") == 0 and result.get("timedOut") is False,
             f"{location}: process lifecycle invalid", errors)
     expected_argv = [*CLI_INVARIANT_ARGV[:-3], "--sandbox", expected_sandbox, "--json",
+                     "--add-dir", invocation.get("tempRoot"),
+                     "--add-dir", invocation.get("cacheRoot"),
+                     "--add-dir", invocation.get("dependencyRoot"),
                      "-C", invocation.get("workdir"), "-o", invocation.get("finalPath"), "-"]
     require(result.get("argv") == expected_argv,
             f"{location}: argv ordering or pin mismatch", errors)
@@ -922,6 +944,14 @@ def validate_supervision_result(result: Any, invocation: dict[str, Any], raw: An
             (role != "builder" or (valid_hash(result.get("postStateSha256")) and
                                    result.get("postStateSha256") != "0" * 64)),
             f"{location}: stderr/final hash invalid", errors)
+    require(result.get("supervisorCommitScriptSha256") == COMMIT_HELPER_SHA256 and
+            result.get("inputCommit") == invocation.get("inputCommit", invocation.get("commonStartCommit")) and
+            ((role in {"builder", "fixer"} and valid_hash(result.get("supervisorCommit"), HEX40) and
+              valid_hash(result.get("supervisorCommitTree"), HEX40) and
+              result.get("supervisorCommitError") is None) or
+             (role not in {"builder", "fixer"} and result.get("supervisorCommit") is None and
+              result.get("supervisorCommitTree") is None and result.get("supervisorCommitError") is None)),
+            f"{location}: supervisor commit binding invalid", errors)
     if role != "builder":
         started_at = parse_time(result.get("startedAt"), f"{location}.startedAt", errors)
         completed_at = parse_time(result.get("completedAt"), f"{location}.completedAt", errors)
@@ -988,7 +1018,8 @@ def validate_builder_supervision(evidence: Any, contract: Any, stdout_by_id: Any
     if isinstance(results, list) and len(invocations) == 2:
         for index, result in enumerate(results):
             raw = stdout_by_id.get(result.get("invocationId")) if isinstance(stdout_by_id, dict) and isinstance(result, dict) else None
-            errors.extend(validate_supervision_result(result, invocations[index], raw,
+            invocation = {**invocations[index], "inputCommit": contract.get("commonStartCommit")}
+            errors.extend(validate_supervision_result(result, invocation, raw,
                                                      f"cliRuntimeEvidence.results[{index}]"))
         process_ids = [item.get("processId") for item in results if isinstance(item, dict)]
         thread_ids = [item.get("threadIds", [None])[0] for item in results
@@ -1139,6 +1170,7 @@ def validate_role_supervision_evidence(result: Any, contract: Any, raw: Any) -> 
     if errors or not isinstance(contract, dict):
         return errors
     invocation = {field: contract.get(field) for field in CLI_INVOCATION_FIELDS}
+    invocation["inputCommit"] = contract.get("inputCommit")
     errors.extend(validate_supervision_result(result, invocation, raw, "roleSupervisionEvidence",
                                              contract["role"]))
     if isinstance(result, dict):
@@ -1292,7 +1324,7 @@ def validate_execution(fixture: Any) -> list[str]:
         return sorted(set(errors))
     validate_conclusion(fixture, errors)
     require(fixture.get("fixtureVersion") == "1.0.0", "run: fixtureVersion diverges", errors)
-    require(fixture.get("protocolVersion") == "2.5.0", "run: protocolVersion diverges", errors)
+    require(fixture.get("protocolVersion") == "2.6.0", "run: protocolVersion diverges", errors)
     if fixture.get("status") == "invalid":
         invalid_fields = {
             "fixtureVersion", "fixtureKind", "protocolVersion",

@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 HEADER = (
-    "# Frozen SHA-256 manifest for build-review-loop skill v2 / public protocol 2.5.0-draft.\n"
+    "# Frozen SHA-256 manifest for build-review-loop skill v2 / public protocol 2.6.0-draft.\n"
     "# Hashes cover canonical Git blobs for attributes, skill sources, public fixtures, parity, and evidence.\n"
     "# Excluded: this manifest (to avoid self-reference), ignored bytecode, and unrelated repository files.\n"
 )

@@ -1,4 +1,3 @@
 interface:
   display_name: "Build Review Loop"
-  short_description: "Run the pinned blinded review-loop pilot"
-  default_prompt: "Use $build-review-loop to validate and run the provisional protocol-v2.5 pilot."
+  short_description: "Help with Build Review Loop tasks"

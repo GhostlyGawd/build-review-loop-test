@@ -1,18 +1,18 @@
-build-review-loop skill v2 / protocol 2.5.0-draft validation evidence
+build-review-loop skill v2 / protocol 2.6.0-draft validation evidence
 validated: 2026-07-21 America/New_York
-skill base commit: 18dda9691711086733d8dde1084931a9d23d5fdf
-skill base tree: 04fd258a7d9ba849aa33a1f906dfff7f8b02ddbc
-skill branch: agent/protocol-prereg-repair
-protocol source commit: 18dda9691711086733d8dde1084931a9d23d5fdf
-protocol source tree: 04fd258a7d9ba849aa33a1f906dfff7f8b02ddbc
-candidate access: none
+skill base commit: 24b04d47ea906605e736e5b20ac1ba37eb6b7379
+skill base tree: 749c66d82360f4d0b46344065b27694b7395f3a1
+skill branch: agent/protocol-v2.6-execution-repair
+protocol source commit: 24b04d47ea906605e736e5b20ac1ba37eb6b7379
+protocol source tree: 749c66d82360f4d0b46344065b27694b7395f3a1
+candidate access: no replacement builder access; the two invalid 2.5 launches are recorded only by sanitized commitment
 push/PR/publication: none
 
 Source-byte parity
-- validation/source-parity.json records 42 protocol-derived source mappings, including the sanitized aborted-before-launch 2.4 record.
+- validation/source-parity.json records 44 protocol-derived source mappings, including the sanitized 2.5 abort record, no-model permission probe, and trusted commit/probe helpers.
 - Each bundled Git blob equals the named protocol commit's Git blob.
-- allMatch: true; fileCount: 42.
-- Sources include canonical/config/golden/invalid fixtures and golden note; builder/smoke/four role prompts; builder projection allowlist/package/manifest schema/preparer; CLI/role/supervision/mapping/manifest schemas and templates; artifact schemas; protocol lock/schema/prose and aborted-prelaunch record; canonical path helper; both PowerShell runners; exact-HEAD packager; and frozen public projection surfaces.
+- allMatch: true; fileCount: 44.
+- Sources include canonical/config/golden/invalid fixtures and golden note; builder/smoke/four role prompts; builder projection allowlist/package/manifest schema/preparer; CLI/role/supervision/mapping/manifest schemas and templates; artifact schemas; protocol prose and abort/probe records; canonical path helper; both PowerShell runners; trusted commit/probe helpers; exact-HEAD packager; and frozen public projection surfaces. The provisional skill lock/schema are portable administrative files rather than P-exact parity members.
 
 Portable manifest
 - generation and validation use validation/manifest_tool.py against canonical index or Git tree-ish blob bytes, not smudged worktree bytes.
@@ -25,10 +25,13 @@ Hardened runtime coverage
 - builder projection binds source commit/tree privately and gives builders only identical one-root, core.autocrlf=false, remotes-disabled, allowlisted bytes.
 - builder preflight rejects ignored or untracked visible contamination, private inputs inside mutable roots, containment-graph overlap, and non-exact projected state.
 - builder supervision binds deterministic post-model visible-filesystem snapshots and the exact evidence-root parent closure.
+- model roles keep approval at never and do not write `.git`; exact external temp/cache/dependency roots are passed with `--add-dir`.
+- the no-model sandbox probe confirms ordinary workspace writes and Git/Node/npm commands, protected Git metadata, unchanged private/outside canaries, and a trusted one-child commit handoff.
+- the trusted supervisor commit helper rejects frozen paths and in-worktree indexes, disables hooks/signing, advances only the expected parent, and requires a clean one-child history.
 - role supervision charges pre-launch delay, uses a strict UTC absolute deadline, binds actual OS exit separately from completion observation, and preserves the two-second observation/termination tolerance only.
 - packager requires exact HEAD/ref/commit/tree and rejects traversal, physical aliases, reparse points, lineage leakage, and source drift.
 - The corrected tester contract exactly matches the projected candidate package: format, lint, typecheck, public tests, and build. The protocol repository's administrative checks are not grafted into candidate workdirs.
-- No live model runner, candidate execution, seed draw, assignment, treatment, or evaluation was performed by this skill validation.
+- No live model runner, replacement candidate execution, seed draw, assignment, treatment, or evaluation was performed by this repair validation.
 
 Skill validator
 command: python -m unittest -v skills/build-review-loop/scripts/test_validate_artifacts.py
@@ -49,13 +52,11 @@ Adversarial additions
 - bundled exact path helper, projection, lock, protocol, schemas/templates, runners, and packager bytes
 - canonical manifest stability across an intentionally CRLF-smudged worktree
 
-Exact protocol-source suite
-command: npm run test:protocol
-working directory: prospective protocol 2.5 finalization based on skill seal a40895bac8e6a8775e33bc5a6d7242f0b1993361
-result: PASS, 53 tests, 0 failures
-coverage includes projected-input contamination, ignored files, every schema-valid builder/role containment overlap, junction and Windows 8.3 aliases, deadline parsing and pre-wait charging, exact runtime/prompt/evidence bindings, deterministic blinded packaging, and all integrated contract mutations.
-host note: one earlier complete attempt encountered a transient PowerShell CLR startup failure in one subprocess. The affected case passed in isolation, and the final complete 53-test run passed with POWERSHELL_TELEMETRY_OPTOUT=1 and POWERSHELL_UPDATECHECK=Off.
-candidate access: none; packaging/projection tests use temporary synthetic repositories.
+Targeted protocol-source repair suite
+command: node --test --test-name-pattern="seals allowed|accepts the frozen CLI runtime|strictly reconciles general role" scripts/validate-scaffold.test.mjs
+result: PASS, 3 tests, 0 failures
+coverage includes allowed supervisor commits, disabled hooks, clean one-child history, frozen-path and nested-index rejection, exact builder add-dir/runtime evidence, and role supervision evidence.
+candidate access: none; tests use temporary synthetic repositories.
 
 Static validation
 - python -m py_compile validator, tests, and manifest tool: PASS

@@ -1,6 +1,6 @@
 ---
 name: build-review-loop
-description: Run or audit the provisional protocol-v2.5 neutral-build versus treatment-only review-loop pilot with pinned external Codex CLI subprocesses, post-build random assignment, bounded fresh reviewer/fixer/tester roles, canonical evidence, and mapping-blinded B0/T0/Tfinal evaluation. Use when executing, validating, packaging, or diagnosing this exact public experiment without changing its frozen runtime or evaluation design.
+description: Run or audit the provisional protocol-v2.6 neutral-build versus treatment-only review-loop pilot with pinned external Codex CLI subprocesses, supervisor-owned commits, post-build random assignment, bounded fresh reviewer/fixer/tester roles, canonical evidence, and mapping-blinded B0/T0/Tfinal evaluation. Use when executing, validating, packaging, or diagnosing this exact public experiment without changing its frozen runtime or evaluation design.
 ---
 
 # Build Review Loop
@@ -9,7 +9,7 @@ Treat this as one provisional, descriptive pilot under a pinned deployment. Make
 
 ## Freeze the public boundary
 
-1. Bind [canonical-contract.json](references/canonical-contract.json) at canonical SHA-256 `2303f8fc8963fdfa132ee84acd8388e7a081f6a1cbdd5907c37ea8077f62a9c3`.
+1. Bind [canonical-contract.json](references/canonical-contract.json) at the canonical SHA-256 recorded by the validated protocol lock.
 2. Bind byte-exact [neutral-builder.md](references/neutral-builder.md), [runner-smoke.md](references/runner-smoke.md), [builder-config.json](references/builder-config.json), runtime schemas/templates, role prompts/artifact schemas, both PowerShell runners, the blinded mapping/manifest schemas, and the packager. Never substitute the harmless smoke prompt for a builder prompt.
 3. Require the frozen PowerShell 7 host and invoke each runner with `-NoProfile -File`. Require the frozen Codex binary, ChatGPT authentication, `gpt-5.4`, `xhigh`, exact argv order, `--ephemeral`, `--ignore-user-config`, and no resume.
 4. Keep the root orchestration-only. Every builder, reviewer, fixer, tester, and evaluator is a fresh external CLI subprocess with exact raw prompt bytes on stdin. Do not use in-process collaboration, inherited transcripts, resumed threads, or extra turns for model roles.
@@ -21,7 +21,9 @@ From one clean exact source commit/tree, run [prepare-builder-input.mjs](scripts
 
 Before creating runtime or evidence directories, resolve every path through [canonicalize-paths.mjs](scripts/canonicalize-paths.mjs). Reject reparse ancestors, physical aliases including Windows short names, nesting, private inputs inside mutable paths, and ignored or untracked projection files. Fill and validate [cli-runtime-contract.template.json](references/cli-runtime-contract.template.json) before launch.
 
-Use the byte-exact [run-cli-builders.ps1](scripts/run-cli-builders.ps1) through the pinned `pwsh -NoProfile -File` host. It validates contract/schema/lock/helper/runner/binary/auth/projection/path bindings and preserves raw JSONL/stdout/stderr/final/evidence plus deterministic post-model visible-filesystem snapshots. Accept only distinct process and `thread.started` IDs, one `turn.completed`, reconciled hashes, exit zero, exact closed evidence trees, and clean committed projections.
+Before any model call, run the no-model [verify-cli-permissions.ps1](scripts/verify-cli-permissions.ps1) probe in a fresh root. Require its committed [permission-probe-2.6.0.json](references/permission-probe-2.6.0.json) shape: workspace writes and Git/Node/npm succeed, `.git` remains protected, private/outside canaries stay unchanged, and the trusted supervisor seals a clean one-child commit without hooks.
+
+Use the byte-exact [run-cli-builders.ps1](scripts/run-cli-builders.ps1) through the pinned `pwsh -NoProfile -File` host. It validates contract/schema/lock/helper/runner/binary/auth/projection/path bindings and passes only the three exact external runtime roots through `--add-dir`. Models may edit authorized worktree files but must not modify `.git` or commit. After valid lifecycle evidence, [commit-candidate.ps1](scripts/commit-candidate.ps1) rejects frozen-path drift and creates exactly one hook-free child commit through an external index. Accept only distinct process and `thread.started` IDs, one `turn.completed`, reconciled hashes, exit zero, exact closed evidence trees, and clean one-child projections.
 
 Freeze both initial snapshots and evidence before drawing one 32-byte OS-CSPRNG assignment seed. Apply the registered assignment bytes exactly; baseline receives zero treatment cycles.
 
@@ -30,7 +32,7 @@ Freeze both initial snapshots and evidence before drawing one 32-byte OS-CSPRNG 
 Read [role-prompts.md](references/role-prompts.md). For every required reviewer, fixer, or tester invocation, fill [role-runtime-contract.template.json](references/role-runtime-contract.template.json), deterministically render the exact frozen role prompt, and use [run-cli-role.ps1](scripts/run-cli-role.ps1) through the pinned host.
 
 - Reviewer: read-only snapshot; fresh current-cycle context; emit exact findings.
-- Fixer: authorized isolated full-clone write; receive only current findings; finish with one clean child commit.
+- Fixer: authorized isolated worktree write; receive only current findings; do not touch `.git`; the trusted supervisor creates the one clean child commit and injects `finalCommit`.
 - Tester: disposable workspace-write copy; run immutable candidate `npm run check` with exactly format, lint, typecheck, public tests, and build; transfer no mutations.
 
 Stop before fixer/tester on verified zero findings. Otherwise run fresh fixer then tester. Stop at zero findings or after cycle 5 under the registered semantics. Bind every role artifact to supervisor-observed identity and actual OS-exit chronology. Charge all pre-launch delay to the monotonic budget and strict UTC prompt deadline; allow two seconds only for completion observation or process-tree termination.

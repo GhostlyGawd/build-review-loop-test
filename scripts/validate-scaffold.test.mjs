@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
   copyFileSync,
+  chmodSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -454,7 +455,112 @@ const createRoleRunnerFixture = () => {
   };
 };
 
-describe("protocol 2.5.0 locked cross-contract validation", () => {
+describe("protocol 2.6.0 locked cross-contract validation", () => {
+  it("seals allowed candidate changes without hooks and rejects frozen or in-worktree indexes", () => {
+    const temporaryRoot = mkdtempSync(
+      path.join(root, "node_modules", "supervisor-commit-"),
+    );
+    const workdir = path.join(temporaryRoot, "candidate");
+    mkdirSync(workdir);
+    try {
+      writeFileSync(path.join(workdir, "seed.txt"), "seed");
+      for (const args of [
+        ["init", "--initial-branch=main"],
+        ["config", "core.autocrlf", "false"],
+        ["config", "user.name", "Commit Test"],
+        ["config", "user.email", "commit-test@example.invalid"],
+        ["add", "--all"],
+        ["commit", "-m", "root"],
+      ])
+        assert.equal(runGit(workdir, args).status, 0);
+      const parent = runGit(workdir, ["rev-parse", "HEAD"]).stdout.trim();
+      const hookCanary = path.join(temporaryRoot, "hook-ran.txt");
+      const hook = path.join(workdir, ".git", "hooks", "post-commit");
+      writeFileSync(hook, `#!/bin/sh\necho ran > "${hookCanary}"\n`);
+      chmodSync(hook, 0o755);
+      writeFileSync(path.join(workdir, "allowed.txt"), "allowed");
+      const seal = spawnSync(
+        readJson("experiment/lock.json").powerShellHostPath,
+        [
+          "-NoProfile",
+          "-File",
+          path.join(root, "scripts/commit-candidate.ps1"),
+          "-Workdir",
+          workdir,
+          "-ExpectedParent",
+          parent,
+          "-TemporaryIndexPath",
+          path.join(temporaryRoot, "runtime", "index"),
+          "-Message",
+          "Seal test candidate",
+          "-Timestamp",
+          "2026-07-21T18:00:00Z",
+        ],
+        { encoding: "utf8" },
+      );
+      assert.equal(seal.status, 0, seal.stderr);
+      const sealed = JSON.parse(seal.stdout);
+      assert.equal(sealed.parent, parent);
+      assert.equal(existsSync(hookCanary), false);
+      assert.equal(runGit(workdir, ["status", "--porcelain=v1"]).stdout, "");
+      assert.equal(
+        runGit(workdir, ["rev-list", "--parents", "-n", "1", "HEAD"])
+          .stdout.trim()
+          .split(" ").length,
+        2,
+      );
+
+      const sealedHead = runGit(workdir, ["rev-parse", "HEAD"]).stdout.trim();
+      writeFileSync(path.join(workdir, "package.json"), "{}\n");
+      const frozen = spawnSync(
+        readJson("experiment/lock.json").powerShellHostPath,
+        [
+          "-NoProfile",
+          "-File",
+          path.join(root, "scripts/commit-candidate.ps1"),
+          "-Workdir",
+          workdir,
+          "-ExpectedParent",
+          sealedHead,
+          "-TemporaryIndexPath",
+          path.join(temporaryRoot, "runtime", "frozen-index"),
+          "-Message",
+          "Reject frozen path",
+          "-Timestamp",
+          "2026-07-21T18:01:00Z",
+        ],
+        { encoding: "utf8" },
+      );
+      assert.notEqual(frozen.status, 0);
+      assert.match(frozen.stderr, /frozen path/i);
+      rmSync(path.join(workdir, "package.json"));
+      writeFileSync(path.join(workdir, "second.txt"), "second");
+      const nestedIndex = spawnSync(
+        readJson("experiment/lock.json").powerShellHostPath,
+        [
+          "-NoProfile",
+          "-File",
+          path.join(root, "scripts/commit-candidate.ps1"),
+          "-Workdir",
+          workdir,
+          "-ExpectedParent",
+          sealedHead,
+          "-TemporaryIndexPath",
+          path.join(workdir, "nested-index"),
+          "-Message",
+          "Reject nested index",
+          "-Timestamp",
+          "2026-07-21T18:02:00Z",
+        ],
+        { encoding: "utf8" },
+      );
+      assert.notEqual(nestedIndex.status, 0);
+      assert.match(nestedIndex.stderr, /outside the candidate/i);
+    } finally {
+      rmSync(temporaryRoot, { recursive: true, force: true });
+    }
+  });
+
   it("projects only allowlisted bytes into identical one-root builder repositories", () => {
     const fixture = createProjectionFixture(
       [{ source: "product.txt", destination: "product.txt" }],
@@ -1004,7 +1110,7 @@ describe("protocol 2.5.0 locked cross-contract validation", () => {
     );
   });
 
-  it("binds the final lock to sanitized P/S/A/B/C preflight evidence", () => {
+  it("binds the final lock to P/S/A/B/C, abort, and permission evidence", () => {
     const lock = readJson("experiment/lock.json");
     const evidence = readJson("experiment/preflight/final-lock-evidence.json");
     const inventory = readJson(
@@ -1017,11 +1123,11 @@ describe("protocol 2.5.0 locked cross-contract validation", () => {
     assert.deepEqual(validateFinalLockEvidence(evidence, inventory, lock), []);
     assert.equal(
       lock.supersedesFinalizationCommit,
-      "f85357139efd9d192afc4ad2494dd180a8c7e5cf",
+      "c373d77cbbd82cadcd24a456d68fac771f34ffd3",
     );
-    assert.equal(lock.treatmentSkillManifestEntryCount, 53);
+    assert.equal(lock.treatmentSkillManifestEntryCount, 57);
     assert.equal(lock.treatmentSkillManifestCommentLineCount, 3);
-    assert.equal(lock.treatmentSkillManifestPhysicalLineCount, 56);
+    assert.equal(lock.treatmentSkillManifestPhysicalLineCount, 60);
     assert.equal(lock.treatmentSkillManifestByteSource, "canonical-git-blob");
     assert.equal(lock.runnerSmokeContractSha256, null);
     assert.equal(lock.runnerSmokeSupervisionSha256, null);
@@ -1627,6 +1733,12 @@ describe("protocol 2.5.0 locked cross-contract validation", () => {
       "--sandbox",
       "read-only",
       "--json",
+      "--add-dir",
+      contract.tempRoot,
+      "--add-dir",
+      contract.cacheRoot,
+      "--add-dir",
+      contract.dependencyRoot,
       "-C",
       contract.workdir,
       "-o",
@@ -1639,6 +1751,10 @@ describe("protocol 2.5.0 locked cross-contract validation", () => {
     result.finalSha256 = hash("2");
     result.finalSchemaValid = true;
     result.artifactBindingValid = true;
+    result.inputCommit = contract.inputCommit;
+    result.supervisorCommitScriptSha256 = readJson(
+      "experiment/lock.json",
+    ).candidateCommitScriptSha256;
     result.threadIds = ["role-thread-1"];
     result.turnCompleted = true;
     result.rawJsonlValid = true;

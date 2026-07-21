@@ -1,15 +1,15 @@
 # Permissions Playground review-loop experiment
 
-This repository is the prospective source scaffold for protocol version 2.5.0. Before builder launch, a deterministic allowlist projects only neutral Permissions Playground task files into two byte-identical, freshly initialized one-root Git repositories. Builders never receive this repository, its history, README, experiment material, skills, hidden material, or evidence.
+This repository is the prospective source scaffold for protocol version 2.6.0. Before builder launch, a deterministic allowlist projects only neutral Permissions Playground task files into two byte-identical, freshly initialized one-root Git repositories. Builders never receive this repository, its history, README, experiment material, skills, hidden material, or evidence.
 
 ## Status
 
-- Phase: protocol 2.5.0 locked, before builder exposure
+- Phase: protocol 2.6.0 locked, before builder exposure
 - Product: intentionally not implemented on this branch
 - Public contract tests: committed but gated until all required implementation files exist
 - Hidden tests: sealed externally; the existing v2 commitment remains unchanged
 - Treatment algorithm: exact skill-v1 flow incorporated and content-addressed
-- Experiment lock: 2.5.0 locked to corrected parent P, portable skill S3, and unchanged applicable preflight gates A/B/C
+- Experiment lock: 2.6.0 execution repair, including a no-model permission probe and supervisor-owned commits
 - License: none has been granted; no license file is included
 
 Do not present this branch as a completed application or executable experiment. A passing scaffold check establishes internal consistency only.
@@ -60,11 +60,12 @@ The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact t
 - [`experiment/treatment-loop-algorithm.md`](experiment/treatment-loop-algorithm.md): exact frozen skill-v1 flow
 - [`experiment/schemas/`](experiment/schemas/): machine-readable artifact contracts and the authoritative finding schema
 - [`experiment/templates/`](experiment/templates/): prospective, non-evidentiary artifact examples
-- [`experiment/lock.json`](experiment/lock.json): protocol 2.5 commitments and sanitized preflight binding
-- [`experiment/preflight/aborted-lock-2.4.0.json`](experiment/preflight/aborted-lock-2.4.0.json): sanitized record of the prelaunch candidate/tester gate mismatch; no builder, model, seed, assignment, treatment, or evaluation occurred
-- [`experiment/preflight/`](experiment/preflight/): P-bound 41-file S↔P parity inventory and sanitized A/B/C evidence commitments
+- [`experiment/lock.json`](experiment/lock.json): protocol 2.6 commitments and sanitized preflight binding
+- [`experiment/preflight/aborted-lock-2.4.0.json`](experiment/preflight/aborted-lock-2.4.0.json): sanitized record of the earlier prelaunch candidate/tester gate mismatch
+- [`experiment/preflight/aborted-lock-2.5.0.json`](experiment/preflight/aborted-lock-2.5.0.json): sanitized record of the sandbox/commit contradiction; two invalid builder turns occurred before assignment, with no treatment or evaluation
+- [`experiment/preflight/`](experiment/preflight/): source-parity inventory and sanitized preflight commitments
 
-The three gates were executed against parent commit `f957cdf3054b8055a3d4b90d7cae0fbb8c79394c` (P), not against either administrative finalization. This successor seal supersedes F (`a37774cf25821103861ed94c261ac5db4f433860`) only to bind S2's portable canonical-Git-byte manifest: 52 entries verified by its committed manifest tool, independent of worktree line-ending smudging. P and every A/B/C commitment remain unchanged. No candidate received task material and no model run was performed at F or its successor. The unchanged copied 41-file inventory proves S2's protocol-derived sources still match P; the finalizations intentionally differ only in enumerated administrative sealing files. The legacy `runnerSmoke*` fields remain null because gate B is a reviewer exact-commit closure, not an exact instance of the older runner-smoke contract.
+Protocol 2.6 preserves the neutral candidate projection and post-build randomization. The CLI remains frozen at `-a never` with network disabled. Models write only authorized worktree files; the hash-bound trusted supervisor creates commits after validating lifecycle evidence and frozen paths. Before replacement builders run, a no-model sandbox probe must demonstrate ordinary writes and Git/Node/npm execution, protected Git metadata, unchanged private/outside canaries, and a clean hook-free supervisor commit.
 
 ## Architecture and boundaries
 

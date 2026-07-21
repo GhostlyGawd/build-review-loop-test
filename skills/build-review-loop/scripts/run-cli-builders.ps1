@@ -143,6 +143,8 @@ $lock = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $lockPath -Raw)
 Assert-PowerShellHost $lock
 $canonicalPathHelperPath = [System.IO.Path]::GetFullPath($contract.canonicalPathHelperPath)
 if ((Get-Sha256 $canonicalPathHelperPath) -ne $contract.canonicalPathHelperSha256 -or $contract.canonicalPathHelperSha256 -ne $lock.canonicalPathHelperSha256) { throw "Canonical path helper binding mismatch" }
+$candidateCommitScriptPath = [System.IO.Path]::GetFullPath((Join-Path (Split-Path -Parent $PSCommandPath) "commit-candidate.ps1"))
+if ((Get-Sha256 $candidateCommitScriptPath) -ne $lock.candidateCommitScriptSha256) { throw "Supervisor commit helper binding mismatch" }
 $builderManifestPath = [System.IO.Path]::GetFullPath($contract.builderInputManifestPath)
 $builderManifestSchemaPath = [System.IO.Path]::GetFullPath($contract.builderInputManifestSchemaPath)
 $builderAllowlistPath = [System.IO.Path]::GetFullPath($contract.builderInputAllowlistPath)
@@ -152,6 +154,7 @@ $pathsToCanonicalize = [ordered]@{
   lock = $lockPath
   schema = $schemaPath
   helper = $canonicalPathHelperPath
+  commitHelper = $candidateCommitScriptPath
   manifest = $builderManifestPath
   manifestSchema = $builderManifestSchemaPath
   allowlist = $builderAllowlistPath
@@ -219,8 +222,8 @@ foreach ($spec in $contract.invocations) {
     Assert-NoReparseAncestors ([System.IO.Path]::GetFullPath($spec.$field)) "Builder runtime root"
   }
 }
-$privateInputPaths = @($physical.contract, $physical.lock, $physical.schema, $physical.helper, $physical.manifest, $physical.manifestSchema, $physical.allowlist, $physical.preparationScript, $physical.prompt)
-$privateInputRawPaths = @($contractFullPath, $lockPath, $schemaPath, $canonicalPathHelperPath, $builderManifestPath, $builderManifestSchemaPath, $builderAllowlistPath, $builderPreparationScriptPath, [System.IO.Path]::GetFullPath($contract.promptPath))
+$privateInputPaths = @($physical.contract, $physical.lock, $physical.schema, $physical.helper, $physical.commitHelper, $physical.manifest, $physical.manifestSchema, $physical.allowlist, $physical.preparationScript, $physical.prompt)
+$privateInputRawPaths = @($contractFullPath, $lockPath, $schemaPath, $canonicalPathHelperPath, $candidateCommitScriptPath, $builderManifestPath, $builderManifestSchemaPath, $builderAllowlistPath, $builderPreparationScriptPath, [System.IO.Path]::GetFullPath($contract.promptPath))
 foreach ($privatePath in $privateInputRawPaths) { Assert-NoReparseAncestors $privatePath "Private runtime input" }
 Assert-PathsSeparate $workdirPaths[0] $workdirPaths[1] "Builder workdirs"
 for ($left = 0; $left -lt $authoritativeOutputPaths.Count; $left++) {
@@ -281,7 +284,7 @@ $runs = @()
 foreach ($spec in $contract.invocations) {
   $prefix = $spec.invocationId
   $workdir = $physical["$prefix.workdir"]
-  $argv = @($ExpectedInvariant + @("-C", $workdir, "-o", $physical["$prefix.finalPath"], "-"))
+  $argv = @($ExpectedInvariant + @("--add-dir", $physical["$prefix.tempRoot"], "--add-dir", $physical["$prefix.cacheRoot"], "--add-dir", $physical["$prefix.dependencyRoot"], "-C", $workdir, "-o", $physical["$prefix.finalPath"], "-"))
   $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
   $startInfo.FileName = $contract.cliPath
   $startInfo.WorkingDirectory = (Split-Path -Parent $contractFullPath)
@@ -350,6 +353,13 @@ foreach ($run in $runs) {
   $turnEvents = @($events | Where-Object { $_.type -eq "turn.completed" })
   $turnCompleted = $turnEvents.Count -eq 1
   $usage = if ($turnEvents.Count -eq 1 -and $null -ne $turnEvents[0].usage) { $turnEvents[0].usage } else { $null }
+  $commitInfo = $null; $commitError = $null
+  $commitEligible = -not $contract.smokeMode -and $run.started -and $run.stdinDelivered -and -not $run.timedOut -and $exitCode -eq 0 -and $rawJsonlValid -and $threadIds.Count -eq 1 -and $turnCompleted -and [System.IO.File]::Exists($physical["$prefix.finalPath"])
+  if ($commitEligible) {
+    try {
+      $commitInfo = (& $candidateCommitScriptPath -Workdir $physical["$prefix.workdir"] -ExpectedParent $contract.commonStartCommit -TemporaryIndexPath (Join-Path $physical["$prefix.dependencyRoot"] "supervisor-index") -Message "Seal neutral builder output" -Timestamp ([System.DateTimeOffset]::new($run.process.ExitTime.ToUniversalTime()).ToString("o"))) | ConvertFrom-JsonLiteral
+    } catch { $commitError = $_.Exception.ToString() }
+  }
   $postState = Get-VisibleFilesystemSnapshot $physical["$prefix.workdir"] $false
   [System.IO.File]::WriteAllText($postStatePath, ($postState | ConvertTo-Json -Depth 8), $Utf8NoBom)
   $result = [ordered]@{
@@ -358,6 +368,7 @@ foreach ($run in $runs) {
     argv = $run.argv; argvSha256 = Get-TextSha256 ($run.argv -join "`0"); promptSha256 = $contract.promptSha256
     stdoutPath = $stdoutPath; stderrPath = $stderrPath; finalPath = $physical["$prefix.finalPath"]; finalSha256 = if ([System.IO.File]::Exists($physical["$prefix.finalPath"])) { Get-Sha256 $physical["$prefix.finalPath"] } else { $null }; finalSchemaValid = $null; artifactBindingValid = $null
     postStatePath = $postStatePath; postStateSha256 = Get-Sha256 $postStatePath
+    inputCommit = $contract.commonStartCommit; supervisorCommit = if ($null -ne $commitInfo) { $commitInfo.commit } else { $null }; supervisorCommitTree = if ($null -ne $commitInfo) { $commitInfo.tree } else { $null }; supervisorCommitScriptSha256 = $lock.candidateCommitScriptSha256; supervisorCommitError = $commitError
     threadIds = $threadIds; turnCompleted = $turnCompleted; rawJsonlValid = $rawJsonlValid; unauthorizedToolOrWriteDetected = $null; unauthorizedToolOrWriteUnavailableReason = "runner cannot observe every external tool or write; scoped candidate checks are enforced separately"; sandboxMode = "workspace-write"; inputDisposition = "authorized-worktree-write"; isolationEnforcedBy = "audited-procedural-boundary-plus-cli-sandbox"
     usage = $usage; usageUnavailableReason = if ($null -eq $usage) { "turn.completed did not expose usage" } else { $null }
     runtimeModel = $null; runtimeModelUnavailableReason = "not present in trusted JSONL lifecycle metadata"
@@ -380,7 +391,7 @@ foreach ($outputPath in $authoritativeOutputPaths) {
 $allowedEvidenceDirectories = @($allowedEvidenceDirectories | Sort-Object -Unique)
 $actualEvidenceDirectories = @((Get-ChildItem -LiteralPath $evidenceRoot -Directory -Recurse -Force | ForEach-Object { $_.FullName.ToLowerInvariant() }) | Sort-Object -Unique)
 $evidenceShapeValid = ($allowedEvidenceFiles -join "`0") -eq ($actualEvidenceFiles -join "`0") -and ($allowedEvidenceDirectories -join "`0") -eq ($actualEvidenceDirectories -join "`0") -and (Get-ChildItem -LiteralPath $evidenceRoot -Recurse -Force | Where-Object { ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0 } | Measure-Object).Count -eq 0
-$valid = ($results | Where-Object { -not $_.started -or -not $_.stdinDelivered -or $_.timedOut -or $_.exitCode -ne 0 -or $_.threadIds.Count -ne 1 -or -not $_.turnCompleted -or -not $_.rawJsonlValid -or $null -eq $_.finalSha256 -or $_.sandboxMode -ne "workspace-write" }).Count -eq 0 -and ($threadIds | Select-Object -Unique).Count -eq 2 -and $evidenceShapeValid
+$valid = ($results | Where-Object { -not $_.started -or -not $_.stdinDelivered -or $_.timedOut -or $_.exitCode -ne 0 -or $_.threadIds.Count -ne 1 -or -not $_.turnCompleted -or -not $_.rawJsonlValid -or $null -eq $_.finalSha256 -or $_.sandboxMode -ne "workspace-write" -or (-not $contract.smokeMode -and $null -eq $_.supervisorCommit) }).Count -eq 0 -and ($threadIds | Select-Object -Unique).Count -eq 2 -and $evidenceShapeValid
 foreach ($run in $runs) { if ($run.started -and ((Invoke-Git $physical["$($run.spec.invocationId).workdir"] @("status", "--porcelain=v1")).Length -ne 0)) { $valid = $false } }
 $summary = [ordered]@{
   contractSha256 = Get-Sha256 $contractFullPath; runnerMode = if ($contract.smokeMode) { "smoke" } else { "builder" }
