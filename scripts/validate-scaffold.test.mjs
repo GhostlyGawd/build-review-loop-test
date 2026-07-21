@@ -2,12 +2,14 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
+  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import os from "node:os";
@@ -81,15 +83,24 @@ const createProjectionFixture = (entries, contents, layout = {}) => {
   assert.equal(runGit(source, ["commit", "-m", "source fixture"]).status, 0);
   const sourceCommit = runGit(source, ["rev-parse", "HEAD"]).stdout.trim();
   const sourceTree = runGit(source, ["rev-parse", "HEAD^{tree}"]).stdout.trim();
-  const destinationA = layout.destinationAInsideSource
+  let destinationA = layout.destinationAInsideSource
     ? path.join(source, "builder-a")
     : path.join(temporaryRoot, "builder-a");
+  if (layout.destinationParentJunction) {
+    const physicalParent = path.join(temporaryRoot, "physical-parent");
+    const aliasParent = path.join(temporaryRoot, "alias-parent");
+    mkdirSync(physicalParent);
+    symlinkSync(physicalParent, aliasParent, "junction");
+    destinationA = path.join(aliasParent, "builder-a");
+  }
   const destinationB = layout.destinationBInsideA
     ? path.join(destinationA, "builder-b")
     : path.join(temporaryRoot, "builder-b");
   const manifest = layout.manifestInsideA
     ? path.join(destinationA, "manifest.json")
-    : path.join(temporaryRoot, "private", "manifest.json");
+    : layout.manifestInsideSource
+      ? path.join(source, "private-manifest.json")
+      : path.join(temporaryRoot, "private", "manifest.json");
   const result = spawnSync(
     process.execPath,
     [
@@ -118,6 +129,156 @@ const createProjectionFixture = (entries, contents, layout = {}) => {
     destinationB,
     manifest,
     result,
+  };
+};
+
+const createBuilderRunnerFixture = () => {
+  const temporaryRoot = mkdtempSync(path.join(os.tmpdir(), "builder-runner-"));
+  const source = path.join(temporaryRoot, "source");
+  mkdirSync(source);
+  const allowlist = readJson("experiment/builder-input-allowlist.json");
+  for (const entry of allowlist.files) {
+    const target = path.join(source, ...entry.source.split("/"));
+    mkdirSync(path.dirname(target), { recursive: true });
+    copyFileSync(path.join(root, ...entry.source.split("/")), target);
+  }
+  const fixtureAllowlist = path.join(
+    source,
+    "experiment",
+    "builder-input-allowlist.json",
+  );
+  mkdirSync(path.dirname(fixtureAllowlist), { recursive: true });
+  copyFileSync(
+    path.join(root, "experiment/builder-input-allowlist.json"),
+    fixtureAllowlist,
+  );
+  for (const args of [
+    ["init", "--initial-branch=source"],
+    ["config", "user.name", "Runner Test"],
+    ["config", "user.email", "runner@invalid.local"],
+    ["add", "--all"],
+    ["commit", "-m", "runner fixture"],
+  ])
+    assert.equal(runGit(source, args).status, 0);
+  const sourceCommit = runGit(source, ["rev-parse", "HEAD"]).stdout.trim();
+  const sourceTree = runGit(source, ["rev-parse", "HEAD^{tree}"]).stdout.trim();
+  const workA = path.join(temporaryRoot, "builder-a");
+  const workB = path.join(temporaryRoot, "builder-b");
+  const manifestPath = path.join(temporaryRoot, "private", "manifest.json");
+  const prepare = spawnSync(
+    process.execPath,
+    [
+      path.join(root, "scripts/prepare-builder-input.mjs"),
+      "--source",
+      source,
+      "--destination-a",
+      workA,
+      "--destination-b",
+      workB,
+      "--allowlist",
+      fixtureAllowlist,
+      "--manifest",
+      manifestPath,
+      "--source-commit",
+      sourceCommit,
+      "--source-tree",
+      sourceTree,
+    ],
+    { encoding: "utf8" },
+  );
+  assert.equal(prepare.status, 0, prepare.stderr);
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  const lock = clone(readJson("experiment/lock.json"));
+  const lockedPath = (relative) => path.join(root, relative);
+  const bytesHash = (relative) => sha256(readFileSync(lockedPath(relative)));
+  lock.cliRuntimeSchemaSha256 = bytesHash(
+    "experiment/schemas/cli-runtime-contract.schema.json",
+  );
+  lock.cliRunnerSha256 = bytesHash("scripts/run-cli-builders.ps1");
+  lock.builderInputPreparationScriptSha256 = bytesHash(
+    "scripts/prepare-builder-input.mjs",
+  );
+  lock.supervisionEvidenceSchemaSha256 = bytesHash(
+    "experiment/schemas/cli-supervision-evidence.schema.json",
+  );
+  const shadowLockPath = path.join(temporaryRoot, "private", "lock.json");
+  writeFileSync(shadowLockPath, `${JSON.stringify(lock, null, 2)}\n`);
+  const evidenceRoot = path.join(temporaryRoot, "evidence");
+  const contract = clone(
+    readJson("experiment/golden-run/golden-run.json").cliRuntimeContract,
+  );
+  Object.assign(contract, {
+    cliPath: lock.cliBinaryPath,
+    cliVersion: lock.cliVersion,
+    cliSha256: lock.cliBinarySha256,
+    authStatus: lock.cliAuthStatus,
+    lockPath: shadowLockPath,
+    lockSha256: sha256(readFileSync(shadowLockPath)),
+    contractSchemaPath: lockedPath(
+      "experiment/schemas/cli-runtime-contract.schema.json",
+    ),
+    contractSchemaSha256: lock.cliRuntimeSchemaSha256,
+    sourceCommonStartCommit: sourceCommit,
+    sourceCommonStartTree: sourceTree,
+    commonStartCommit: manifest.projectionCommit,
+    commonStartTree: manifest.projectionTree,
+    builderInputManifestPath: manifestPath,
+    builderInputManifestSha256: sha256(readFileSync(manifestPath)),
+    builderInputManifestSchemaPath: lockedPath(
+      "experiment/schemas/builder-input-manifest.schema.json",
+    ),
+    builderInputManifestSchemaSha256: lock.builderInputManifestSchemaSha256,
+    builderInputAllowlistPath: fixtureAllowlist,
+    builderInputAllowlistSha256: lock.builderInputAllowlistSha256,
+    builderInputPreparationScriptPath: lockedPath(
+      "scripts/prepare-builder-input.mjs",
+    ),
+    builderInputPreparationScriptSha256:
+      lock.builderInputPreparationScriptSha256,
+    builderInputProjectionSha256: manifest.projectionSha256,
+    promptPath: lockedPath("experiment/prompts/runner-smoke.md"),
+    promptSha256: lock.runnerSmokePromptSha256,
+    evidenceRoot,
+    smokeMode: true,
+  });
+  for (const [index, workdir] of [workA, workB].entries()) {
+    const output = path.join(evidenceRoot, index === 0 ? "a" : "b");
+    Object.assign(contract.invocations[index], {
+      workdir,
+      finalPath: path.join(output, "final.json"),
+      stdoutPath: path.join(output, "stdout.jsonl"),
+      stderrPath: path.join(output, "stderr.txt"),
+      evidencePath: path.join(output, "evidence.json"),
+      postStatePath: path.join(output, "post-state.json"),
+      tempRoot: path.join(output, "temp"),
+      cacheRoot: path.join(output, "cache"),
+      dependencyRoot: path.join(output, "deps"),
+      port: 43001 + index,
+    });
+  }
+  const run = () => {
+    const contractPath = path.join(temporaryRoot, "private", "contract.json");
+    writeFileSync(contractPath, `${JSON.stringify(contract, null, 2)}\n`);
+    return spawnSync(
+      lock.powerShellHostPath,
+      [
+        "-NoProfile",
+        "-File",
+        lockedPath("scripts/run-cli-builders.ps1"),
+        "-ContractPath",
+        contractPath,
+      ],
+      { cwd: root, encoding: "utf8", timeout: 120000 },
+    );
+  };
+  return {
+    temporaryRoot,
+    workA,
+    workB,
+    manifestPath,
+    evidenceRoot,
+    contract,
+    run,
   };
 };
 
@@ -201,6 +362,8 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       { destinationAInsideSource: true },
       { destinationBInsideA: true },
       { manifestInsideA: true },
+      { manifestInsideSource: true },
+      { destinationParentJunction: true },
     ]) {
       const fixture = createProjectionFixture(
         [{ source: "input.txt", destination: "input.txt" }],
@@ -212,6 +375,72 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       } finally {
         rmSync(fixture.temporaryRoot, { recursive: true, force: true });
       }
+    }
+  });
+
+  it("rejects ignored builder contamination before model launch", () => {
+    const fixture = createBuilderRunnerFixture();
+    try {
+      const ignored = path.join(fixture.workA, "node_modules", "private.txt");
+      mkdirSync(path.dirname(ignored), { recursive: true });
+      writeFileSync(ignored, "PRIVATE_IGNORED_CONTEXT\n");
+      assert.equal(
+        runGit(fixture.workA, ["status", "--porcelain=v1"]).stdout,
+        "",
+      );
+      const result = fixture.run();
+      assert.notEqual(result.status, 0);
+      assert.match(
+        `${result.stdout}\n${result.stderr}`,
+        /visible filesystem contains unmanifested/i,
+      );
+      assert.equal(existsSync(fixture.evidenceRoot), false);
+    } finally {
+      rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects private runtime inputs nested inside a builder before model launch", () => {
+    const fixture = createBuilderRunnerFixture();
+    try {
+      const nestedManifest = path.join(
+        fixture.workA,
+        "node_modules",
+        "private-manifest.json",
+      );
+      mkdirSync(path.dirname(nestedManifest), { recursive: true });
+      copyFileSync(fixture.manifestPath, nestedManifest);
+      fixture.contract.builderInputManifestPath = nestedManifest;
+      fixture.contract.builderInputManifestSha256 = sha256(
+        readFileSync(nestedManifest),
+      );
+      const result = fixture.run();
+      assert.notEqual(result.status, 0);
+      assert.match(
+        `${result.stdout}\n${result.stderr}`,
+        /private runtime input must remain outside/i,
+      );
+      assert.equal(existsSync(fixture.evidenceRoot), false);
+    } finally {
+      rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a junction-aliased builder workdir before model launch", () => {
+    const fixture = createBuilderRunnerFixture();
+    try {
+      const alias = path.join(fixture.temporaryRoot, "builder-a-alias");
+      symlinkSync(fixture.workA, alias, "junction");
+      fixture.contract.invocations[0].workdir = alias;
+      const result = fixture.run();
+      assert.notEqual(result.status, 0);
+      assert.match(
+        `${result.stdout}\n${result.stderr}`,
+        /symlink, junction, or reparse point/i,
+      );
+      assert.equal(existsSync(fixture.evidenceRoot), false);
+    } finally {
+      rmSync(fixture.temporaryRoot, { recursive: true, force: true });
     }
   });
   it("accepts the prospective scaffold and seeded assignment algorithms", () => {
@@ -466,6 +695,19 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
         golden.cliRuntimeStdoutByInvocation,
       ),
       [],
+    );
+    for (const result of golden.cliRuntimeEvidence.results) {
+      assert.match(result.postStatePath, /post-state\.json$/);
+      assert.match(result.postStateSha256, /^[0-9a-f]{64}$/);
+    }
+    delete golden.cliRuntimeEvidence.results[0].postStateSha256;
+    assert.match(
+      validateCliSupervisionEvidence(
+        golden.cliRuntimeEvidence,
+        golden.cliRuntimeContract,
+        golden.cliRuntimeStdoutByInvocation,
+      ).join("\n"),
+      /post-state hash|postStateSha256|schema/i,
     );
   });
 
@@ -800,6 +1042,7 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       mkdirSync(path.join(source, "tests", "public"), { recursive: true });
       mkdirSync(path.join(source, "scripts"), { recursive: true });
       for (const [relative, contents] of [
+        [".gitignore", "private-cache/\n"],
         ["docs/permissions-playground-spec.md", "spec\n"],
         ["docs/public-test-contract.md", "contract\n"],
         ["tests/public/example.test.ts", "export {};\n"],
@@ -856,6 +1099,22 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
         );
         return destination;
       });
+      for (const clonePath of clones) {
+        const ignoredPrivate = path.join(
+          clonePath,
+          "private-cache",
+          "hidden-context.txt",
+        );
+        mkdirSync(path.dirname(ignoredPrivate), { recursive: true });
+        writeFileSync(ignoredPrivate, "PRIVATE_IGNORED_CONTEXT\n");
+        assert.equal(
+          spawnSync("git", ["status", "--porcelain=v1"], {
+            cwd: clonePath,
+            encoding: "utf8",
+          }).stdout,
+          "",
+        );
+      }
       const gateFiles = [
         "docs/permissions-playground-spec.md",
         "docs/public-test-contract.md",
@@ -932,6 +1191,14 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       assert.equal(
         existsSync(path.join(temp, "output-one", "X", ".git")),
         false,
+      );
+      assert.equal(
+        existsSync(path.join(temp, "output-one", "X", "private-cache")),
+        false,
+      );
+      assert.equal(
+        readFileSync(path.join(temp, "output-one", "X", ".gitignore"), "utf8"),
+        "private-cache/\n",
       );
       assert.equal(
         readdirSync(path.join(temp, "output-one")).sort().join(""),

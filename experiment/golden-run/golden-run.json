@@ -2,7 +2,7 @@
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-conformance",
   "protocolVersion": "2.4.0",
-  "canonicalContractSha256": "10d9f1327e37310393e3224057687a2b97dd61b23e695b1638192b76585537cd",
+  "canonicalContractSha256": "40a59f59f756a20905686a1f3dd210aab845f181ad64de5d24a045e6f9cd32cf",
   "status": "valid",
   "activeInvalidation": null,
   "invalidAttempts": [
@@ -86,7 +86,7 @@
     "lockPath": "C:\\synthetic\\protocol\\experiment\\lock.json",
     "lockSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "contractSchemaPath": "C:\\synthetic\\protocol\\experiment\\schemas\\cli-runtime-contract.schema.json",
-    "contractSchemaSha256": "bb6c1ca1e91e07d2304c4d014910d6dca031aef2eabf144403f8f8de84905ecb",
+    "contractSchemaSha256": "0d8f38f41282667d01e54d650c9f89b28da644c3b251ea99a7c4a290b1404175",
     "sourceCommonStartCommit": "29454a133f990982253744a85ccb8516d62f5a19",
     "sourceCommonStartTree": "2234567890abcdef1234567890abcdef12345678",
     "commonStartCommit": "79454a133f990982253744a85ccb8516d62f5a19",
@@ -98,7 +98,7 @@
     "builderInputAllowlistPath": "C:\\synthetic\\protocol\\experiment\\builder-input-allowlist.json",
     "builderInputAllowlistSha256": "37af679c4f3f71cbd9e28b810897d4ff82c7c47cf4421a9d661b8b90947aef5b",
     "builderInputPreparationScriptPath": "C:\\synthetic\\protocol\\scripts\\prepare-builder-input.mjs",
-    "builderInputPreparationScriptSha256": "ef2ce47851c8b849a902fb33f3e50ca38bf58a75566401b3a2a90fc27ee757e1",
+    "builderInputPreparationScriptSha256": "c0557964337369403e98d43f0abdf99397c501c978b6e042fd3d3ce3be40520f",
     "builderInputProjectionSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
     "promptPath": "C:\\synthetic\\neutral-builder.md",
     "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
@@ -128,6 +128,7 @@
         "stdoutPath": "C:\\synthetic\\evidence\\a\\stdout.jsonl",
         "stderrPath": "C:\\synthetic\\evidence\\a\\stderr.txt",
         "evidencePath": "C:\\synthetic\\evidence\\a\\evidence.json",
+        "postStatePath": "C:\\synthetic\\evidence\\a\\post-state.json",
         "tempRoot": "C:\\synthetic\\evidence\\a\\temp",
         "cacheRoot": "C:\\synthetic\\evidence\\a\\cache",
         "dependencyRoot": "C:\\synthetic\\evidence\\a\\deps",
@@ -140,6 +141,7 @@
         "stdoutPath": "C:\\synthetic\\evidence\\b\\stdout.jsonl",
         "stderrPath": "C:\\synthetic\\evidence\\b\\stderr.txt",
         "evidencePath": "C:\\synthetic\\evidence\\b\\evidence.json",
+        "postStatePath": "C:\\synthetic\\evidence\\b\\post-state.json",
         "tempRoot": "C:\\synthetic\\evidence\\b\\temp",
         "cacheRoot": "C:\\synthetic\\evidence\\b\\cache",
         "dependencyRoot": "C:\\synthetic\\evidence\\b\\deps",
@@ -191,6 +193,8 @@
         "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
         "finalPath": "C:\\synthetic\\evidence\\a\\final.json",
         "finalSha256": "1212121212121212121212121212121212121212121212121212121212121212",
+        "postStatePath": "C:\\synthetic\\evidence\\a\\post-state.json",
+        "postStateSha256": "3131313131313131313131313131313131313131313131313131313131313131",
         "finalSchemaValid": null,
         "artifactBindingValid": null,
         "threadIds": ["019f827b-221c-7021-b650-a948e9dd4298"],
@@ -256,6 +260,8 @@
         "stderrSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
         "finalPath": "C:\\synthetic\\evidence\\b\\final.json",
         "finalSha256": "2323232323232323232323232323232323232323232323232323232323232323",
+        "postStatePath": "C:\\synthetic\\evidence\\b\\post-state.json",
+        "postStateSha256": "3232323232323232323232323232323232323232323232323232323232323232",
         "finalSchemaValid": null,
         "artifactBindingValid": null,
         "threadIds": ["019f827b-221c-7363-a23f-0f40b4ec017d"],
@@ -399,7 +405,7 @@
       "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
       "configSha256": "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4",
       "runtimeInvocationId": "3fa8a63edab948c496d7e1028dfbeabf",
-      "runtimeEvidenceSha256": "74de83646dd9425de3b1dd084c84d25825904f983142e42124a01f71193cfde9",
+      "runtimeEvidenceSha256": "2135934c6f6a226564a1630b9656c520baed6ff0171134da9ac57f5d2bdddc82",
       "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
       "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
       "sealedAt": "2026-07-20T01:00:00Z"
@@ -410,7 +416,7 @@
       "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
       "configSha256": "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4",
       "runtimeInvocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
-      "runtimeEvidenceSha256": "8e93a9891f38e280027b01d4283fda88a8d8953efa2cc32788815f3499548bbf",
+      "runtimeEvidenceSha256": "15b231d096380dcd3b209f6659ec3ed6713160aaf82eb414d8f2254c1df49ccd",
       "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
       "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
       "sealedAt": "2026-07-20T01:00:00Z"
@@ -452,7 +458,7 @@
       "assignedArm": "baseline",
       "builderWorkerId": "worker-01-builder-a-7b4c",
       "runtimeInvocationId": "3fa8a63edab948c496d7e1028dfbeabf",
-      "runtimeEvidenceSha256": "74de83646dd9425de3b1dd084c84d25825904f983142e42124a01f71193cfde9",
+      "runtimeEvidenceSha256": "2135934c6f6a226564a1630b9656c520baed6ff0171134da9ac57f5d2bdddc82",
       "initialSnapshot": {
         "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
         "sealedAt": "2026-07-20T01:00:00Z",
@@ -475,7 +481,7 @@
       "assignedArm": "treatment",
       "builderWorkerId": "worker-02-builder-b-91e2",
       "runtimeInvocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
-      "runtimeEvidenceSha256": "8e93a9891f38e280027b01d4283fda88a8d8953efa2cc32788815f3499548bbf",
+      "runtimeEvidenceSha256": "15b231d096380dcd3b209f6659ec3ed6713160aaf82eb414d8f2254c1df49ccd",
       "initialSnapshot": {
         "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
         "sealedAt": "2026-07-20T01:00:00Z",
@@ -1335,20 +1341,20 @@
     {
       "sequence": 0,
       "artifactKey": "builderFreezes.candidate-a",
-      "artifactSha256": "5d7cddae49cf095ae49895781920f25daea45620ed98c42bce03e024a0171270",
+      "artifactSha256": "fbe71d215ccf030fa9ad52f996ed7480e29578df2a09eb3c45cb8d710fdcd253",
       "previousSha256": null
     },
     {
       "sequence": 1,
       "artifactKey": "builderFreezes.candidate-b",
-      "artifactSha256": "83b74dfb7b5c94a0a822193d7e7783633803649fb1c11eb81c62a2fc5b52bb7e",
-      "previousSha256": "5d7cddae49cf095ae49895781920f25daea45620ed98c42bce03e024a0171270"
+      "artifactSha256": "729faef2fc820cd62007be3274540fb57b423ee7974e564015cf3414baa88c30",
+      "previousSha256": "fbe71d215ccf030fa9ad52f996ed7480e29578df2a09eb3c45cb8d710fdcd253"
     },
     {
       "sequence": 2,
       "artifactKey": "assignment",
       "artifactSha256": "c499551590308f2d59114d041dcef51e1841035c8f21be614a8ad5a7d049f5d4",
-      "previousSha256": "83b74dfb7b5c94a0a822193d7e7783633803649fb1c11eb81c62a2fc5b52bb7e"
+      "previousSha256": "729faef2fc820cd62007be3274540fb57b423ee7974e564015cf3414baa88c30"
     },
     {
       "sequence": 3,

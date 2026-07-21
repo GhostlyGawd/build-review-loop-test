@@ -551,6 +551,7 @@ export function validateCliRuntimeContract(
     "stdoutPath",
     "stderrPath",
     "evidencePath",
+    "postStatePath",
     "tempRoot",
     "cacheRoot",
     "dependencyRoot",
@@ -589,6 +590,7 @@ export function validateCliRuntimeContract(
       "stdoutPath",
       "stderrPath",
       "evidencePath",
+      "postStatePath",
       "tempRoot",
       "cacheRoot",
       "dependencyRoot",
@@ -620,6 +622,10 @@ export function validateCliSupervisionEvidence(
       failures.push(`CLI result ${index} contract hash missing`);
     if (!nonzeroSha256(result.finalSha256))
       failures.push(`CLI result ${index} final artifact hash missing`);
+    if (result.postStatePath !== invocation.postStatePath)
+      failures.push(`CLI result ${index} post-state path mismatch`);
+    if (!nonzeroSha256(result.postStateSha256))
+      failures.push(`CLI result ${index} post-state hash missing`);
     if (result.argvSha256 !== sha256(result.argv.join("\0")))
       failures.push(`CLI result ${index} argv hash mismatch`);
     if (result.promptSha256 !== contract.promptSha256)

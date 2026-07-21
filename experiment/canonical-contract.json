@@ -41,7 +41,7 @@
       "manifestSchemaPath": "experiment/schemas/builder-input-manifest.schema.json",
       "manifestSchemaSha256": "b044646ede4fef4543a4950e5842f51997dc3b65e6bfabad7eeb1ff84caf0bb5",
       "preparationScriptPath": "scripts/prepare-builder-input.mjs",
-      "preparationScriptSha256": "ef2ce47851c8b849a902fb33f3e50ca38bf58a75566401b3a2a90fc27ee757e1",
+      "preparationScriptSha256": "c0557964337369403e98d43f0abdf99397c501c978b6e042fd3d3ce3be40520f",
       "sourceRule": "private manifest binds the clean protocol source commit/tree; neither source nor manifest is builder input",
       "outputRule": "two fresh nonnested git-init repositories with identical one-root commit/tree, core.autocrlf=false, no remotes, and exact allowlisted bytes only"
     }
@@ -62,9 +62,9 @@
     ],
     "roleLaunchRule": "every model-bearing role invocation is a fresh external Codex CLI subprocess using the frozen binary/auth/invariant argv, role-specific exact raw prompt bytes on stdin, --ephemeral, no resume, and distinct process and thread.started IDs; the bundled two-invocation contract and supervisor instantiate this rule for builders",
     "schemaPath": "experiment/schemas/cli-runtime-contract.schema.json",
-    "schemaSha256": "bb6c1ca1e91e07d2304c4d014910d6dca031aef2eabf144403f8f8de84905ecb",
+    "schemaSha256": "0d8f38f41282667d01e54d650c9f89b28da644c3b251ea99a7c4a290b1404175",
     "runnerPath": "scripts/run-cli-builders.ps1",
-    "runnerSha256": "295e7526146f52f463bd26699c3ef9da1c06c239259d726f115384ff03ea4c6e",
+    "runnerSha256": "8433350c57051c8d54fbff52c00912a596875e393b1051bae3c8afa8b55e46c2",
     "binaryPath": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe",
     "binaryVersion": "codex-cli 0.145.0-alpha.18",
     "binarySha256": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
@@ -110,7 +110,7 @@
       "runnerPath": "scripts/run-cli-role.ps1",
       "runnerSha256": "385830cc00bebca1541040dababf9496610064d94eb252a02c8de7d77cf6cea3",
       "evidenceSchemaPath": "experiment/schemas/cli-supervision-evidence.schema.json",
-      "evidenceSchemaSha256": "f6c18acea89f5cfac3b2fe6ad84871f563e217d884b14ecb29e6606bb99dcd89",
+      "evidenceSchemaSha256": "ef1711aab227a288ed9c71eae2343f9b3f2aae212bbdc4db72d5c196349b934e",
       "promptTemplateSha256": {
         "reviewer": "5bd94cc7c44165acae23675f82d74ece6bab0b4dab31f387d338d1c9a5e7dcae",
         "fixer": "ac4c0a40dbcee8b1ffe11b6eb7e81c5458849859a1ab38d09b78431aa390c9cf",
@@ -191,7 +191,7 @@
     "blindingClaim": "mapping-blinded single-package evaluation, not lineage-blinded inference",
     "sequenceRule": "randomize X/Y/Z order; use a fresh evaluator subprocess for one package; record mapping guess and integer confidence percentage from 0 through 100; score and seal before launching the next; prohibit revisions",
     "packageScriptPath": "scripts/package-blinded-snapshots.mjs",
-    "packageScriptSha256": "98cf033b59916e36a871034ba23a1bcfb06c0783f9e5b9fd04596caca6a216ec",
+    "packageScriptSha256": "6c091f2f2103f90ab531d5f112b3723a4f4b9fbafa2b1a2d23eea171859db95d",
     "packageManifestSchemaPath": "experiment/schemas/blinded-package-manifest.schema.json",
     "packageManifestSchemaSha256": "4d9d8397fc068cdf511e99bae6980ed2d2ef5410e5128385043f1c426cdb8bd5",
     "packageMappingSchemaPath": "experiment/schemas/blinded-package-mapping.schema.json",

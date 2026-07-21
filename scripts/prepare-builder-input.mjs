@@ -26,13 +26,56 @@ const required = [
 for (const name of required)
   if (!args.get(name)) throw new Error(`Missing ${name}`);
 
-const source = path.resolve(args.get("--source"));
+const pathKey = (candidate) => path.resolve(candidate).toLowerCase();
+const assertNoLinkAncestors = (candidate) => {
+  let cursor = path.resolve(candidate);
+  while (!existsSync(cursor)) {
+    const parent = path.dirname(cursor);
+    if (parent === cursor)
+      throw new Error(`No existing ancestor: ${candidate}`);
+    cursor = parent;
+  }
+  while (true) {
+    if (lstatSync(cursor).isSymbolicLink())
+      throw new Error(
+        `Symlink, junction, or reparse ancestor forbidden: ${cursor}`,
+      );
+    const parent = path.dirname(cursor);
+    if (parent === cursor) break;
+    cursor = parent;
+  }
+};
+const canonicalProspective = (candidate) => {
+  const requested = path.resolve(candidate);
+  assertNoLinkAncestors(requested);
+  const missing = [];
+  let cursor = requested;
+  while (!existsSync(cursor)) {
+    missing.unshift(path.basename(cursor));
+    cursor = path.dirname(cursor);
+  }
+  const canonical = path.join(realpathSync(cursor), ...missing);
+  if (pathKey(canonical) !== pathKey(requested))
+    throw new Error(
+      `Physical path alias or reparse ancestor forbidden: ${candidate}`,
+    );
+  return canonical;
+};
+const sourceRequested = path.resolve(args.get("--source"));
+assertNoLinkAncestors(sourceRequested);
+const source = realpathSync(sourceRequested);
+if (pathKey(source) !== pathKey(sourceRequested))
+  throw new Error("Source path must not use a physical alias");
 const destinations = [
-  path.resolve(args.get("--destination-a")),
-  path.resolve(args.get("--destination-b")),
+  canonicalProspective(args.get("--destination-a")),
+  canonicalProspective(args.get("--destination-b")),
 ];
-const allowlistPath = path.resolve(args.get("--allowlist"));
-const manifestPath = path.resolve(args.get("--manifest"));
+const allowlistRequested = path.resolve(args.get("--allowlist"));
+assertNoLinkAncestors(allowlistRequested);
+const allowlistPath = realpathSync(allowlistRequested);
+if (pathKey(allowlistPath) !== pathKey(allowlistRequested))
+  throw new Error("Allowlist path must not use a physical alias");
+const manifestPath = canonicalProspective(args.get("--manifest"));
 const nestedOrEqual = (left, right) => {
   const relative = path.relative(left, right);
   return (
@@ -64,6 +107,11 @@ for (const destination of destinations)
     );
 if (!nestedOrEqual(source, allowlistPath))
   throw new Error("Allowlist must be bound inside the source repository");
+if (
+  nestedOrEqual(source, manifestPath) ||
+  nestedOrEqual(path.dirname(manifestPath), source)
+)
+  throw new Error("Source and private manifest must be separate and nonnested");
 const git = (cwd, gitArgs, env = {}) =>
   execFileSync("git", gitArgs, {
     cwd,
@@ -146,6 +194,8 @@ for (const destination of destinations) {
   if (existsSync(destination))
     throw new Error(`Destination must not exist: ${destination}`);
   mkdirSync(destination, { recursive: true });
+  if (pathKey(realpathSync(destination)) !== pathKey(destination))
+    throw new Error("Created destination resolved through a physical alias");
   for (const record of records) {
     const output = path.join(destination, ...record.path.split("/"));
     mkdirSync(path.dirname(output), { recursive: true });
@@ -182,6 +232,8 @@ for (const destination of destinations) {
   if (Number(git(destination, ["rev-list", "--count", "HEAD"])) !== 1)
     throw new Error("Projection must have exactly one root commit");
 }
+if (git(source, ["status", "--porcelain=v1"]))
+  throw new Error("Source changed during projection preparation");
 
 const manifest = {
   version: "1.0.0",

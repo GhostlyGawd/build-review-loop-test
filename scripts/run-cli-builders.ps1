@@ -74,6 +74,49 @@ function Test-PathsNestedOrEqual([string]$Left, [string]$Right) {
   return $leftPath.Equals($rightPath, [System.StringComparison]::OrdinalIgnoreCase) -or (Test-PathBeneath $leftPath $rightPath) -or (Test-PathBeneath $rightPath $leftPath)
 }
 
+function Assert-NoReparseAncestors([string]$Path, [string]$Label) {
+  $cursor = [System.IO.Path]::GetFullPath($Path)
+  while (-not [System.IO.File]::Exists($cursor) -and -not [System.IO.Directory]::Exists($cursor)) {
+    $parent = [System.IO.Path]::GetDirectoryName($cursor)
+    if ([string]::IsNullOrEmpty($parent) -or $parent -eq $cursor) { throw "$Label has no existing physical ancestor" }
+    $cursor = $parent
+  }
+  while (-not [string]::IsNullOrEmpty($cursor)) {
+    $item = Get-Item -LiteralPath $cursor -Force
+    if (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { throw "$Label crosses a symlink, junction, or reparse point: $cursor" }
+    $parent = [System.IO.Path]::GetDirectoryName($cursor)
+    if ([string]::IsNullOrEmpty($parent) -or $parent -eq $cursor) { break }
+    $cursor = $parent
+  }
+}
+
+function Get-VisibleFilesystemSnapshot([string]$Root, [bool]$RejectReparse) {
+  $rootPath = [System.IO.Path]::GetFullPath($Root).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
+  $entries = [System.Collections.Generic.List[object]]::new()
+  $pending = [System.Collections.Generic.Stack[string]]::new()
+  $pending.Push($rootPath)
+  while ($pending.Count -gt 0) {
+    $directory = $pending.Pop()
+    foreach ($item in @(Get-ChildItem -LiteralPath $directory -Force | Sort-Object FullName -CaseSensitive)) {
+      $relative = [System.IO.Path]::GetRelativePath($rootPath, $item.FullName).Replace("\", "/")
+      $isRootGit = $directory -eq $rootPath -and $item.Name -eq ".git"
+      if (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+        if ($RejectReparse) { throw "Visible filesystem contains a symlink, junction, or reparse point: $relative" }
+        $entries.Add([pscustomobject][ordered]@{ path = $relative; type = "reparse"; sha256 = $null; bytes = $null })
+        continue
+      }
+      if ($isRootGit) { continue }
+      if ($item.PSIsContainer) {
+        $entries.Add([pscustomobject][ordered]@{ path = $relative; type = "directory"; sha256 = $null; bytes = $null })
+        $pending.Push($item.FullName)
+      } else {
+        $entries.Add([pscustomobject][ordered]@{ path = $relative; type = "file"; sha256 = Get-Sha256 $item.FullName; bytes = $item.Length })
+      }
+    }
+  }
+  return [ordered]@{ version = "1.0.0"; entries = @($entries | Sort-Object path -CaseSensitive) }
+}
+
 $contractFullPath = [System.IO.Path]::GetFullPath($ContractPath)
 $contract = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $contractFullPath -Raw)
 $lockPath = [System.IO.Path]::GetFullPath($contract.lockPath)
@@ -110,16 +153,37 @@ $promptBytes = [System.IO.File]::ReadAllBytes([System.IO.Path]::GetFullPath($con
 if ((Get-Sha256 $contract.promptPath) -ne $contract.promptSha256) { throw "Raw stdin prompt hash mismatch" }
 $evidenceRoot = [System.IO.Path]::GetFullPath($contract.evidenceRoot).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
 if (-not [System.IO.Path]::IsPathFullyQualified($evidenceRoot)) { throw "Evidence root must be absolute" }
+Assert-NoReparseAncestors $evidenceRoot "Evidence root"
 if ([System.IO.Directory]::Exists($evidenceRoot) -and $null -ne (Get-ChildItem -LiteralPath $evidenceRoot -Force | Select-Object -First 1)) { throw "Evidence root must be fresh and empty" }
-[System.IO.Directory]::CreateDirectory($evidenceRoot) | Out-Null
 
 $ids = @($contract.invocations | ForEach-Object { $_.invocationId })
 if (($ids | Select-Object -Unique).Count -ne 2) { throw "Opaque invocation IDs must be distinct" }
 $variablePaths = @()
 foreach ($spec in $contract.invocations) {
-  $variablePaths += @($spec.workdir, $spec.finalPath, $spec.stdoutPath, $spec.stderrPath, $spec.evidencePath, $spec.tempRoot, $spec.cacheRoot, $spec.dependencyRoot)
+  $variablePaths += @($spec.workdir, $spec.finalPath, $spec.stdoutPath, $spec.stderrPath, $spec.evidencePath, $spec.postStatePath, $spec.tempRoot, $spec.cacheRoot, $spec.dependencyRoot)
   $workdir = [System.IO.Path]::GetFullPath($spec.workdir).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
+  Assert-NoReparseAncestors $workdir "Builder workdir"
   if (-not [System.IO.Directory]::Exists($workdir)) { throw "Workdir must exist" }
+  if (Test-PathsNestedOrEqual $workdir $evidenceRoot) { throw "Evidence root and candidate clone must be separate and nonnested" }
+  foreach ($outputPath in @($spec.finalPath, $spec.stdoutPath, $spec.stderrPath, $spec.evidencePath, $spec.postStatePath, $spec.tempRoot, $spec.cacheRoot, $spec.dependencyRoot)) {
+    $resolvedOutput = [System.IO.Path]::GetFullPath($outputPath)
+    Assert-NoReparseAncestors $resolvedOutput "Runtime output"
+    if (-not $resolvedOutput.StartsWith($evidenceRoot + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) { throw "Every output path must resolve beneath evidenceRoot" }
+    if (Test-PathBeneath $workdir $resolvedOutput) { throw "Runtime output may not be inside a candidate clone" }
+  }
+}
+$privateInputPaths = @($contractFullPath, $lockPath, $schemaPath, $builderManifestPath, $builderManifestSchemaPath, $builderAllowlistPath, $builderPreparationScriptPath, [System.IO.Path]::GetFullPath($contract.promptPath))
+foreach ($privatePath in $privateInputPaths) {
+  Assert-NoReparseAncestors $privatePath "Private runtime input"
+  if (Test-PathsNestedOrEqual $privatePath $evidenceRoot) { throw "Private runtime input and evidence root must be separate and nonnested" }
+  foreach ($invocation in $contract.invocations) { if (Test-PathsNestedOrEqual $privatePath $invocation.workdir) { throw "Private runtime input must remain outside every builder workdir" } }
+}
+if ((Test-PathBeneath $contract.invocations[0].workdir $contract.invocations[1].workdir) -or (Test-PathBeneath $contract.invocations[1].workdir $contract.invocations[0].workdir)) { throw "Candidate clones must be nonnested" }
+if (($contract.invocations.port | Select-Object -Unique).Count -ne 2) { throw "Candidate ports must be distinct" }
+if (($variablePaths | ForEach-Object { [System.IO.Path]::GetFullPath($_).ToLowerInvariant() } | Select-Object -Unique).Count -ne $variablePaths.Count) { throw "Runtime paths must be distinct" }
+
+foreach ($spec in $contract.invocations) {
+  $workdir = [System.IO.Path]::GetFullPath($spec.workdir).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
   if (-not [System.IO.Directory]::Exists((Join-Path $workdir ".git"))) { throw "Builder input must be an independent full clone" }
   if ((Invoke-Git $workdir @("remote")).Length -ne 0) { throw "Builder clone remotes must be disabled" }
   if ((Invoke-Git $workdir @("rev-parse", "HEAD")) -ne $contract.commonStartCommit -or (Invoke-Git $workdir @("rev-parse", "HEAD^{tree}")) -ne $contract.commonStartTree) { throw "Builder common-start commit/tree mismatch" }
@@ -137,17 +201,20 @@ foreach ($spec in $contract.invocations) {
   $projectionBytes = [System.Text.UTF8Encoding]::new($false).GetBytes($projectionMaterial.ToString())
   $projectionHash = [System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::HashData($projectionBytes)).Replace("-", "").ToLowerInvariant()
   if ($projectionHash -ne $contract.builderInputProjectionSha256) { throw "Builder projection content hash mismatch" }
-  if ((Invoke-Git $workdir @("status", "--porcelain=v1")).Length -ne 0) { throw "Builder clone must start clean" }
-  if (Test-PathsNestedOrEqual $workdir $evidenceRoot) { throw "Evidence root and candidate clone must be separate and nonnested" }
-  foreach ($outputPath in @($spec.finalPath, $spec.stdoutPath, $spec.stderrPath, $spec.evidencePath, $spec.tempRoot, $spec.cacheRoot, $spec.dependencyRoot)) {
-    $resolvedOutput = [System.IO.Path]::GetFullPath($outputPath)
-    if (-not $resolvedOutput.StartsWith($evidenceRoot + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) { throw "Every output path must resolve beneath evidenceRoot" }
-    if (Test-PathBeneath $workdir $resolvedOutput) { throw "Runtime output may not be inside a candidate clone" }
+  $visibleSnapshot = Get-VisibleFilesystemSnapshot $workdir $true
+  $visibleFiles = @($visibleSnapshot.entries | Where-Object { $_.type -eq "file" })
+  $visibleDirectories = @($visibleSnapshot.entries | Where-Object { $_.type -eq "directory" } | ForEach-Object { $_.path })
+  $expectedDirectories = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+  foreach ($manifestPath in $manifestPaths) {
+    $parent = [System.IO.Path]::GetDirectoryName($manifestPath.Replace("/", [System.IO.Path]::DirectorySeparatorChar))
+    while (-not [string]::IsNullOrEmpty($parent)) { [void]$expectedDirectories.Add($parent.Replace("\", "/")); $parent = [System.IO.Path]::GetDirectoryName($parent) }
   }
+  $expectedDirectoryList = @($expectedDirectories); [Array]::Sort($expectedDirectoryList, [System.StringComparer]::Ordinal)
+  if ((@($visibleFiles | ForEach-Object { $_.path }) -join "`0") -ne ($manifestPaths -join "`0") -or ($visibleDirectories -join "`0") -ne ($expectedDirectoryList -join "`0")) { throw "Builder visible filesystem contains unmanifested files or directories" }
+  foreach ($index in 0..($builderManifest.files.Count - 1)) { if ($visibleFiles[$index].sha256 -ne $builderManifest.files[$index].sha256 -or $visibleFiles[$index].bytes -ne $builderManifest.files[$index].bytes) { throw "Builder visible filesystem bytes diverge from manifest" } }
+  if ((Invoke-Git $workdir @("status", "--porcelain=v1")).Length -ne 0) { throw "Builder clone must start clean" }
 }
-if ((Test-PathBeneath $contract.invocations[0].workdir $contract.invocations[1].workdir) -or (Test-PathBeneath $contract.invocations[1].workdir $contract.invocations[0].workdir)) { throw "Candidate clones must be nonnested" }
-if (($contract.invocations.port | Select-Object -Unique).Count -ne 2) { throw "Candidate ports must be distinct" }
-if (($variablePaths | ForEach-Object { [System.IO.Path]::GetFullPath($_).ToLowerInvariant() } | Select-Object -Unique).Count -ne $variablePaths.Count) { throw "Runtime paths must be distinct" }
+[System.IO.Directory]::CreateDirectory($evidenceRoot) | Out-Null
 
 $runs = @()
 foreach ($spec in $contract.invocations) {
@@ -208,7 +275,8 @@ foreach ($run in $runs) {
   $stdoutPath = [System.IO.Path]::GetFullPath($run.spec.stdoutPath)
   $stderrPath = [System.IO.Path]::GetFullPath($run.spec.stderrPath)
   $evidencePath = [System.IO.Path]::GetFullPath($run.spec.evidencePath)
-  foreach ($outputPath in @($stdoutPath, $stderrPath, $evidencePath, [System.IO.Path]::GetFullPath($run.spec.finalPath))) { [System.IO.Directory]::CreateDirectory((Split-Path -Parent $outputPath)) | Out-Null }
+  $postStatePath = [System.IO.Path]::GetFullPath($run.spec.postStatePath)
+  foreach ($outputPath in @($stdoutPath, $stderrPath, $evidencePath, $postStatePath, [System.IO.Path]::GetFullPath($run.spec.finalPath))) { [System.IO.Directory]::CreateDirectory((Split-Path -Parent $outputPath)) | Out-Null }
   [System.IO.File]::WriteAllText($stdoutPath, $stdout, $Utf8NoBom)
   [System.IO.File]::WriteAllText($stderrPath, $stderr, $Utf8NoBom)
   $events = @(); $rawJsonlValid = $true
@@ -219,11 +287,14 @@ foreach ($run in $runs) {
   $turnEvents = @($events | Where-Object { $_.type -eq "turn.completed" })
   $turnCompleted = $turnEvents.Count -eq 1
   $usage = if ($turnEvents.Count -eq 1 -and $null -ne $turnEvents[0].usage) { $turnEvents[0].usage } else { $null }
+  $postState = Get-VisibleFilesystemSnapshot ([System.IO.Path]::GetFullPath($run.spec.workdir)) $false
+  [System.IO.File]::WriteAllText($postStatePath, ($postState | ConvertTo-Json -Depth 8), $Utf8NoBom)
   $result = [ordered]@{
     role = "builder"; invocationId = $run.spec.invocationId; contractSha256 = Get-Sha256 $contractFullPath; artifactSchemaSha256 = $null; processId = $processId; started = $run.started; startedAt = $run.startedAt.ToString("o")
     startError = $run.startError; stdinDelivered = $run.stdinDelivered; stdinError = $run.stdinError; exitCode = $exitCode; timedOut = $run.timedOut
     argv = $run.argv; argvSha256 = Get-TextSha256 ($run.argv -join "`0"); promptSha256 = $contract.promptSha256
     stdoutPath = $stdoutPath; stderrPath = $stderrPath; finalPath = [System.IO.Path]::GetFullPath($run.spec.finalPath); finalSha256 = if ([System.IO.File]::Exists([System.IO.Path]::GetFullPath($run.spec.finalPath))) { Get-Sha256 ([System.IO.Path]::GetFullPath($run.spec.finalPath)) } else { $null }; finalSchemaValid = $null; artifactBindingValid = $null
+    postStatePath = $postStatePath; postStateSha256 = Get-Sha256 $postStatePath
     threadIds = $threadIds; turnCompleted = $turnCompleted; rawJsonlValid = $rawJsonlValid; unauthorizedToolOrWriteDetected = $null; unauthorizedToolOrWriteUnavailableReason = "runner cannot observe every external tool or write; scoped candidate checks are enforced separately"; sandboxMode = "workspace-write"; inputDisposition = "authorized-worktree-write"; isolationEnforcedBy = "audited-procedural-boundary-plus-cli-sandbox"
     usage = $usage; usageUnavailableReason = if ($null -eq $usage) { "turn.completed did not expose usage" } else { $null }
     runtimeModel = $null; runtimeModelUnavailableReason = "not present in trusted JSONL lifecycle metadata"
