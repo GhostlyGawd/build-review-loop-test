@@ -11,6 +11,9 @@ jobs:
   check:
     runs-on: windows-latest
     timeout-minutes: 10
+    env:
+      POWERSHELL_TELEMETRY_OPTOUT: "1"
+      POWERSHELL_UPDATECHECK: "Off"
     defaults:
       run:
         shell: pwsh
@@ -21,4 +24,31 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Install frozen PowerShell host
+        run: |
+          $archivePath = Join-Path $env:RUNNER_TEMP 'PowerShell-7.6.2-win-x64.zip'
+          $destinationPath = 'C:\Users\rhenm\AppData\Local\pwsh7'
+          Invoke-WebRequest -Uri 'https://github.com/PowerShell/PowerShell/releases/download/v7.6.2/PowerShell-7.6.2-win-x64.zip' -OutFile $archivePath
+
+          $archiveSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $archivePath).Hash.ToLowerInvariant()
+          if ($archiveSha256 -ne '32e0dd26752483ba3f0e40e9ae44150643cbff469c13210c93295d158bfd7b26') {
+            throw "PowerShell archive SHA-256 mismatch: $archiveSha256"
+          }
+
+          if (Test-Path -LiteralPath $destinationPath) {
+            throw "Frozen PowerShell destination already exists: $destinationPath"
+          }
+          New-Item -ItemType Directory -Path $destinationPath | Out-Null
+          Expand-Archive -LiteralPath $archivePath -DestinationPath $destinationPath
+
+          $pwshPath = Join-Path $destinationPath 'pwsh.exe'
+          $pwshSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $pwshPath).Hash.ToLowerInvariant()
+          if ($pwshSha256 -ne '99ec38d8c4910fd5f2feeeec4dedb5076ff39a08ca21e12642822bc8d989e316') {
+            throw "PowerShell host SHA-256 mismatch: $pwshSha256"
+          }
+
+          $pwshVersion = & $pwshPath -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
+          if ($pwshVersion -ne '7.6.2') {
+            throw "PowerShell host version mismatch: $pwshVersion"
+          }
       - run: npm run check
