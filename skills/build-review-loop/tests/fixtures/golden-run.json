@@ -1,8 +1,8 @@
 {
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-conformance",
-  "protocolVersion": "2.3.0",
-  "canonicalContractSha256": "4b8c4753aca6a83025e72a0a76680bf78895b0e3be94cd64fed8c06c123b1b01",
+  "protocolVersion": "2.4.0",
+  "canonicalContractSha256": "541985e02a49b79910282a6e7f26e43fbde3ae500ebfcdf9cef6d031f1a74b49",
   "status": "valid",
   "activeInvalidation": null,
   "invalidAttempts": [
@@ -14,6 +14,42 @@
       "invalidatedAt": "2026-07-19T23:50:00Z",
       "evidenceSha256": "4ed9e9cbdba7becab220ed3f802c03b7bb86648a242b55c63b6793718cd2a320",
       "preservedArtifactSha256": "cc8e04b3d8629a04500b91e9e4db2ce52ef71137f803787f974430017213384d"
+    },
+    {
+      "attemptId": "collaboration-dispatch-cap",
+      "scope": "pre-work-runtime",
+      "code": "COLLABORATION_THREAD_CAP",
+      "reason": "Collaboration dispatch exceeded the thread cap before builder work began; no outcome was scored",
+      "invalidatedAt": "2026-07-20T00:10:00Z",
+      "evidenceSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "preservedArtifactSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+      "attemptId": "cli-v1",
+      "scope": "pre-work-runtime",
+      "code": "CLI_REHEARSAL_INVALID",
+      "reason": "CLI v1 rehearsal invalidated and preserved as runtime evidence only; no outcome was scored",
+      "invalidatedAt": "2026-07-20T00:20:00Z",
+      "evidenceSha256": "e026b75676f33023347a8718434f296ad97f137a784828d0defc9e2b6f1cd977",
+      "preservedArtifactSha256": "ed6b3550ec0f74d1cf963dfb1c2d3b50703aef5b115b03a1c4b17e7ac3a10cf8"
+    },
+    {
+      "attemptId": "cli-v2",
+      "scope": "pre-work-runtime",
+      "code": "CLI_REHEARSAL_INVALID",
+      "reason": "CLI v2 rehearsal invalidated and preserved as runtime evidence only; no outcome was scored",
+      "invalidatedAt": "2026-07-20T00:30:00Z",
+      "evidenceSha256": "116b0d9057a487a8f3375c9b86161733d29dc8c84d25ee69b998b877469135a6",
+      "preservedArtifactSha256": "7da39fd8971906d9ac19f34d4200e6c8766361b35be2492fe36e4ea668b9cb80"
+    },
+    {
+      "attemptId": "cli-v3",
+      "scope": "pre-work-runtime",
+      "code": "CLI_REHEARSAL_INVALID",
+      "reason": "CLI v3 rehearsal was superseded by v4 global-before-exec proof and preserved without scoring",
+      "invalidatedAt": "2026-07-20T00:40:00Z",
+      "evidenceSha256": "347c822115e6f37da632d0704c62028ee86166361dac14a22a377b2a5df85597",
+      "preservedArtifactSha256": "2ed73c4129d9f816ffe22ffe6de413d40c2cba7ed4c68b7c5e822d1c28b66abe"
     }
   ],
   "bindings": {
@@ -41,42 +77,256 @@
     "node": "22.x",
     "npm": "11.11.0"
   },
-  "assignmentEnvelopes": [
+  "cliRuntimeContract": {
+    "contractVersion": "1.0.0",
+    "cliPath": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe",
+    "cliVersion": "codex-cli 0.145.0-alpha.18",
+    "cliSha256": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
+    "authStatus": "Logged in using ChatGPT",
+    "lockPath": "C:\\synthetic\\protocol\\experiment\\lock.json",
+    "lockSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "contractSchemaPath": "C:\\synthetic\\protocol\\experiment\\schemas\\cli-runtime-contract.schema.json",
+    "contractSchemaSha256": "c18db758a6b40194e64c88d3842522ade28ff831806c6315e3c5348e92934c33",
+    "commonStartCommit": "79454a133f990982253744a85ccb8516d62f5a19",
+    "commonStartTree": "1234567890abcdef1234567890abcdef12345678",
+    "promptPath": "C:\\synthetic\\neutral-builder.md",
+    "promptSha256": "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0",
+    "evidenceRoot": "C:\\synthetic\\evidence",
+    "deadlineSeconds": 2400,
+    "invariantArgv": [
+      "-a",
+      "never",
+      "-m",
+      "gpt-5.4",
+      "-c",
+      "model_reasoning_effort=\"xhigh\"",
+      "exec",
+      "--ephemeral",
+      "--ignore-user-config",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "workspace-write",
+      "--json"
+    ],
+    "smokeMode": false,
+    "invocations": [
+      {
+        "invocationId": "3fa8a63edab948c496d7e1028dfbeabf",
+        "workdir": "C:\\synthetic\\work-a",
+        "finalPath": "C:\\synthetic\\evidence\\a\\final.json",
+        "stdoutPath": "C:\\synthetic\\evidence\\a\\stdout.jsonl",
+        "stderrPath": "C:\\synthetic\\evidence\\a\\stderr.txt",
+        "evidencePath": "C:\\synthetic\\evidence\\a\\evidence.json",
+        "tempRoot": "C:\\synthetic\\evidence\\a\\temp",
+        "cacheRoot": "C:\\synthetic\\evidence\\a\\cache",
+        "dependencyRoot": "C:\\synthetic\\evidence\\a\\deps",
+        "port": 41001
+      },
+      {
+        "invocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
+        "workdir": "C:\\synthetic\\work-b",
+        "finalPath": "C:\\synthetic\\evidence\\b\\final.json",
+        "stdoutPath": "C:\\synthetic\\evidence\\b\\stdout.jsonl",
+        "stderrPath": "C:\\synthetic\\evidence\\b\\stderr.txt",
+        "evidencePath": "C:\\synthetic\\evidence\\b\\evidence.json",
+        "tempRoot": "C:\\synthetic\\evidence\\b\\temp",
+        "cacheRoot": "C:\\synthetic\\evidence\\b\\cache",
+        "dependencyRoot": "C:\\synthetic\\evidence\\b\\deps",
+        "port": 41002
+      }
+    ]
+  },
+  "cliRuntimeEvidence": {
+    "valid": true,
+    "results": [
+      {
+        "role": "builder",
+        "invocationId": "3fa8a63edab948c496d7e1028dfbeabf",
+        "contractSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "artifactSchemaSha256": null,
+        "processId": 12001,
+        "started": true,
+        "startedAt": "2026-07-20T01:00:00Z",
+        "startError": null,
+        "stdinDelivered": true,
+        "stdinError": null,
+        "exitCode": 0,
+        "timedOut": false,
+        "argv": [
+          "-a",
+          "never",
+          "-m",
+          "gpt-5.4",
+          "-c",
+          "model_reasoning_effort=\"xhigh\"",
+          "exec",
+          "--ephemeral",
+          "--ignore-user-config",
+          "--skip-git-repo-check",
+          "--sandbox",
+          "workspace-write",
+          "--json",
+          "-C",
+          "C:\\synthetic\\work-a",
+          "-o",
+          "C:\\synthetic\\evidence\\a\\final.json",
+          "-"
+        ],
+        "argvSha256": "25128d39e4e7c032cf4abc6e508b05b67ff605c2572d36dddd405a55c9fc63cc",
+        "promptSha256": "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0",
+        "stdoutPath": "C:\\synthetic\\evidence\\a\\stdout.jsonl",
+        "stdoutSha256": "3db78fe24b68efe647e0762d16db05774781bfe0a905dc3876ce0048a66899b6",
+        "stderrPath": "C:\\synthetic\\evidence\\a\\stderr.txt",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "finalPath": "C:\\synthetic\\evidence\\a\\final.json",
+        "finalSha256": "1212121212121212121212121212121212121212121212121212121212121212",
+        "finalSchemaValid": null,
+        "artifactBindingValid": null,
+        "threadIds": ["019f827b-221c-7021-b650-a948e9dd4298"],
+        "turnCompleted": true,
+        "rawJsonlValid": true,
+        "unauthorizedToolOrWriteDetected": null,
+        "sandboxMode": "workspace-write",
+        "inputDisposition": "authorized-worktree-write",
+        "isolationEnforcedBy": "audited-procedural-boundary-plus-cli-sandbox",
+        "usage": {
+          "input_tokens": 100,
+          "cached_input_tokens": 10,
+          "output_tokens": 20
+        },
+        "usageUnavailableReason": null,
+        "runtimeModel": null,
+        "runtimeModelUnavailableReason": "not present in trusted JSONL lifecycle metadata",
+        "runtimeProvider": null,
+        "runtimeProviderUnavailableReason": "not present in trusted JSONL lifecycle metadata",
+        "reasoningSetting": null,
+        "reasoningSettingUnavailableReason": "not present in trusted JSONL lifecycle metadata",
+        "metadataSource": "unavailable",
+        "unauthorizedToolOrWriteUnavailableReason": "runner cannot observe every external tool or write; scoped candidate checks are enforced separately"
+      },
+      {
+        "role": "builder",
+        "invocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
+        "contractSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "artifactSchemaSha256": null,
+        "processId": 12002,
+        "started": true,
+        "startedAt": "2026-07-20T01:00:00Z",
+        "startError": null,
+        "stdinDelivered": true,
+        "stdinError": null,
+        "exitCode": 0,
+        "timedOut": false,
+        "argv": [
+          "-a",
+          "never",
+          "-m",
+          "gpt-5.4",
+          "-c",
+          "model_reasoning_effort=\"xhigh\"",
+          "exec",
+          "--ephemeral",
+          "--ignore-user-config",
+          "--skip-git-repo-check",
+          "--sandbox",
+          "workspace-write",
+          "--json",
+          "-C",
+          "C:\\synthetic\\work-b",
+          "-o",
+          "C:\\synthetic\\evidence\\b\\final.json",
+          "-"
+        ],
+        "argvSha256": "77b4ec17d695ed516ab31865ef0c19ad368b0c1ab0ce3432b4724cf13f682b7a",
+        "promptSha256": "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0",
+        "stdoutPath": "C:\\synthetic\\evidence\\b\\stdout.jsonl",
+        "stdoutSha256": "3becf7950cf2eb22eed98485f48cd6f0aae726de7067fa07e9630428c67a41e2",
+        "stderrPath": "C:\\synthetic\\evidence\\b\\stderr.txt",
+        "stderrSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "finalPath": "C:\\synthetic\\evidence\\b\\final.json",
+        "finalSha256": "2323232323232323232323232323232323232323232323232323232323232323",
+        "finalSchemaValid": null,
+        "artifactBindingValid": null,
+        "threadIds": ["019f827b-221c-7363-a23f-0f40b4ec017d"],
+        "turnCompleted": true,
+        "rawJsonlValid": true,
+        "unauthorizedToolOrWriteDetected": null,
+        "sandboxMode": "workspace-write",
+        "inputDisposition": "authorized-worktree-write",
+        "isolationEnforcedBy": "audited-procedural-boundary-plus-cli-sandbox",
+        "usage": {
+          "input_tokens": 110,
+          "cached_input_tokens": 11,
+          "output_tokens": 22
+        },
+        "usageUnavailableReason": null,
+        "runtimeModel": null,
+        "runtimeModelUnavailableReason": "not present in trusted JSONL lifecycle metadata",
+        "runtimeProvider": null,
+        "runtimeProviderUnavailableReason": "not present in trusted JSONL lifecycle metadata",
+        "reasoningSetting": null,
+        "reasoningSettingUnavailableReason": "not present in trusted JSONL lifecycle metadata",
+        "metadataSource": "unavailable",
+        "unauthorizedToolOrWriteUnavailableReason": "runner cannot observe every external tool or write; scoped candidate checks are enforced separately"
+      }
+    ]
+  },
+  "cliRuntimeStdoutByInvocation": {
+    "3fa8a63edab948c496d7e1028dfbeabf": "{\"type\":\"thread.started\",\"thread_id\":\"019f827b-221c-7021-b650-a948e9dd4298\"}\n{\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":100,\"cached_input_tokens\":10,\"output_tokens\":20}}\n",
+    "b3132c32d2fb40e2b65fa1a23cd6fe2d": "{\"type\":\"thread.started\",\"thread_id\":\"019f827b-221c-7363-a23f-0f40b4ec017d\"}\n{\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":110,\"cached_input_tokens\":11,\"output_tokens\":22}}\n"
+  },
+  "roleRuntimeEvidence": [
     {
-      "schemaVersion": "1.0.0",
-      "opaqueWorkerKey": "7f3a9d2c4b6e8f1023456789",
-      "opaqueCandidateId": "a1c3e5f709b2d4e6f8012345",
-      "absoluteWorktreePath": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-worktree-7f3a9d2c",
-      "buildBranch": "experiment/pilot-002-build-7f3a9d2c",
-      "baseBranch": "experiment/pilot-002-base-7f3a9d2c",
-      "commonStartCommit": "79454a133f990982253744a85ccb8516d62f5a19",
-      "commonStartTree": "1234567890abcdef1234567890abcdef12345678",
-      "promptSha256": "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39",
-      "configSha256": "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606",
-      "envelopeSchemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21"
+      "role": "reviewer",
+      "invocationId": "44444444444444444444444444444444",
+      "processId": 12003,
+      "threadId": "019f827b-221c-7000-8000-000000000003",
+      "lifecycleComplete": true,
+      "evidenceSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "usage": {
+        "input_tokens": 80,
+        "cached_input_tokens": 8,
+        "output_tokens": 16
+      }
     },
     {
-      "schemaVersion": "1.0.0",
-      "opaqueWorkerKey": "1b4c7e9a2d5f803162748590",
-      "opaqueCandidateId": "b2d4f60718c3e5a709123456",
-      "absoluteWorktreePath": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-worktree-1b4c7e9a",
-      "buildBranch": "experiment/pilot-002-build-1b4c7e9a",
-      "baseBranch": "experiment/pilot-002-base-1b4c7e9a",
-      "commonStartCommit": "79454a133f990982253744a85ccb8516d62f5a19",
-      "commonStartTree": "1234567890abcdef1234567890abcdef12345678",
-      "promptSha256": "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39",
-      "configSha256": "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606",
-      "envelopeSchemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21"
-    }
-  ],
-  "assignmentEnvelopeAttestations": [
-    {
-      "opaqueCandidateId": "a1c3e5f709b2d4e6f8012345",
-      "envelopeSha256": "c11d5922f5477b9be7ec446c19cda7080c69904eb22189ac862fc9311ed3e399"
+      "role": "evaluator",
+      "invocationId": "66666666666666666666666666666666",
+      "processId": 12006,
+      "threadId": "019f827b-221c-7000-8000-000000000006",
+      "lifecycleComplete": true,
+      "evidenceSha256": "6666666666666666666666666666666666666666666666666666666666666666",
+      "usage": {
+        "input_tokens": 120,
+        "cached_input_tokens": 12,
+        "output_tokens": 24
+      }
     },
     {
-      "opaqueCandidateId": "b2d4f60718c3e5a709123456",
-      "envelopeSha256": "bb438b9577df4658fae28c84864ead67422e8c6deb3d45a387d7e15331a4e2d8"
+      "role": "evaluator",
+      "invocationId": "77777777777777777777777777777777",
+      "processId": 12007,
+      "threadId": "019f827b-221c-7000-8000-000000000007",
+      "lifecycleComplete": true,
+      "evidenceSha256": "7777777777777777777777777777777777777777777777777777777777777777",
+      "usage": {
+        "input_tokens": 121,
+        "cached_input_tokens": 12,
+        "output_tokens": 25
+      }
+    },
+    {
+      "role": "evaluator",
+      "invocationId": "88888888888888888888888888888888",
+      "processId": 12008,
+      "threadId": "019f827b-221c-7000-8000-000000000008",
+      "lifecycleComplete": true,
+      "evidenceSha256": "8888888888888888888888888888888888888888888888888888888888888888",
+      "usage": {
+        "input_tokens": 122,
+        "cached_input_tokens": 12,
+        "output_tokens": 26
+      }
     }
   ],
   "workers": [
@@ -95,10 +345,28 @@
       "role": "reviewer",
       "invoked": true
     },
-    { "workerId": "worker-04-fixer-31a9", "role": "fixer", "invoked": false },
-    { "workerId": "worker-05-tester-c472", "role": "tester", "invoked": false },
+    {
+      "workerId": "worker-04-fixer-31a9",
+      "role": "fixer",
+      "invoked": false
+    },
+    {
+      "workerId": "worker-05-tester-c472",
+      "role": "tester",
+      "invoked": false
+    },
     {
       "workerId": "worker-06-evaluator-2d5b",
+      "role": "evaluator",
+      "invoked": true
+    },
+    {
+      "workerId": "worker-09-evaluator-7d6c",
+      "role": "evaluator",
+      "invoked": true
+    },
+    {
+      "workerId": "worker-10-evaluator-8e7d",
       "role": "evaluator",
       "invoked": true
     },
@@ -117,9 +385,10 @@
     "candidate-a": {
       "candidateLabel": "candidate-a",
       "workerId": "worker-01-builder-a-7b4c",
-      "promptSha256": "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39",
-      "configSha256": "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606",
-      "assignmentEnvelopeSha256": "c11d5922f5477b9be7ec446c19cda7080c69904eb22189ac862fc9311ed3e399",
+      "promptSha256": "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0",
+      "configSha256": "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4",
+      "runtimeInvocationId": "3fa8a63edab948c496d7e1028dfbeabf",
+      "runtimeEvidenceSha256": "67dca93773c73ae71d0b60f446dbcfe13349d9a130d0ba29208f755bb0da12e6",
       "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
       "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
       "sealedAt": "2026-07-20T01:00:00Z"
@@ -127,9 +396,10 @@
     "candidate-b": {
       "candidateLabel": "candidate-b",
       "workerId": "worker-02-builder-b-91e2",
-      "promptSha256": "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39",
-      "configSha256": "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606",
-      "assignmentEnvelopeSha256": "bb438b9577df4658fae28c84864ead67422e8c6deb3d45a387d7e15331a4e2d8",
+      "promptSha256": "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0",
+      "configSha256": "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4",
+      "runtimeInvocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
+      "runtimeEvidenceSha256": "616e620a498814fe7f8c620181afdfefcad9f01ae8e1964ba90771ab4266ca9d",
       "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
       "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
       "sealedAt": "2026-07-20T01:00:00Z"
@@ -137,15 +407,18 @@
   },
   "assignment": {
     "frozenInitialEvidenceHashes": {
-      "candidate-a": "3f6837046921cca0cb12d571242e007149f9179843864ebc617676a7c63697bb",
-      "candidate-b": "57cbfec8ba5fb04b0550f42baf5aecd2811cd38df125ffdda107d9db9992553d"
+      "candidate-a": "feb5a0116b64c0e26195d835b6bb999500e5329343bef7fa36e1967a195da40c",
+      "candidate-b": "2a97f4f6ec34345427389bea487a15d00290fc3fcd22ec7a80dc2a32f5457a02"
     },
     "seedHex": "4f8c49a049cdb2bef7fed4950c9bbe8127160599d5b72c549b6d2878e4706b02",
     "digestSha256": "aec4dcdcdefeae6fdda5dccb89d0cf2203e4d9ae200cb7f48650b8cea64f748e",
     "draw": 0,
     "generatedAt": "2026-07-20T01:01:00Z",
     "generator": "node:crypto.randomBytes-compatible synthetic conformance source",
-    "mapping": { "candidate-a": "baseline", "candidate-b": "treatment" }
+    "mapping": {
+      "candidate-a": "baseline",
+      "candidate-b": "treatment"
+    }
   },
   "evaluationRandomization": {
     "seedHex": "f0f09f423ebce85f0535a0dd95faa92891fdc19bd817b2a5c99e5238fe59056b",
@@ -156,16 +429,19 @@
       "Tfinal": "cee406dc354796bc4f26adff1b40928de09887bb1ac459474bbdc7e25d4de1bf"
     },
     "order": ["X", "Y", "Z"],
-    "mapping": { "X": "B0", "Y": "T0", "Z": "Tfinal" }
+    "mapping": {
+      "X": "B0",
+      "Y": "T0",
+      "Z": "Tfinal"
+    }
   },
   "runs": {
     "candidate-a": {
       "candidateLabel": "candidate-a",
       "assignedArm": "baseline",
       "builderWorkerId": "worker-01-builder-a-7b4c",
-      "assignmentEnvelopePath": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-builder-assignments\\builder_7f3a9d2c.json",
-      "assignmentEnvelopeSha256": "c11d5922f5477b9be7ec446c19cda7080c69904eb22189ac862fc9311ed3e399",
-      "assignmentEnvelopeSchemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21",
+      "runtimeInvocationId": "3fa8a63edab948c496d7e1028dfbeabf",
+      "runtimeEvidenceSha256": "67dca93773c73ae71d0b60f446dbcfe13349d9a130d0ba29208f755bb0da12e6",
       "initialSnapshot": {
         "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
         "sealedAt": "2026-07-20T01:00:00Z",
@@ -187,9 +463,8 @@
       "candidateLabel": "candidate-b",
       "assignedArm": "treatment",
       "builderWorkerId": "worker-02-builder-b-91e2",
-      "assignmentEnvelopePath": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-builder-assignments\\builder_1b4c7e9a.json",
-      "assignmentEnvelopeSha256": "bb438b9577df4658fae28c84864ead67422e8c6deb3d45a387d7e15331a4e2d8",
-      "assignmentEnvelopeSchemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21",
+      "runtimeInvocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
+      "runtimeEvidenceSha256": "616e620a498814fe7f8c620181afdfefcad9f01ae8e1964ba90771ab4266ca9d",
       "initialSnapshot": {
         "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
         "sealedAt": "2026-07-20T01:00:00Z",
@@ -224,6 +499,9 @@
       "snapshotCommit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
       "roleInstanceId": "cycle-1-reviewer",
       "workerId": "worker-03-reviewer-6f8d",
+      "runtimeInvocationId": "44444444444444444444444444444444",
+      "runtimeProcessId": 12003,
+      "runtimeThreadId": "019f827b-221c-7000-8000-000000000003",
       "startedAt": "2026-07-20T01:02:00Z",
       "completedAt": "2026-07-20T01:10:00Z",
       "checksRun": [],
@@ -257,12 +535,54 @@
       "historyFree": true
     }
   ],
+  "blindedPackageManifest": {
+    "manifestVersion": "1.0.0",
+    "mappingSeedSha256": "84e09f0fb1fddf4d5a0f58bb5e459f9e8e83e266f4b9567192ab42012376ce2f",
+    "randomizedOrder": ["X", "Y", "Z"],
+    "frozenGateSetSha256": "ac6ad587fc42e4bf423134fddb1ab5704a9924cff968523c5e61cccba8b4a70e",
+    "packages": [
+      {
+        "packageLabel": "X",
+        "packageSha256": "2ead643fcb670f73e7a189e566f463a42df44db4ecec83905d7fa8928495ec4d",
+        "fileCount": 12,
+        "historyFree": true,
+        "lineageScanPassed": true,
+        "timestampsNormalized": true
+      },
+      {
+        "packageLabel": "Y",
+        "packageSha256": "76b3ec7289368fc1a26b7e82f4d22807dfea6435318ba637c6216f80cc28fd31",
+        "fileCount": 12,
+        "historyFree": true,
+        "lineageScanPassed": true,
+        "timestampsNormalized": true
+      },
+      {
+        "packageLabel": "Z",
+        "packageSha256": "02827ac286660fbf195489e92fbb3b5fd9b38f4bd4d6090002d07c885e111239",
+        "fileCount": 12,
+        "historyFree": true,
+        "lineageScanPassed": true,
+        "timestampsNormalized": true
+      }
+    ],
+    "sanitizationPolicySha256": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+  },
   "evaluations": [
     {
       "packageLabel": "X",
       "packageSha256": "2ead643fcb670f73e7a189e566f463a42df44db4ecec83905d7fa8928495ec4d",
       "evaluatorWorkerId": "worker-06-evaluator-2d5b",
+      "runtimeInvocationId": "66666666666666666666666666666666",
+      "runtimeProcessId": 12006,
+      "runtimeThreadId": "019f827b-221c-7000-8000-000000000006",
+      "evaluationSequence": 1,
+      "revisionAllowed": false,
+      "mappingGuess": "unknown",
+      "mappingGuessConfidence": 0,
+      "mappingGuessEvidence": "No diagnostic basis observed.",
       "evaluatedAt": "2026-07-20T01:30:00Z",
+      "sealedAt": "2026-07-20T01:30:00Z",
       "publicTests": {
         "passed": 20,
         "failed": 0,
@@ -440,8 +760,17 @@
     {
       "packageLabel": "Y",
       "packageSha256": "76b3ec7289368fc1a26b7e82f4d22807dfea6435318ba637c6216f80cc28fd31",
-      "evaluatorWorkerId": "worker-06-evaluator-2d5b",
+      "evaluatorWorkerId": "worker-09-evaluator-7d6c",
+      "runtimeInvocationId": "77777777777777777777777777777777",
+      "runtimeProcessId": 12007,
+      "runtimeThreadId": "019f827b-221c-7000-8000-000000000007",
+      "evaluationSequence": 2,
+      "revisionAllowed": false,
+      "mappingGuess": "T0",
+      "mappingGuessConfidence": 40,
+      "mappingGuessEvidence": "Synthetic fixture guess based only on observable implementation structure.",
       "evaluatedAt": "2026-07-20T01:40:00Z",
+      "sealedAt": "2026-07-20T01:40:00Z",
       "publicTests": {
         "passed": 18,
         "failed": 2,
@@ -619,8 +948,17 @@
     {
       "packageLabel": "Z",
       "packageSha256": "02827ac286660fbf195489e92fbb3b5fd9b38f4bd4d6090002d07c885e111239",
-      "evaluatorWorkerId": "worker-06-evaluator-2d5b",
+      "evaluatorWorkerId": "worker-10-evaluator-8e7d",
+      "runtimeInvocationId": "88888888888888888888888888888888",
+      "runtimeProcessId": 12008,
+      "runtimeThreadId": "019f827b-221c-7000-8000-000000000008",
+      "evaluationSequence": 3,
+      "revisionAllowed": false,
+      "mappingGuess": "Tfinal",
+      "mappingGuessConfidence": 40,
+      "mappingGuessEvidence": "Synthetic fixture guess based only on observable implementation structure.",
       "evaluatedAt": "2026-07-20T01:50:00Z",
+      "sealedAt": "2026-07-20T01:50:00Z",
       "publicTests": {
         "passed": 18,
         "failed": 2,
@@ -797,16 +1135,24 @@
     }
   ],
   "outcome": {
-    "packageMapping": { "X": "B0", "Y": "T0", "Z": "Tfinal" },
-    "scores": { "B0": 95, "T0": 83, "Tfinal": 83 },
+    "packageMapping": {
+      "X": "B0",
+      "Y": "T0",
+      "Z": "Tfinal"
+    },
+    "scores": {
+      "B0": 95,
+      "T0": 83,
+      "Tfinal": 83
+    },
     "primaryTfinalMinusB0": -12,
     "secondaryTfinalMinusT0": 0,
     "mainSelection": "baseline",
     "tiePolicy": "baseline",
     "evaluationArtifactHashes": {
-      "X": "70fe7ac2545b28bf72e85f94fc247ecad6aef15db4e831fcc081fe76a1a126cc",
-      "Y": "26de3fb48d3ad0cb417614d168a94001eac5730b0e21e3031886a8913e516c85",
-      "Z": "b0455ea53c94e18db049c786ef46d460081f6266d884763fdd756da8bb8ea4af"
+      "X": "476be5085c0aacbbacd972e84f8ba83870f9e712f7b5c877b1a9de75d4438306",
+      "Y": "be1357b13d285da474c3a09320db3fa01b9014f90413f3a7b6b6f374d0f716dd",
+      "Z": "8b91b99fef52e3b70c8fa32e95f713de0466d32609aac66c171d65f083fe3eda"
     },
     "evidenceHash": "c32db5e73d59ee2230927b039599848ae48413174361a3dd1af84a4ec74fce1e",
     "unblinderWorkerId": "worker-07-unblinder-8aa1",
@@ -817,7 +1163,7 @@
       "workerId": "worker-01-builder-a-7b4c",
       "role": "builder",
       "candidateLabel": "candidate-a",
-      "packageLabel": null,
+      "packageLabel": "X",
       "cycle": null,
       "turnLimit": 1,
       "wallSecondsMaximum": 2400,
@@ -877,7 +1223,7 @@
       "workerId": "worker-06-evaluator-2d5b",
       "role": "evaluator",
       "candidateLabel": null,
-      "packageLabel": null,
+      "packageLabel": "X",
       "cycle": null,
       "turnLimit": 1,
       "wallSecondsMaximum": 1800,
@@ -887,8 +1233,48 @@
       "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
       "modelConfigUnavailableReason": null,
       "startedAt": "2026-07-20T01:20:00Z",
+      "completedAt": "2026-07-20T01:30:00Z",
+      "wallSeconds": 600,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-09-evaluator-7d6c",
+      "role": "evaluator",
+      "candidateLabel": null,
+      "packageLabel": "Y",
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 1800,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "provider does not expose an enforceable per-role ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+      "modelConfigUnavailableReason": null,
+      "startedAt": "2026-07-20T01:31:00Z",
+      "completedAt": "2026-07-20T01:40:00Z",
+      "wallSeconds": 540,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-10-evaluator-8e7d",
+      "role": "evaluator",
+      "candidateLabel": null,
+      "packageLabel": "Z",
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 1800,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "provider does not expose an enforceable per-role ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+      "modelConfigUnavailableReason": null,
+      "startedAt": "2026-07-20T01:41:00Z",
       "completedAt": "2026-07-20T01:50:00Z",
-      "wallSeconds": 1800,
+      "wallSeconds": 540,
       "totalTokens": null,
       "usd": null,
       "source": "unavailable"
@@ -938,32 +1324,32 @@
     {
       "sequence": 0,
       "artifactKey": "builderFreezes.candidate-a",
-      "artifactSha256": "3f6837046921cca0cb12d571242e007149f9179843864ebc617676a7c63697bb",
+      "artifactSha256": "83f46c5c8b36afee0f607e05b35732476418cda19025f47063f2a64c9d578a81",
       "previousSha256": null
     },
     {
       "sequence": 1,
       "artifactKey": "builderFreezes.candidate-b",
-      "artifactSha256": "57cbfec8ba5fb04b0550f42baf5aecd2811cd38df125ffdda107d9db9992553d",
-      "previousSha256": "3f6837046921cca0cb12d571242e007149f9179843864ebc617676a7c63697bb"
+      "artifactSha256": "3bddcf01a090ea015aa08c27cbbce7c721c4593f873f85ea8dd1595686d5e5db",
+      "previousSha256": "83f46c5c8b36afee0f607e05b35732476418cda19025f47063f2a64c9d578a81"
     },
     {
       "sequence": 2,
       "artifactKey": "assignment",
-      "artifactSha256": "d5737e15ab62aeb26f1e1847f906c833989f92961b03e8f01b9d9be1f18bdf97",
-      "previousSha256": "57cbfec8ba5fb04b0550f42baf5aecd2811cd38df125ffdda107d9db9992553d"
+      "artifactSha256": "c499551590308f2d59114d041dcef51e1841035c8f21be614a8ad5a7d049f5d4",
+      "previousSha256": "3bddcf01a090ea015aa08c27cbbce7c721c4593f873f85ea8dd1595686d5e5db"
     },
     {
       "sequence": 3,
       "artifactKey": "reviews.0",
-      "artifactSha256": "e18d3960d1bea8be590499a40934e9b07824abdc391ba17b8b9ba9af85788267",
-      "previousSha256": "d5737e15ab62aeb26f1e1847f906c833989f92961b03e8f01b9d9be1f18bdf97"
+      "artifactSha256": "92912f617038291cedc763e5476beae0f27179b78783d6f7e57a20f97ea4e5f9",
+      "previousSha256": "c499551590308f2d59114d041dcef51e1841035c8f21be614a8ad5a7d049f5d4"
     },
     {
       "sequence": 4,
       "artifactKey": "packages.0",
       "artifactSha256": "2ead643fcb670f73e7a189e566f463a42df44db4ecec83905d7fa8928495ec4d",
-      "previousSha256": "e18d3960d1bea8be590499a40934e9b07824abdc391ba17b8b9ba9af85788267"
+      "previousSha256": "92912f617038291cedc763e5476beae0f27179b78783d6f7e57a20f97ea4e5f9"
     },
     {
       "sequence": 5,
@@ -980,32 +1366,32 @@
     {
       "sequence": 7,
       "artifactKey": "evaluations.0",
-      "artifactSha256": "70fe7ac2545b28bf72e85f94fc247ecad6aef15db4e831fcc081fe76a1a126cc",
+      "artifactSha256": "476be5085c0aacbbacd972e84f8ba83870f9e712f7b5c877b1a9de75d4438306",
       "previousSha256": "02827ac286660fbf195489e92fbb3b5fd9b38f4bd4d6090002d07c885e111239"
     },
     {
       "sequence": 8,
       "artifactKey": "evaluations.1",
-      "artifactSha256": "26de3fb48d3ad0cb417614d168a94001eac5730b0e21e3031886a8913e516c85",
-      "previousSha256": "70fe7ac2545b28bf72e85f94fc247ecad6aef15db4e831fcc081fe76a1a126cc"
+      "artifactSha256": "be1357b13d285da474c3a09320db3fa01b9014f90413f3a7b6b6f374d0f716dd",
+      "previousSha256": "476be5085c0aacbbacd972e84f8ba83870f9e712f7b5c877b1a9de75d4438306"
     },
     {
       "sequence": 9,
       "artifactKey": "evaluations.2",
-      "artifactSha256": "b0455ea53c94e18db049c786ef46d460081f6266d884763fdd756da8bb8ea4af",
-      "previousSha256": "26de3fb48d3ad0cb417614d168a94001eac5730b0e21e3031886a8913e516c85"
+      "artifactSha256": "8b91b99fef52e3b70c8fa32e95f713de0466d32609aac66c171d65f083fe3eda",
+      "previousSha256": "be1357b13d285da474c3a09320db3fa01b9014f90413f3a7b6b6f374d0f716dd"
     },
     {
       "sequence": 10,
       "artifactKey": "outcome",
-      "artifactSha256": "05593bce8f7783a0311a2a8380f23351151c84e20c277874620e1d61eb68737f",
-      "previousSha256": "b0455ea53c94e18db049c786ef46d460081f6266d884763fdd756da8bb8ea4af"
+      "artifactSha256": "0cc04f206431553ad9be57ea0bacc81356d1e5339168425f605bd681c9b2fd4a",
+      "previousSha256": "8b91b99fef52e3b70c8fa32e95f713de0466d32609aac66c171d65f083fe3eda"
     },
     {
       "sequence": 11,
       "artifactKey": "costs",
-      "artifactSha256": "3a42b239a651351f203d2017325ace64f7f0a86fefbfb7dca97d3dc2d10ff873",
-      "previousSha256": "05593bce8f7783a0311a2a8380f23351151c84e20c277874620e1d61eb68737f"
+      "artifactSha256": "9fb0252efa27fcfaf7aa6842d21ef6ba1b75e2d9b4dcf67b51cd42eff9ea8343",
+      "previousSha256": "0cc04f206431553ad9be57ea0bacc81356d1e5339168425f605bd681c9b2fd4a"
     }
   ]
 }

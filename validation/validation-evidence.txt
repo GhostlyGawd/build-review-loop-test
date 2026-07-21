@@ -1,48 +1,65 @@
-build-review-loop skill v1 prospective runtime-envelope conformance validation
-repository: GhostlyGawd/build-review-loop-test
-branch: experiment/skill-v1
-sync parent: 7f313955de0dc2c85f66c8efb5d0ca4badf423c8
-public protocol source commit: b76a5fa3a82543d793b7344648e0abbc51214958
-protocol version: 2.3.0
+build-review-loop skill v1 / protocol 2.4.0-draft validation evidence
+validated: 2026-07-21 America/New_York
+skill base commit: 33355b97041070e1dec4b7c9beca4ce96faa50bb
+skill branch: experiment/skill-v1
+protocol source commit: cb198b3b2985643c9984d1ff40b9a7cf70db8bd6
+protocol source tree: fb7e392f0697ca0c9376cde664682f7708288c9a
+candidate access: none
+push/PR/publication: none
 
-Authorized byte-identical public source adoption
-canonical contract source/blob/raw/domain SHA-256: experiment/canonical-contract.json / 0188977baea4f49c717f265065fd94393c14a107 / 7588fb1e58ae89a06bcaf307895664d89bb83bd5c93f340f79715bd62153cc73 / 4b8c4753aca6a83025e72a0a76680bf78895b0e3be94cd64fed8c06c123b1b01
-valid golden source/blob/raw/domain SHA-256: experiment/golden-run/golden-run.json / 18b23839db3338152c91003d92ebbaade438f8d1 / 80d087b959ddf3fdfc9a211ccfb8903187164701bc48171898f2e37d89c84f5c / 58231f1acf65fbc572602712da4247521aeba4beefafa1f520444bdeafd1f062
-invalid-current source/blob/raw/domain SHA-256: experiment/golden-run/invalid-current.json / 80f0060aee55b99af4b11b359ffb4bb292532941 / 06c0aad89ddf2eee365688196e1324b26b49ad662e86c3432d76452a7846f72b / 90b7950bdf2daa14842bacce85e103e8cf305301e80958110f774dc53636f95d
-assignment schema source/blob/raw SHA-256: experiment/schemas/assignment-envelope.schema.json / d3ea3545732f5e83604fac5ff8f5927c526d5056 / a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21
-neutral prompt source/blob/raw SHA-256: experiment/prompts/neutral-builder.md / 14c85d5b935a8d882ef696485c071787f59845f7 / 28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39
-builder config source/blob/raw SHA-256: experiment/builder-config.json / 980131f1ef7a69e1e103f27e42a629faf7455720 / 8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606
-result: all six bundled sources are byte-identical to pinned public Git blobs; JSON fixture canonical hashes and every raw source hash are enforced
+Source-byte parity
+- validation/source-parity.json records 28 protocol-derived source mappings.
+- Each bundled Git blob equals the named protocol commit's Git blob.
+- allMatch: true; fileCount: 28.
+- Sources cover canonical/config/fixtures; builder+smoke+four role prompts; builder/role/supervision/mapping/manifest schemas and templates; four role artifact schemas plus finding; both PowerShell runners; blinded packager.
 
-Opaque runtime-envelope contract
-result: exact 11 fields; no semantic extension fields; schema/opaque ID/branch/hash syntax enforced
-result: prompt/config/schema commitments equal canonical and lock values; common-start commit/tree match across the pair
-result: opaque keys, candidate IDs, worktrees, and all build/base branches are distinct; worktrees are canonical safe workspace children and non-nested
-result: exactly two separately hashed attestations cover both opaque candidates; builder freezes and run records bind those hashes and the schema
-result: direct files require the frozen coordination directory and a lowercase `[a-z0-9_]+.json` task leaf; neutral prompt makes directory listing or sibling reads invalidating
-result: real two-file helper inputs and embedded protocol fixture pairs are accepted through explicit envelope validation
+Frozen runtime coverage
+- PowerShell host: C:\Users\rhenm\AppData\Local\pwsh7\pwsh.exe
+- PowerShell version/hash: 7.6.2 / 99ec38d8c4910fd5f2feeeec4dedb5076ff39a08ca21e12642822bc8d989e316
+- CLI version/hash: codex-cli 0.145.0-alpha.18 / 20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4
+- Model/reasoning/auth: gpt-5.4 / xhigh / Logged in using ChatGPT
+- Both exact runners parse under the pinned PowerShell host.
+- Template builder and role contracts fail closed in preflight before any Codex launch.
+- The separate smoke prompt is accepted only in smoke mode; builder mode binds the neutral prompt.
+- No live model runner or candidate execution was performed by this skill validation.
 
-Official skill packaging
-generator: python C:\Users\rhenm\.codex\skills\.system\skill-creator\scripts\generate_openai_yaml.py .\skills\build-review-loop --interface 'display_name=Build Review Loop' --interface 'short_description=Run the public blinded review-loop pilot' --interface 'default_prompt=Use $build-review-loop to run the public protocol-v2 neutral-build review-loop experiment.'
-generator result: exit 0; [OK] Created agents/openai.yaml
-quick validation: python C:\Users\rhenm\.codex\skills\.system\skill-creator\scripts\quick_validate.py .\skills\build-review-loop
-quick validation result: exit 0; Skill is valid!
+Skill validator
+command: python skills/build-review-loop/scripts/validate_artifacts.py skills/build-review-loop/tests/fixtures/golden-run.json --mode execution --expect-golden
+result: PASS
 
-Python and behavioral validation
-syntax command: python -m py_compile .\skills\build-review-loop\scripts\validate_artifacts.py .\skills\build-review-loop\scripts\test_validate_artifacts.py
-syntax result: exit 0
-suite command: python -m unittest discover -s .\skills\build-review-loop\scripts -p test_*.py
-suite result: exit 0; 71 tests ran; all passed
-positive envelope coverage: exact public golden/invalid pairs; embedded envelope CLI; real two-file helper with direct safe task-leaf inputs; exact source bytes/hashes; separate canonical attestations; valid prior 2.2 conclusions and evaluation semantics
-negative envelope coverage: extra semantics; schema/opaque IDs; prompt/config/schema canonical and lock drift; common-start mismatch; unsafe/noncanonical/coordination/nested worktrees; invalid or duplicate branches/IDs; missing/extra/bad/duplicate attestations; unattested freezes; run hash/schema drift; bad direct directory/leaf/extension; removed sibling-access invalidation prose
-preserved negative coverage: arbitrary/invalid conclusion states; finding/run/evidence/rubric/evaluation/budget/gate/hidden/worker/package/outcome drift; execution zero/sentinel data
+command: python skills/build-review-loop/scripts/validate_artifacts.py skills/build-review-loop/tests/fixtures/invalid-current.json --mode execution
+result: PASS
 
-Explicit-mode CLI smoke validation
-valid: python .\skills\build-review-loop\scripts\validate_artifacts.py .\skills\build-review-loop\tests\fixtures\golden-run.json --mode execution --expect-golden
-invalid: python .\skills\build-review-loop\scripts\validate_artifacts.py .\skills\build-review-loop\tests\fixtures\invalid-current.json --mode execution
-template: python .\skills\build-review-loop\scripts\validate_artifacts.py .\skills\build-review-loop\tests\fixtures\invalid-current.json --mode template
-envelope: python .\skills\build-review-loop\scripts\validate_artifacts.py .\skills\build-review-loop\tests\fixtures\golden-run.json --mode envelope
-result: all four exit 0 with canonical validity confirmation
+command: python -m unittest skills/build-review-loop/scripts/test_validate_artifacts.py -v
+result: PASS, 29 tests, 0 failures, 0 errors
 
-Patch and source hygiene
-result: manifest hashes match every tracked skill/evidence source; all six bundled Git blobs match pinned public sources; git diff --check passes; obsolete 2.2/hash references are absent; no unintended files differ from authorized skill-v1 scope
+Adversarial coverage
+- builder contract: binary/schema/common-start/prompt/deadline/argv/model/reasoning/resume drift
+- coordinates: duplicate invocation/port/path, nested workdirs, evidence-root escape
+- supervision: start/stdin/timeout/exit/turn/JSONL failure, raw hash mismatch, usage spoofing, duplicate process/thread, unequal prompt bytes, unauthorized write/tool evidence
+- metadata: missing absence reasons and trusted model/provider/reasoning conflicts
+- role isolation: runner/prompt/evidence/artifact binding drift, sandbox drift, extra history substitution, multiline/inherited prompt injection, final artifact binding failure
+- assignment/evaluation: registered byte recomputation, active-invalidation score rejection, revision prohibition, runtime identity reuse
+- blinding: mapping permutation/provenance omission, traversal label, history-free/lineage/timestamp seal drift, provenance leak into evaluator-facing manifest, package hash mismatch
+
+Exact protocol-source suite
+command: npm run test:protocol
+working directory: build-review-loop-protocol-v2 at cb198b3b2985643c9984d1ff40b9a7cf70db8bd6
+result: PASS, 38 tests, 0 failures
+coverage includes builder/role preflight, pinned PowerShell smoke behavior, raw JSONL/usage/bindings, private provenance without manifest leakage, deterministic synthetic packaging, traversal/nesting/source drift, and malicious execution fixtures.
+candidate access: none; packager tests use temporary synthetic repositories.
+
+Static validation
+- python -m py_compile: PASS
+- node --check scripts/package-blinded-snapshots.mjs: PASS
+- pinned PowerShell ScriptBlock parse for both runners: PASS
+- skill-creator quick_validate.py: PASS (Skill is valid!)
+- git diff --check: PASS
+
+Limitations preserved
+- This is a provisional n=1-per-arm descriptive pilot, not statistical inference or a portability/provider-wide claim.
+- Isolation is an audited procedural boundary plus CLI sandbox, not proof of kernel-enforced containment.
+- Trusted JSONL may omit model/provider/reasoning metadata; null plus a specific reason is required and self-report is not evidence.
+- Blinding is mapping blinding, not proof that implementation lineage is intrinsically unknowable.
+- Authoritative role schemas require supervisor-observed runtime identity, so --output-schema remains omitted until distinct frozen pre-injection schemas exist.
+- The exact packager resolves its schema/Ajv dependency from the frozen protocol repository layout; the skill copy is a byte-exact commitment.

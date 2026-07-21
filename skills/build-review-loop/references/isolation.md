@@ -1,24 +1,38 @@
-# Isolation procedure
+# Isolation and runtime boundary
 
-## Establish neutral candidates
+## Builder boundary
 
-1. Have a delegated Git worker verify a clean frozen source and resolve the common start commit/tree.
-2. Create two new, non-nested candidate directories from that exact start using independent worktrees, clones, or equivalent copy-on-write environments. Never use the root checkout as a candidate.
-3. Separate writable caches, temporary files, dependencies, databases, ports, process namespaces, credentials, services, and evidence paths. The only shared-CWD exception is one direct read of the builder's opaque assignment envelope; all repository operations use its assigned worktree afterward.
-4. Freeze exact builder prompt/config/schema bytes. Give each fresh builder the same prompt/config, role budget, environment, model-setting policy, and common start. Give each a distinct 24-character opaque worker key, candidate ID, safe worktree, build branch, base branch, task-leaf file, envelope hash, and attestation. Do not expose this skill.
-5. Require the pair to differ only in those five opaque/workspace fields. Worktrees must be distinct, non-nested canonical children of the frozen workspace root; all four branches must differ. Keep common start and prompt/config/schema commitments identical.
-6. Freeze both envelope attestations and snapshots before generating the assignment seed. A builder derives `[a-z0-9_]+` only from its task name and reads `<coordination-directory>\<task-leaf>.json` directly. Never list that directory or read a sibling assignment.
+Use the pinned PowerShell 7 host at `C:\Users\rhenm\AppData\Local\pwsh7\pwsh.exe` (version `7.6.2`, SHA-256 `99ec38d8c4910fd5f2feeeec4dedb5076ff39a08ca21e12642822bc8d989e316`) with `-NoProfile -File`. The runner in turn launches the pinned Codex CLI binary at `C:\Users\rhenm\.codex\plugins\.plugin-appserver\codex.exe` (version `codex-cli 0.145.0-alpha.18`, SHA-256 `20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4`) under attested ChatGPT authentication.
 
-## Maintain role isolation
+Create two independent full clones at the same bound commit/tree. Disable remotes, require clean status, and keep their canonical paths distinct, nonnested, and free of reparse points. Keep each clone separate from a fresh evidence root. Give every invocation distinct final/stdout/stderr/evidence paths, temp/cache/dependency roots, port, opaque invocation ID, process ID, and thread ID.
 
-- Keep the baseline immutable and worker-free until blind evaluation.
-- Create a new history-free reviewer, fixer, and tester whenever the treatment cycle requires that role. Never fork them from conversations containing prior roles or cycles.
-- Build reviewer packets from the current treatment snapshot and frozen public inputs only. Build fixer packets from only the current findings and snapshot.
-- Keep the hidden suite sealed until the evaluator packet. The evaluator receives anonymous B0/T0/Tfinal packages labeled only X/Y/Z, exact frozen public materials, and no mapping, provenance, history, findings, fixes, identities, prompts, costs, cycles, or skill.
-- Delegate Git work to dedicated workers. The root may select, dispatch, verify, stop, and record, but may not implement, review, fix, test, evaluate, or operate Git.
+Freeze the exact global argv order:
 
-## Detect contamination
+```text
+-a never -m gpt-5.4 -c model_reasoning_effort="xhigh" exec
+--ephemeral --ignore-user-config --skip-git-repo-check
+--sandbox workspace-write --json
+```
 
-Before every handoff, record snapshot commit/tree, allowed paths, worker ID, packet hash, envelope/schema hash, frozen one-turn wall budget, cost/environment/model binding, and clean/dirty state. Invalidate for assignment-directory listing, sibling assignment reads, envelope/path/attestation mismatch, mismatched starts, byte-unequal builder inputs, skill exposure, early assignment/redraw, shared mutable paths, cross-candidate reads, baseline mutation, worker reuse, changed gates/commitments/rubric, unexpected network/remotes, inherited role history, evaluator leakage, sentinel execution data, or evidence-chain failure.
+Append only `-C <workdir> -o <final-path> -`. Write the exact neutral builder prompt bytes to stdin without prefix/suffix/substitution/wrapper, then close stdin. Never resume. The smoke prompt is a separate frozen harmless preflight input and is forbidden for a builder execution.
 
-Quarantine processes and credentials on suspected leakage. Preserve sanitized evidence and stop when isolation cannot be restored without changing the frozen protocol. Cleanup is separately authorized destructive work: validate exact candidate paths first and never recursively delete a repository root, home directory, unresolved variable, or broad glob.
+## Treatment-role boundary
+
+Use one fresh external CLI subprocess for each reviewer, fixer, tester, and evaluator. Never fork or resume a conversation containing another role or cycle.
+
+- Reviewer: independent read-only clone at the bound commit/tree; HEAD/tree/status must remain unchanged.
+- Fixer: authorized full-clone workspace-write input; it may create exactly one child commit and must finish clean.
+- Tester: disposable workspace-write clone; HEAD/tree/status and package transfer remain unchanged after discarding the copy.
+- Evaluator: disposable workspace-write history-free package outside every Git worktree; package content hash must remain unchanged.
+
+Render role prompts only by replacing the exact role-specific token set with bounded single-line literal values. Bind the lock, runner, evidence schema, prompt template, rendered prompt, artifact schema, input commit/tree or package seal, handoff, rubric, and hidden-suite commitment before launch. The runner injects observed runtime identity into the final artifact, validates the authoritative final schema, and writes a separate supervision record.
+
+## Audited procedural claim
+
+This is an audited procedural boundary plus CLI sandbox, not proof of kernel-enforced containment. It cannot prove every child write, network action, junction, reparse escape, credential observation, or model/provider metadata claim was blocked. Compensating evidence includes independent full clones, disabled remotes, clean bound inputs, nonnested non-reparse roots, disposable copies, pre/post hashes, exact argv/prompt hashes, strict raw JSONL reconciliation, and no mutation transfer.
+
+Trusted JSONL may omit model/provider/reasoning metadata. Record a trusted value when observed; otherwise record `null` with a specific absence reason. Agent self-report is not runtime evidence. A conflicting observed value invalidates the invocation.
+
+Invalidate on missing/out-of-scope evidence, inherited history, resume, repeated process/thread/invocation identity, shared mutable roots, unexpected remotes/network, wrong prompt bytes, unauthorized writes, lifecycle failure, timeout, nonzero exit, malformed JSONL, unbound usage, dirty inputs/outputs, or cross-role/cross-candidate access.
+
+Cleanup is separately authorized destructive work. Resolve and verify exact candidate/evidence targets before deletion; never recursively delete a repository root, home directory, unresolved variable, or broad glob.

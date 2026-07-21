@@ -1,0 +1,292 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/role-runtime-contract.schema.json",
+  "title": "Protocol 2.4 single model-role CLI invocation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "role",
+    "candidateLabel",
+    "cycle",
+    "evaluationSequence",
+    "invocationId",
+    "cliPath",
+    "cliVersion",
+    "cliSha256",
+    "authStatus",
+    "lockPath",
+    "lockSha256",
+    "contractSchemaPath",
+    "contractSchemaSha256",
+    "runnerPath",
+    "runnerSha256",
+    "evidenceSchemaPath",
+    "evidenceSchemaSha256",
+    "promptTemplatePath",
+    "promptTemplateSha256",
+    "promptSubstitutions",
+    "artifactSchemaPath",
+    "artifactSchemaSha256",
+    "inputCommit",
+    "inputTree",
+    "promptPath",
+    "promptSha256",
+    "workdir",
+    "evidenceRoot",
+    "finalPath",
+    "stdoutPath",
+    "stderrPath",
+    "evidencePath",
+    "tempRoot",
+    "cacheRoot",
+    "dependencyRoot",
+    "port",
+    "deadlineSeconds",
+    "sandboxMode",
+    "inputDisposition",
+    "packageManifestPath",
+    "packageManifestSha256",
+    "packageLabel",
+    "packageSha256",
+    "handoffPath",
+    "handoffSha256",
+    "rubricPath",
+    "rubricSha256",
+    "hiddenSuiteId",
+    "hiddenSuitePath",
+    "hiddenSuiteSha256",
+    "packageManifestSchemaPath",
+    "packageManifestSchemaSha256",
+    "packageScriptPath",
+    "packageScriptSha256"
+  ],
+  "properties": {
+    "contractVersion": { "const": "1.0.0" },
+    "role": { "enum": ["reviewer", "fixer", "tester", "evaluator"] },
+    "candidateLabel": {
+      "oneOf": [
+        { "type": "string", "pattern": "^candidate-[a-z0-9-]+$" },
+        { "type": "null" }
+      ]
+    },
+    "cycle": {
+      "oneOf": [
+        { "type": "integer", "minimum": 1, "maximum": 5 },
+        { "type": "null" }
+      ]
+    },
+    "evaluationSequence": {
+      "oneOf": [
+        { "type": "integer", "minimum": 1, "maximum": 3 },
+        { "type": "null" }
+      ]
+    },
+    "invocationId": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "cliPath": {
+      "const": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe"
+    },
+    "cliVersion": { "const": "codex-cli 0.145.0-alpha.18" },
+    "cliSha256": {
+      "const": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4"
+    },
+    "authStatus": { "const": "Logged in using ChatGPT" },
+    "lockPath": { "type": "string", "minLength": 3 },
+    "lockSha256": { "$ref": "#/$defs/sha256" },
+    "contractSchemaPath": { "type": "string", "minLength": 3 },
+    "contractSchemaSha256": { "$ref": "#/$defs/sha256" },
+    "runnerPath": { "type": "string", "minLength": 3 },
+    "runnerSha256": { "$ref": "#/$defs/sha256" },
+    "evidenceSchemaPath": { "type": "string", "minLength": 3 },
+    "evidenceSchemaSha256": { "$ref": "#/$defs/sha256" },
+    "promptTemplatePath": { "type": "string", "minLength": 3 },
+    "promptTemplateSha256": { "$ref": "#/$defs/sha256" },
+    "promptSubstitutions": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "artifactSchemaPath": { "type": "string", "minLength": 3 },
+    "artifactSchemaSha256": { "$ref": "#/$defs/sha256" },
+    "inputCommit": {
+      "oneOf": [{ "$ref": "#/$defs/sha1" }, { "type": "null" }]
+    },
+    "inputTree": { "oneOf": [{ "$ref": "#/$defs/sha1" }, { "type": "null" }] },
+    "promptPath": { "type": "string", "minLength": 3 },
+    "promptSha256": { "$ref": "#/$defs/sha256" },
+    "workdir": { "type": "string", "minLength": 3 },
+    "evidenceRoot": { "type": "string", "minLength": 3 },
+    "finalPath": { "type": "string", "minLength": 3 },
+    "stdoutPath": { "type": "string", "minLength": 3 },
+    "stderrPath": { "type": "string", "minLength": 3 },
+    "evidencePath": { "type": "string", "minLength": 3 },
+    "tempRoot": { "type": "string", "minLength": 3 },
+    "cacheRoot": { "type": "string", "minLength": 3 },
+    "dependencyRoot": { "type": "string", "minLength": 3 },
+    "port": { "type": "integer", "minimum": 1024, "maximum": 65535 },
+    "deadlineSeconds": { "type": "integer", "minimum": 1, "maximum": 1800 },
+    "sandboxMode": { "enum": ["read-only", "workspace-write"] },
+    "inputDisposition": {
+      "enum": [
+        "read-only-snapshot",
+        "authorized-worktree-write",
+        "discard-after-run"
+      ]
+    },
+    "packageManifestPath": { "type": ["string", "null"], "minLength": 3 },
+    "packageManifestSha256": {
+      "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "packageLabel": {
+      "oneOf": [{ "enum": ["X", "Y", "Z"] }, { "type": "null" }]
+    },
+    "packageSha256": {
+      "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "handoffPath": { "type": ["string", "null"], "minLength": 3 },
+    "handoffSha256": {
+      "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "rubricPath": { "type": ["string", "null"], "minLength": 3 },
+    "rubricSha256": {
+      "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "hiddenSuiteId": { "type": ["string", "null"], "minLength": 1 },
+    "hiddenSuitePath": { "type": ["string", "null"], "minLength": 3 },
+    "hiddenSuiteSha256": {
+      "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "packageManifestSchemaPath": { "type": ["string", "null"], "minLength": 3 },
+    "packageManifestSchemaSha256": {
+      "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "packageScriptPath": { "type": ["string", "null"], "minLength": 3 },
+    "packageScriptSha256": {
+      "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "role": { "const": "reviewer" } } },
+      "then": {
+        "properties": {
+          "sandboxMode": { "const": "read-only" },
+          "inputDisposition": { "const": "read-only-snapshot" },
+          "deadlineSeconds": { "maximum": 900 }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "role": { "const": "fixer" } } },
+      "then": {
+        "properties": {
+          "sandboxMode": { "const": "workspace-write" },
+          "inputDisposition": { "const": "authorized-worktree-write" },
+          "deadlineSeconds": { "maximum": 1500 }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "role": { "enum": ["tester", "evaluator"] } } },
+      "then": {
+        "properties": {
+          "sandboxMode": { "const": "workspace-write" },
+          "inputDisposition": { "const": "discard-after-run" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "role": { "const": "evaluator" } } },
+      "then": {
+        "required": [
+          "packageManifestPath",
+          "packageManifestSha256",
+          "packageLabel",
+          "packageSha256",
+          "rubricPath",
+          "rubricSha256",
+          "hiddenSuiteId",
+          "hiddenSuitePath",
+          "hiddenSuiteSha256",
+          "packageManifestSchemaPath",
+          "packageManifestSchemaSha256",
+          "packageScriptPath",
+          "packageScriptSha256"
+        ],
+        "properties": {
+          "inputCommit": { "type": "null" },
+          "inputTree": { "type": "null" },
+          "candidateLabel": { "type": "null" },
+          "cycle": { "type": "null" },
+          "evaluationSequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "packageManifestPath": { "type": "string", "minLength": 3 },
+          "packageManifestSha256": { "$ref": "#/$defs/sha256" },
+          "packageLabel": { "enum": ["X", "Y", "Z"] },
+          "packageSha256": { "$ref": "#/$defs/sha256" },
+          "rubricPath": { "type": "string", "minLength": 3 },
+          "rubricSha256": { "$ref": "#/$defs/sha256" },
+          "hiddenSuiteId": { "type": "string", "minLength": 1 },
+          "hiddenSuitePath": { "type": "string", "minLength": 3 },
+          "hiddenSuiteSha256": { "$ref": "#/$defs/sha256" },
+          "packageManifestSchemaPath": { "type": "string", "minLength": 3 },
+          "packageManifestSchemaSha256": { "$ref": "#/$defs/sha256" },
+          "packageScriptPath": { "type": "string", "minLength": 3 },
+          "packageScriptSha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "role": { "enum": ["reviewer", "fixer", "tester"] } }
+      },
+      "then": {
+        "properties": {
+          "inputCommit": { "$ref": "#/$defs/sha1" },
+          "inputTree": { "$ref": "#/$defs/sha1" },
+          "candidateLabel": {
+            "type": "string",
+            "pattern": "^candidate-[a-z0-9-]+$"
+          },
+          "cycle": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "evaluationSequence": { "type": "null" },
+          "packageManifestPath": { "type": "null" },
+          "packageManifestSha256": { "type": "null" },
+          "packageLabel": { "type": "null" },
+          "packageSha256": { "type": "null" },
+          "rubricPath": { "type": "null" },
+          "rubricSha256": { "type": "null" },
+          "hiddenSuiteId": { "type": "null" },
+          "hiddenSuitePath": { "type": "null" },
+          "hiddenSuiteSha256": { "type": "null" },
+          "packageManifestSchemaPath": { "type": "null" },
+          "packageManifestSchemaSha256": { "type": "null" },
+          "packageScriptPath": { "type": "null" },
+          "packageScriptSha256": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "role": { "const": "fixer" } } },
+      "then": {
+        "properties": {
+          "handoffPath": { "type": "string", "minLength": 3 },
+          "handoffSha256": { "$ref": "#/$defs/sha256" }
+        }
+      },
+      "else": {
+        "properties": {
+          "handoffPath": { "type": "null" },
+          "handoffSha256": { "type": "null" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

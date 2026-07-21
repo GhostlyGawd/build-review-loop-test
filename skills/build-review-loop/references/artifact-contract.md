@@ -1,101 +1,41 @@
-# Public protocol-v2 artifact contract
+# Public protocol-v2.4 artifact contract
 
-Treat bundled [canonical-contract.json](canonical-contract.json) as authoritative. Its domain-separated canonical SHA-256 is `4b8c4753aca6a83025e72a0a76680bf78895b0e3be94cd64fed8c06c123b1b01`. Use bundled `../tests/fixtures/golden-run.json` as the byte-identical valid-with-history execution example; its canonical SHA-256 is `58231f1acf65fbc572602712da4247521aeba4beefafa1f520444bdeafd1f062`. The byte-identical `../tests/fixtures/invalid-current.json` example has canonical SHA-256 `90b7950bdf2daa14842bacce85e103e8cf305301e80958110f774dc53636f95d`. Do not invent alternate field names or layouts.
+The bundled [canonical-contract.json](canonical-contract.json) is authoritative. Its domain-separated canonical SHA-256 is `541985e02a49b79910282a6e7f26e43fbde3ae500ebfcdf9cef6d031f1a74b49`. The byte-exact golden execution fixture has canonical SHA-256 `ae96dc2d0f34635ebe979745c5055404943f5ba7578f8bfa325925bebc6070d1`; the invalid-current fixture has canonical SHA-256 `67ff46e219d7dcacfe083db59c31785ca7ce496837f0b0c7ff602267af3b01e0`.
 
-## Frozen bindings and costs
+## Frozen runtime
 
-Bind these exact public commands:
+Bind:
 
-```text
-tester: npm run check
-components, in order:
-  npm run format:check
-  npm run lint
-  npm run typecheck
-  npm run validate:scaffold
-  npm run test:protocol
-  npm run test:public:if-implemented
-  npm run build
-evaluator public: npm run test:public
-evaluator hidden: node sealed-hidden-suite/run.mjs
-hidden ID: permissions-playground-sealed-v2
-hidden SHA-256: a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b
-```
+- PowerShell host: `C:\Users\rhenm\AppData\Local\pwsh7\pwsh.exe`, version `7.6.2`, SHA-256 `99ec38d8c4910fd5f2feeeec4dedb5076ff39a08ca21e12642822bc8d989e316`; launch `pwsh -NoProfile -File`.
+- Codex CLI: `C:\Users\rhenm\.codex\plugins\.plugin-appserver\codex.exe`, version `codex-cli 0.145.0-alpha.18`, SHA-256 `20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4`; auth status `Logged in using ChatGPT`.
+- Model/reasoning: `gpt-5.4` and `xhigh`, pinned in exact argv after approval mode and before `exec`.
+- Builder prompt/config: `5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0` and `f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4`.
+- Smoke prompt: `135c5fc59fe72b4b37d924cd6f1a14e4f2a3b7b59711cc12294e81f52cbfd6a2`; harmless smoke only.
+- Builder runner/schema: `24653c35386be28f09aa5719617ca5ab612a67c1fb8700bd7503abe72569ff25` / `c18db758a6b40194e64c88d3842522ade28ff831806c6315e3c5348e92934c33`.
+- Role runner/schema/evidence schema: `385830cc00bebca1541040dababf9496610064d94eb252a02c8de7d77cf6cea3` / `25a30d43ceb77e7bd4b908f8e577dc6ea0c7f9eb41c61f7c8c77af83f528632f` / `f6c18acea89f5cfac3b2fe6ad84871f563e217d884b14ecb29e6606bb99dcd89`.
 
-Freeze one turn and wall maxima: builder 2400, reviewer 900, fixer 1500, tester 900, evaluator 1800, unblinder 300, Git worker 600 seconds. Every cost record binds `environmentSha256`; model roles bind `modelConfigSha256`, while deterministic unblinder/Git roles may use null only with a reason. Require `maxTokens: null` and a nonempty `maxTokensUnavailableReason`. Use provider-reported nonnegative totals when available; otherwise keep `totalTokens` and `usd` null with `source: "unavailable"`.
+Every successful supervision record binds the contract, invocation, observed process/thread, exact argv and prompt, raw stdout/stderr/final hashes, lifecycle, schema/artifact result, isolation policy, and trusted usage/metadata or explicit absence reasons. Every model role is fresh, ephemeral, one turn, and never resumed.
 
-Every builder freeze must bind exact [neutral-builder.md](neutral-builder.md) SHA-256 `28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39`, exact [builder-config.json](builder-config.json) SHA-256 `8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606`, and one separately attested envelope hash. The [assignment-envelope.schema.json](assignment-envelope.schema.json) raw SHA-256 is `a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21`. Each commitment must equal the canonical and preregistration lock values; equality between builders alone is insufficient.
+## Assignment and treatment
 
-## Opaque assignment envelopes
+After both initial builder artifacts seal, draw exactly 32 OS-CSPRNG bytes once. UTF-8-byte-sort candidate IDs and hash the registered domain, seed, uint64be lengths, and ID bytes. `digest[0] & 1` selects baseline; the other is treatment. Baseline has zero cycles and `baseline-zero-cycles`.
 
-Each envelope contains exactly the 11 schema fields and no task, arm, treatment, comparison, timestamp, ranking, prior-run, or hint field. The pair shares schema version, common-start commit/tree, and prompt/config/schema hashes. Its 24-character opaque worker keys, 24-character candidate IDs, safe absolute worktrees, build branches, and base branches are pairwise distinct; the worktrees are canonical non-nested children of `C:\Users\rhenm\Documents\Codex\2026-07-20`, outside the coordination directory, and all four branches differ.
+Treatment uses at most five fresh reviewer/fixer/tester cycles. Reviewer findings use exactly the nine canonical fields and registered IDs/severities/rubric items. Zero findings stops before fixer/tester. Otherwise the fixer handles only that sealed finding set and a fresh tester runs exact `npm run check` components.
 
-Attest each envelope separately with exactly `opaqueCandidateId` and its domain-separated canonical `envelopeSha256`. Bind each builder freeze and run to that hash and schema hash. Assignment files live only at `C:\Users\rhenm\Documents\Codex\2026-07-20\pilot-002-builder-assignments\<task-leaf>.json`, where the task leaf matches `^[a-z0-9_]+$`. A builder reads its direct file once; listing the directory or reading a sibling is an experiment invalidation.
+## Blinded packages and seals
 
-## Assignment and stopping
+The private mapping schema SHA-256 is `2d0a96f27d43f511c26b57a49dfef5c05acfe0f5dfb1f8419f724d524513fb74`. It binds exactly one B0/T0/Tfinal source to each X/Y/Z label, randomized order, exact `refs/*`, source commit/tree/path, frozen-gate hash, mapping-seed hash, and private candidate/run/evidence/artifact-name provenance.
 
-After both initial artifacts freeze, draw exactly 32 OS-CSPRNG bytes once. UTF-8-byte-sort candidate IDs as id0/id1. Hash, in order:
+The packager SHA-256 is `98cf033b59916e36a871034ba23a1bcfb06c0783f9e5b9fd04596caca6a216ec`; manifest schema SHA-256 is `4d9d8397fc068cdf511e99bae6980ed2d2ef5410e5128385043f1c426cdb8bd5`. The evaluator-facing package seal includes only label, content hash, file count, `historyFree: true`, `lineageScanPassed: true`, and `timestampsNormalized: true`. It must omit source role/ref/path/commit/tree and provenance.
 
-```text
-b"build-review-loop-assignment-v2\x00"
-+ raw seed bytes
-+ uint64be(len(id0)) + id0
-+ uint64be(len(id1)) + id1
-```
+Blinding is mapping blinding, not proof that implementation lineage is intrinsically unknowable. Use a fresh evaluator per single package in randomized order. Record sequence, mapping guess/confidence, diagnostics, and seal time. Seal each artifact before launching the next; revisions are forbidden. Unblind after all three seals.
 
-Use `digest[0] & 1` as baseline index; the other is treatment. Record seed, digest, draw, mapping, generator, timestamp, and the two frozen evidence hashes. Baseline uses exactly `baseline-zero-cycles`, zero cycles, identical initial/final snapshots, and null convergence. Treatment stops on `zero-findings` or after the fifth nonempty review/fix/test as `max-cycles` with false convergence.
+## Gates, scores, and evidence
 
-## Exact findings
+Tester command is `npm run check`, with ordered components: format check, lint, typecheck, scaffold validation, protocol tests, optional public tests, build. Evaluator public command is `npm run test:public`. Hidden suite ID is `permissions-playground-sealed-v2`, command `node sealed-hidden-suite/run.mjs`, SHA-256 `a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b`.
 
-Reject additional or missing fields. Require:
+Canonical JSON accepts only null, booleans, safe integers, strings, arrays, and objects. Sort object keys by UTF-8 bytes, preserve arrays, use JSON escaping, emit no insignificant whitespace or trailing newline, and hash `permissions-playground/canonical-json-v1\x00 || canonical-json`.
 
-```json
-{
-  "id": "cycle-1-reviewer-01",
-  "severity": "critical|high|medium|low",
-  "title": "nonempty",
-  "evidence": ["specific evidence"],
-  "expected": "nonempty",
-  "actual": "nonempty",
-  "rubricItems": ["A1"],
-  "verification": "nonempty",
-  "duplicateOf": null
-}
-```
+Evidence sequence starts at 0 with null predecessor; each later predecessor equals the prior canonical artifact hash. A completed run is exactly valid or invalid. Valid requires null active invalidation, three sealed evaluations, and outcome. Invalid requires structured active invalidation and null evaluations/outcome. Never score an active invalidation.
 
-IDs match `^cycle-[1-5]-reviewer-[0-9]{2}$`; rubric items are unique registered IDs; `duplicateOf` is null or another registered finding ID.
-
-## Blind X/Y/Z evaluation
-
-Draw a separate 32-byte seed and record lowercase `seedHex`. Compute `digestSha256 = SHA256(UTF8("permissions-playground/protocol-v2/evaluation\n" + seedHex))`. For each snapshot name B0, T0, Tfinal, compute `SHA256(UTF8(digestSha256 + "\n" + snapshotName))`. Sort by lowercase rank digest, then UTF-8 snapshot name, and assign positions to X/Y/Z.
-
-Each of the three evaluation artifacts requires exact `publicTests` and `hiddenTests` result objects, exactly 20 items in this order, written-anchor scores, exact maxima, evidence/rationale, section totals, uncapped/final totals, cap conditions, caps applied, uncertainties, and hashes:
-
-| Section | Items (`maximum`; anchors) | Maximum |
-| --- | --- | ---: |
-| `functional` | A1 (6; 0/3/6), A2 (8; 0/4/8), A3 (10; 0/4/7/10), A4 (10; 0/4/7/10), A5 (7; 0/4/7), A6 (7; 0/4/7), A7 (2; 0/1/2) | 50 |
-| `robustnessSecurity` | B1 (5; 0/3/5), B2 (5; 0/3/5), B3 (5; 0/3/5) | 15 |
-| `accessibilityUsability` | C1 (6; 0/3/6), C2 (4; 0/2/4), C3 (5; 0/3/5) | 15 |
-| `testEffectiveness` | D1 (4; 0/2/4), D2 (4; 0/2/4), D3 (2; 0/1/2) | 10 |
-| `maintainabilityDocs` | E1 (3; 0/1/2/3), E2 (3; 0/1/2/3), E3 (2; 0/1/2), E4 (2; 0/1/2) | 10 |
-
-Registered caps are `functional-section-10` when build/render fails, `default-allow-A2-A3-combined-4`, and overall `overall-security-50` for executable injection/unexpected network. Emit caps in that order. The outcome maps X/Y/Z bijectively to B0/T0/Tfinal, copies final totals, computes `primaryTfinalMinusB0` and `secondaryTfinalMinusT0`, and selects baseline on an exact B0/Tfinal tie.
-
-## Canonical evidence and modes
-
-Canonical JSON accepts null, booleans, safe integers, strings, arrays, and objects. Sort object keys by ascending UTF-8 bytes; preserve arrays; use JSON escaping; emit no insignificant whitespace/trailing newline. Hash the bytes `b"permissions-playground/canonical-json-v1\x00" + canonical_json_utf8`.
-
-Evidence sequence begins at 0; first `previousSha256` is null; each later predecessor is the prior `artifactSha256`; every artifact hash uses the canonical algorithm. Execution mode rejects zero 40/64-character hashes or seeds, template/sentinel/placeholder/required-at-run strings, provisional locks, duplicate invocation IDs, and any public-contract divergence. Template mode is never executable.
-
-Completed status is exactly `valid` or `invalid`. Valid records require `activeInvalidation: null`, exactly three evaluations, and a scored outcome. Their `invalidAttempts` array may be empty or retain prior structured attempts. Invalid current records require a structured `activeInvalidation` with ID, scope, code, reason, timestamp, evidence SHA-256, and preserved-artifact SHA-256; both `evaluations` and `outcome` must be null. Preserved attempts use the corresponding `attemptId` and `invalidatedAt` fields. All evidence hashes are nonzero.
-
-Validate an integrated run:
-
-```text
-python scripts/validate_artifacts.py RUN.json --mode execution
-python scripts/validate_artifacts.py tests/fixtures/golden-run.json --mode execution --expect-golden
-python scripts/validate_artifacts.py tests/fixtures/invalid-current.json --mode execution
-python scripts/validate_artifacts.py TEMPLATE.json --mode template
-python scripts/validate_artifacts.py tests/fixtures/golden-run.json --mode envelope
-python scripts/validate_artifacts.py FIRST.json --mode envelope --second SECOND.json
-```
+Templates are non-executable. Execution rejects zero/sentinel/provisional values, duplicate runtime identity, wrong model/reasoning/argv, inherited history/resume, missing lifecycle/usage treatment, unsafe paths, package provenance leakage, broken seals, and any canonical divergence.

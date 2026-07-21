@@ -1,583 +1,386 @@
 #!/usr/bin/env python3
-"""Golden-first tests for the public protocol-v2 validator."""
+"""Adversarial conformance tests for the public protocol-v2 skill validator."""
 
 from __future__ import annotations
 
 import copy
-import hashlib
+import importlib.util
 import json
+import hashlib
 import subprocess
 import sys
 import tempfile
 import unittest
-from unittest import mock
 from pathlib import Path
 
-import validate_artifacts as validator
+MODULE_PATH = Path(__file__).with_name("validate_artifacts.py")
+SPEC = importlib.util.spec_from_file_location("validate_artifacts", MODULE_PATH)
+assert SPEC and SPEC.loader
+validator = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(validator)
 
 
-class ProtocolV2ValidatorTests(unittest.TestCase):
+class ValidatorTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.golden = validator.load_json(validator.GOLDEN_PATH)
+        cls.invalid = validator.load_json(validator.INVALID_PATH)
+        cls.contract = validator.load_json(validator.CONTRACT_PATH)
+
     def setUp(self) -> None:
-        self.golden = validator.load_json(validator.GOLDEN_PATH)
-        self.invalid = validator.load_json(validator.INVALID_PATH)
-        self.envelopes = copy.deepcopy(self.golden["assignmentEnvelopes"])
-        self.attestations = copy.deepcopy(self.golden["assignmentEnvelopeAttestations"])
-
-    def errors(self, value: object, mode: str = "execution",
-               expect_golden: bool = False) -> list[str]:
-        return validator.validate_document(value, mode, expect_golden)
+        self.value = copy.deepcopy(self.golden)
 
     def assert_error(self, value: object, fragment: str) -> None:
-        errors = self.errors(value)
-        self.assertTrue(any(fragment in error for error in errors), errors)
+        errors = validator.validate_execution(value)
+        self.assertTrue(any(fragment.casefold() in error.casefold() for error in errors), errors)
 
-    def test_bundled_contract_and_fixtures_raw_and_canonical_hashes(self) -> None:
-        self.assertEqual([], validator.validate_bundles())
-        contract = validator.load_json(validator.CONTRACT_PATH)
-        self.assertEqual(validator.CONTRACT_CANONICAL_SHA256, validator.canonical_hash(contract))
-        self.assertEqual(validator.GOLDEN_CANONICAL_SHA256, validator.canonical_hash(self.golden))
-        self.assertEqual(validator.INVALID_CANONICAL_SHA256, validator.canonical_hash(self.invalid))
-        self.assertEqual(validator.CONTRACT_RAW_SHA256,
-                         hashlib.sha256(validator.CONTRACT_PATH.read_bytes()).hexdigest())
-        self.assertEqual(validator.GOLDEN_RAW_SHA256,
-                         hashlib.sha256(validator.GOLDEN_PATH.read_bytes()).hexdigest())
-        self.assertEqual(validator.INVALID_RAW_SHA256,
-                         hashlib.sha256(validator.INVALID_PATH.read_bytes()).hexdigest())
-        self.assertEqual(validator.ENVELOPE_SCHEMA_SHA256,
-                         hashlib.sha256(validator.ENVELOPE_SCHEMA_PATH.read_bytes()).hexdigest())
-        self.assertEqual(validator.BUILDER_PROMPT_SHA256,
-                         hashlib.sha256(validator.NEUTRAL_PROMPT_PATH.read_bytes()).hexdigest())
-        self.assertEqual(validator.BUILDER_CONFIG_SHA256,
-                         hashlib.sha256(validator.BUILDER_CONFIG_PATH.read_bytes()).hexdigest())
+    def valid_role_contract(self) -> dict:
+        value = validator.load_json(validator.ROLE_TEMPLATE_PATH)
+        value.update({
+            "lockSha256": "a" * 64,
+            "contractSchemaSha256": validator.ROLE_SCHEMA_SHA256,
+            "runnerSha256": validator.ROLE_RUNNER_SHA256,
+            "evidenceSchemaSha256": validator.EVIDENCE_SCHEMA_SHA256,
+            "promptTemplateSha256": validator.MODEL_ROLE_PROMPT_SHA256["reviewer"],
+            "artifactSchemaSha256": validator.ROLE_ARTIFACT_SCHEMA_SHA256["reviewer"],
+            "inputCommit": "a" * 40,
+            "inputTree": "b" * 40,
+            "promptSha256": "c" * 64,
+        })
+        return value
 
-    def test_exact_golden_and_invalid_envelope_pairs_validate(self) -> None:
-        self.assertEqual([], validator.validate_assignment_envelope_pair(
-            self.golden["assignmentEnvelopes"],
-            self.golden["assignmentEnvelopeAttestations"],
-        ))
-        self.assertEqual([], validator.validate_assignment_envelope_pair(
-            self.invalid["assignmentEnvelopes"],
-            self.invalid["assignmentEnvelopeAttestations"],
-        ))
+    def valid_mapping(self) -> dict:
+        value = validator.load_json(validator.MAPPING_TEMPLATE_PATH)
+        value["mappingSeedSha256"] = "a" * 64
+        value["frozenGateSetSha256"] = "b" * 64
+        for index, package in enumerate(value["packages"]):
+            package["sourceRef"] = f"refs/heads/source-{index}"
+            package["sourceCommit"] = f"{index + 1}" * 40
+            package["sourceTree"] = f"{index + 4}" * 40
+        return value
 
-    def test_envelope_cli_accepts_protocol_fixture(self) -> None:
-        result = subprocess.run(
-            [sys.executable, str(Path(validator.__file__)),
-             str(validator.GOLDEN_PATH), "--mode", "envelope"],
-            check=False, capture_output=True, text=True,
+    def valid_role_evidence(self, contract: dict) -> tuple[dict, str]:
+        raw = (
+            '{"type":"thread.started","thread_id":"role-thread-1"}\n'
+            '{"type":"turn.completed","usage":{"input_tokens":10,"output_tokens":2}}\n'
         )
+        result = validator.load_json(validator.EVIDENCE_TEMPLATE_PATH)
+        result.update({
+            "role": "reviewer",
+            "invocationId": contract["invocationId"],
+            "contractSha256": "d" * 64,
+            "artifactSchemaSha256": validator.ROLE_ARTIFACT_SCHEMA_SHA256["reviewer"],
+            "processId": 321,
+            "started": True,
+            "startError": None,
+            "stdinDelivered": True,
+            "stdinError": None,
+            "exitCode": 0,
+            "timedOut": False,
+            "argv": [
+                *validator.CLI_INVARIANT_ARGV[:-3], "--sandbox", "read-only", "--json",
+                "-C", contract["workdir"], "-o", contract["finalPath"], "-",
+            ],
+            "promptSha256": contract["promptSha256"],
+            "stdoutPath": contract["stdoutPath"],
+            "stdoutSha256": validator.sha256_text(raw),
+            "stderrPath": contract["stderrPath"],
+            "stderrSha256": "e" * 64,
+            "finalPath": contract["finalPath"],
+            "finalSha256": "f" * 64,
+            "finalSchemaValid": True,
+            "artifactBindingValid": True,
+            "threadIds": ["role-thread-1"],
+            "turnCompleted": True,
+            "rawJsonlValid": True,
+            "sandboxMode": "read-only",
+            "inputDisposition": "read-only-snapshot",
+            "usage": {"input_tokens": 10, "output_tokens": 2},
+            "usageUnavailableReason": None,
+        })
+        result["argvSha256"] = validator.sha256_text("\0".join(result["argv"]))
+        return result, raw
+
+    def test_bundled_public_sources_have_exact_hashes(self) -> None:
+        self.assertEqual([], validator.validate_bundles())
+
+    def test_pinned_powershell_host_exists_with_exact_version_and_hash(self) -> None:
+        host = Path(validator.PWSH_PATH)
+        self.assertTrue(host.is_file(), host)
+        self.assertEqual(validator.PWSH_SHA256, hashlib.sha256(host.read_bytes()).hexdigest())
+        result = subprocess.run([str(host), "-NoProfile", "-Command", "$PSVersionTable.PSVersion.ToString()"],
+                                capture_output=True, text=True, check=False)
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-        self.assertIn("envelope pair is canonically valid", result.stdout)
+        self.assertEqual(validator.PWSH_VERSION, result.stdout.strip())
 
-    def test_real_envelope_pair_file_helper_accepts_direct_safe_inputs(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            first = Path(directory) / "builder_one.json"
-            second = Path(directory) / "builder_two.json"
-            first.write_text(json.dumps(self.envelopes[0]), encoding="utf-8")
-            second.write_text(json.dumps(self.envelopes[1]), encoding="utf-8")
-            with mock.patch.object(validator, "COORDINATION_DIRECTORY", directory):
-                self.assertEqual([], validator.validate_envelope_pair_files(first, second))
-
-    def test_direct_assignment_paths_require_safe_task_leaves(self) -> None:
-        safe = [
-            validator.COORDINATION_DIRECTORY + r"\builder_one.json",
-            validator.COORDINATION_DIRECTORY + r"\builder_two.json",
-        ]
-        self.assertEqual([], validator.validate_assignment_envelope_pair(
-            self.envelopes, self.attestations, safe
-        ))
-        bad_cases = [
-            [r"C:\other\builder_one.json", safe[1]],
-            [validator.COORDINATION_DIRECTORY + r"\Builder-One.json", safe[1]],
-            [validator.COORDINATION_DIRECTORY + r"\builder_one.txt", safe[1]],
-        ]
-        for paths in bad_cases:
-            with self.subTest(paths=paths):
-                errors = validator.validate_assignment_envelope_pair(
-                    self.envelopes, self.attestations, paths
-                )
-                self.assertTrue(any("task-leaf path convention" in error for error in errors), errors)
-
-    def test_rejects_envelope_semantic_extension_fields(self) -> None:
-        self.envelopes[0]["arm"] = "treatment"
-        errors = validator.validate_assignment_envelope_pair(self.envelopes, self.attestations)
-        self.assertTrue(any("fields must be exactly" in error for error in errors), errors)
-
-    def test_rejects_invalid_envelope_schema_and_opaque_ids(self) -> None:
+    def test_builder_and_role_runners_fail_closed_during_template_preflight(self) -> None:
+        host = validator.PWSH_PATH
         cases = [
-            ("schemaVersion", "2.0.0", "schemaVersion diverges"),
-            ("opaqueWorkerKey", "UPPER", "opaqueWorkerKey must be 24"),
-            ("opaqueCandidateId", "short", "opaqueCandidateId must be 24"),
+            (validator.CLI_RUNNER_PATH, validator.CLI_TEMPLATE_PATH),
+            (validator.ROLE_RUNNER_PATH, validator.ROLE_TEMPLATE_PATH),
+        ]
+        for runner, contract in cases:
+            with self.subTest(runner=runner.name):
+                result = subprocess.run(
+                    [host, "-NoProfile", "-File", str(runner), "-ContractPath", str(contract)],
+                    capture_output=True, text=True, check=False, timeout=20,
+                )
+                self.assertNotEqual(0, result.returncode)
+                self.assertTrue("path" in (result.stdout + result.stderr).casefold() or
+                                "hash" in (result.stdout + result.stderr).casefold())
+
+    def test_canonical_contract_has_all_final_runtime_bindings(self) -> None:
+        self.assertEqual([], validator.validate_contract(self.contract))
+
+    def test_canonical_hash_rejects_float_and_unsafe_integer(self) -> None:
+        with self.assertRaises(TypeError):
+            validator.canonical_hash({"x": 1.5})
+        with self.assertRaises(TypeError):
+            validator.canonical_hash({"x": 9_007_199_254_740_992})
+
+    def test_exact_golden_and_invalid_current_validate(self) -> None:
+        self.assertEqual([], validator.validate_execution(self.golden))
+        self.assertEqual([], validator.validate_execution(self.invalid))
+
+    def test_cli_accepts_golden_and_invalid_current(self) -> None:
+        for path, extra in (
+            (validator.GOLDEN_PATH, ["--expect-golden"]),
+            (validator.INVALID_PATH, []),
+        ):
+            result = subprocess.run(
+                [sys.executable, str(MODULE_PATH), str(path), "--mode", "execution", *extra],
+                capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def test_template_mode_allows_sentinels_but_execution_rejects_them(self) -> None:
+        value = {"hash": "0" * 64, "path": "required-at-run"}
+        self.assertEqual([], validator.validate_artifact_mode(value, "template"))
+        self.assertTrue(validator.validate_artifact_mode(value, "execution"))
+
+    def test_cli_runtime_contract_accepts_pinned_builder_contract(self) -> None:
+        self.assertEqual([], validator.validate_cli_runtime_contract(self.golden["cliRuntimeContract"]))
+
+    def test_cli_runtime_contract_rejects_malicious_drift(self) -> None:
+        cases = [
+            ("cliSha256", "f" * 64, "binary"),
+            ("promptSha256", "f" * 64, "prompt"),
+            ("contractSchemaSha256", "f" * 64, "schema"),
+            ("commonStartCommit", "0" * 40, "common-start"),
+            ("invariantArgv", ["resume"], "argv"),
+            ("deadlineSeconds", 2401, "deadline"),
         ]
         for field, replacement, fragment in cases:
             with self.subTest(field=field):
-                envelopes = copy.deepcopy(self.envelopes)
-                envelopes[0][field] = replacement
-                errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
-                self.assertTrue(any(fragment in error for error in errors), errors)
+                value = copy.deepcopy(self.golden["cliRuntimeContract"])
+                value[field] = replacement
+                errors = validator.validate_cli_runtime_contract(value)
+                self.assertTrue(any(fragment in error.casefold() for error in errors), errors)
 
-    def test_rejects_envelope_prompt_config_and_schema_commitment_drift(self) -> None:
-        cases = [
-            ("promptSha256", "prompt commitment mismatch"),
-            ("configSha256", "config commitment mismatch"),
-            ("envelopeSchemaSha256", "schema commitment mismatch"),
-        ]
-        for field, fragment in cases:
-            with self.subTest(field=field):
-                envelopes = copy.deepcopy(self.envelopes)
-                envelopes[0][field] = "f" * 64
-                errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
-                self.assertTrue(any(fragment in error for error in errors), errors)
+    def test_cli_runtime_rejects_duplicate_or_nested_coordinates(self) -> None:
+        value = copy.deepcopy(self.golden["cliRuntimeContract"])
+        value["invocations"][1]["invocationId"] = value["invocations"][0]["invocationId"]
+        self.assertTrue(any("duplicate invocationid" in e.casefold() for e in validator.validate_cli_runtime_contract(value)))
+        value = copy.deepcopy(self.golden["cliRuntimeContract"])
+        value["invocations"][1]["workdir"] = value["invocations"][0]["workdir"] + "\\nested"
+        self.assertTrue(any("nonnested" in e.casefold() for e in validator.validate_cli_runtime_contract(value)))
+        value = copy.deepcopy(self.golden["cliRuntimeContract"])
+        value["invocations"][0]["finalPath"] = value["invocations"][0]["workdir"] + "\\escape.json"
+        self.assertTrue(any("isolation" in e.casefold() for e in validator.validate_cli_runtime_contract(value)))
 
-    def test_rejects_envelope_lock_commitment_drift(self) -> None:
-        for constant, fragment in (
-            ("LOCK_PROMPT_SHA256", "prompt commitment mismatch"),
-            ("LOCK_CONFIG_SHA256", "config commitment mismatch"),
-            ("LOCK_ENVELOPE_SCHEMA_SHA256", "schema commitment mismatch"),
-        ):
-            with self.subTest(constant=constant), mock.patch.object(validator, constant, "f" * 64):
-                errors = validator.validate_assignment_envelope_pair(self.envelopes, self.attestations)
-                self.assertTrue(any(fragment in error for error in errors), errors)
+    def test_smoke_mode_requires_separate_frozen_smoke_prompt(self) -> None:
+        value = copy.deepcopy(self.golden["cliRuntimeContract"])
+        value["smokeMode"] = True
+        errors = validator.validate_cli_runtime_contract(value)
+        self.assertTrue(any("prompt" in e.casefold() for e in errors), errors)
+        value["promptSha256"] = validator.SMOKE_PROMPT_SHA256
+        self.assertEqual([], validator.validate_cli_runtime_contract(value))
 
-    def test_rejects_envelope_common_start_mismatch(self) -> None:
-        for field in ("commonStartCommit", "commonStartTree"):
-            with self.subTest(field=field):
-                envelopes = copy.deepcopy(self.envelopes)
-                envelopes[1][field] = "f" * 40
-                errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
-                self.assertTrue(any(f"pair mismatch at {field}" in error for error in errors), errors)
-
-    def test_rejects_unsafe_or_noncanonical_envelope_worktree_paths(self) -> None:
-        cases = [
-            r"C:\outside-workspace",
-            validator.COORDINATION_DIRECTORY,
-            validator.COORDINATION_DIRECTORY + r"\nested",
-            validator.ASSIGNMENT_WORKSPACE_ROOT + r"\folder\..\worktree",
-        ]
-        for replacement in cases:
-            with self.subTest(path=replacement):
-                envelopes = copy.deepcopy(self.envelopes)
-                envelopes[0]["absoluteWorktreePath"] = replacement
-                errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
-                self.assertTrue(any("safe canonical absolute path" in error for error in errors), errors)
-
-    def test_rejects_shared_or_nested_envelope_worktree_paths(self) -> None:
-        for replacement in (
-            self.envelopes[0]["absoluteWorktreePath"],
-            self.envelopes[0]["absoluteWorktreePath"] + r"\nested",
-        ):
-            with self.subTest(path=replacement):
-                envelopes = copy.deepcopy(self.envelopes)
-                envelopes[1]["absoluteWorktreePath"] = replacement
-                errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
-                self.assertTrue(any("distinct and nonnested" in error for error in errors), errors)
-
-    def test_rejects_duplicate_envelope_ids_and_branches(self) -> None:
-        for field, fragment in (
-            ("opaqueWorkerKey", "duplicates opaqueWorkerKey"),
-            ("opaqueCandidateId", "duplicates opaqueCandidateId"),
-            ("buildBranch", "branches must all be distinct"),
-            ("baseBranch", "branches must all be distinct"),
-        ):
-            with self.subTest(field=field):
-                envelopes = copy.deepcopy(self.envelopes)
-                envelopes[1][field] = envelopes[0][field]
-                errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
-                self.assertTrue(any(fragment in error for error in errors), errors)
-
-    def test_rejects_invalid_branch_syntax(self) -> None:
-        envelopes = copy.deepcopy(self.envelopes)
-        envelopes[0]["buildBranch"] = "UPPER BRANCH"
-        errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
-        self.assertTrue(any("buildBranch invalid" in error for error in errors), errors)
-
-    def test_rejects_missing_malformed_or_duplicate_attestations(self) -> None:
-        cases = []
-        cases.append((self.attestations[:1], "two separate attestations"))
-        extra = copy.deepcopy(self.attestations)
-        extra[0]["extra"] = True
-        cases.append((extra, "fields must be exactly"))
-        wrong = copy.deepcopy(self.attestations)
-        wrong[0]["envelopeSha256"] = "f" * 64
-        cases.append((wrong, "attestation hash mismatch"))
-        duplicate = [copy.deepcopy(self.attestations[0]), copy.deepcopy(self.attestations[0])]
-        cases.append((duplicate, "attested more than once"))
-        for attestations, fragment in cases:
-            with self.subTest(fragment=fragment):
-                errors = validator.validate_assignment_envelope_pair(self.envelopes, attestations)
-                self.assertTrue(any(fragment in error for error in errors), errors)
-
-    def test_rejects_unattested_freeze_or_run_envelope_binding_drift(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["builderFreezes"]["candidate-a"]["assignmentEnvelopeSha256"] = "f" * 64
-        self.assert_error(value, "assignment envelopes must be separately attested")
-        value = copy.deepcopy(self.golden)
-        value["runs"]["candidate-a"]["assignmentEnvelopeSha256"] = "f" * 64
-        self.assert_error(value, "run/envelope binding mismatch")
-        value = copy.deepcopy(self.golden)
-        value["runs"]["candidate-a"]["assignmentEnvelopeSchemaSha256"] = "f" * 64
-        self.assert_error(value, "assignment envelope schema binding mismatch")
-
-    def test_neutral_prompt_marks_sibling_listing_or_read_as_invalidation(self) -> None:
-        prompt = validator.NEUTRAL_PROMPT_PATH.read_text(encoding="utf-8")
-        self.assertEqual([], validator.validate_neutral_builder_prompt(prompt))
-        changed = prompt.replace(
-            "Listing the directory or reading a sibling assignment is an experiment invalidation.",
-            "Sibling access is discouraged.",
-        )
-        errors = validator.validate_neutral_builder_prompt(changed)
-        self.assertTrue(any("assignment prose missing" in error for error in errors), errors)
-
-    def test_exact_golden_validates_in_execution_mode(self) -> None:
-        self.assertEqual([], validator.validate_path(
-            validator.GOLDEN_PATH, "execution", expect_golden=True
+    def test_builder_supervision_reconciles_raw_jsonl_and_usage(self) -> None:
+        self.assertEqual([], validator.validate_builder_supervision(
+            self.golden["cliRuntimeEvidence"],
+            self.golden["cliRuntimeContract"],
+            self.golden["cliRuntimeStdoutByInvocation"],
         ))
 
-    def test_exact_golden_validates_through_cli(self) -> None:
-        result = subprocess.run(
-            [sys.executable, str(Path(validator.__file__)),
-             str(validator.GOLDEN_PATH), "--mode", "execution", "--expect-golden"],
-            check=False, capture_output=True, text=True,
+    def test_builder_supervision_rejects_malicious_lifecycle(self) -> None:
+        mutations = [
+            ("started", False, "lifecycle"),
+            ("stdinDelivered", False, "lifecycle"),
+            ("exitCode", 1, "lifecycle"),
+            ("timedOut", True, "lifecycle"),
+            ("turnCompleted", False, "lifecycle"),
+            ("rawJsonlValid", False, "lifecycle"),
+            ("unauthorizedToolOrWriteDetected", True, "unauthorized"),
+        ]
+        for field, replacement, fragment in mutations:
+            with self.subTest(field=field):
+                evidence = copy.deepcopy(self.golden["cliRuntimeEvidence"])
+                evidence["results"][0][field] = replacement
+                errors = validator.validate_builder_supervision(
+                    evidence, self.golden["cliRuntimeContract"],
+                    self.golden["cliRuntimeStdoutByInvocation"],
+                )
+                self.assertTrue(any(fragment in e.casefold() for e in errors), errors)
+
+    def test_builder_supervision_rejects_process_thread_prompt_reuse(self) -> None:
+        evidence = copy.deepcopy(self.golden["cliRuntimeEvidence"])
+        evidence["results"][1]["processId"] = evidence["results"][0]["processId"]
+        evidence["results"][1]["threadIds"] = evidence["results"][0]["threadIds"]
+        evidence["results"][1]["promptSha256"] = "f" * 64
+        errors = validator.validate_builder_supervision(
+            evidence, self.golden["cliRuntimeContract"],
+            self.golden["cliRuntimeStdoutByInvocation"],
         )
-        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-        self.assertIn("canonically valid", result.stdout)
+        joined = "\n".join(errors).casefold()
+        self.assertIn("process", joined)
+        self.assertIn("thread", joined)
+        self.assertIn("prompt", joined)
 
-    def test_exact_invalid_current_validates_in_execution_mode(self) -> None:
-        self.assertEqual([], validator.validate_path(validator.INVALID_PATH, "execution"))
-
-    def test_exact_invalid_current_validates_through_cli(self) -> None:
-        result = subprocess.run(
-            [sys.executable, str(Path(validator.__file__)),
-             str(validator.INVALID_PATH), "--mode", "execution"],
-            check=False, capture_output=True, text=True,
+    def test_builder_supervision_rejects_malformed_jsonl_and_usage_spoofing(self) -> None:
+        stdout = copy.deepcopy(self.golden["cliRuntimeStdoutByInvocation"])
+        first_id = self.golden["cliRuntimeContract"]["invocations"][0]["invocationId"]
+        stdout[first_id] = "not-json\n"
+        errors = validator.validate_builder_supervision(
+            self.golden["cliRuntimeEvidence"], self.golden["cliRuntimeContract"], stdout,
         )
-        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-
-    def test_template_mode_cli_smoke(self) -> None:
-        result = subprocess.run(
-            [sys.executable, str(Path(validator.__file__)),
-             str(validator.INVALID_PATH), "--mode", "template"],
-            check=False, capture_output=True, text=True,
+        self.assertTrue(any("jsonl" in e.casefold() or "stdout hash" in e.casefold() for e in errors), errors)
+        evidence = copy.deepcopy(self.golden["cliRuntimeEvidence"])
+        evidence["results"][0]["usage"] = {"input_tokens": 999}
+        errors = validator.validate_builder_supervision(
+            evidence, self.golden["cliRuntimeContract"],
+            self.golden["cliRuntimeStdoutByInvocation"],
         )
-        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertTrue(any("usage" in e.casefold() for e in errors), errors)
 
-    def test_valid_fixture_preserves_invalid_attempt_history(self) -> None:
-        self.assertEqual("rehearsal-001", self.golden["invalidAttempts"][0]["attemptId"])
-        self.assertEqual([], self.errors(self.golden))
-
-    def test_rejects_prompt_drift_even_when_builders_match_each_other(self) -> None:
-        value = copy.deepcopy(self.golden)
-        for freeze in value["builderFreezes"].values():
-            freeze["promptSha256"] = "f" * 64
-        self.assert_error(value, "prompt commitment drift from canonical contract and lock")
-
-    def test_rejects_config_drift_even_when_builders_match_each_other(self) -> None:
-        value = copy.deepcopy(self.golden)
-        for freeze in value["builderFreezes"].values():
-            freeze["configSha256"] = "f" * 64
-        self.assert_error(value, "config commitment drift from canonical contract and lock")
-
-    def test_rejects_prompt_drift_from_lock_commitment(self) -> None:
-        with mock.patch.object(validator, "LOCK_PROMPT_SHA256", "f" * 64):
-            self.assert_error(self.golden, "prompt commitment drift from canonical contract and lock")
-
-    def test_rejects_config_drift_from_lock_commitment(self) -> None:
-        with mock.patch.object(validator, "LOCK_CONFIG_SHA256", "f" * 64):
-            self.assert_error(self.golden, "config commitment drift from canonical contract and lock")
-
-    def test_rejects_arbitrary_completed_status(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["status"] = "complete"
-        self.assert_error(value, "completed status must be valid or invalid")
-
-    def test_rejects_valid_status_with_active_invalidation(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["activeInvalidation"] = copy.deepcopy(self.invalid["activeInvalidation"])
-        self.assert_error(value, "valid status requires activeInvalidation null")
-
-    def test_rejects_valid_status_without_outcome(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["outcome"] = None
-        self.assert_error(value, "valid status requires a scored outcome")
-
-    def test_rejects_invalid_status_without_active_invalidation(self) -> None:
-        value = copy.deepcopy(self.invalid)
-        value["activeInvalidation"] = None
-        self.assert_error(value, "activeInvalidation: must be an object")
-
-    def test_rejects_invalid_status_with_outcome(self) -> None:
-        value = copy.deepcopy(self.invalid)
-        value["outcome"] = {"score": 100}
-        errors = self.errors(value)
-        self.assertTrue(any("invalid status requires outcome null" in error for error in errors), errors)
-        self.assertTrue(any("active invalidation forbids a scored outcome" in error for error in errors), errors)
-
-    def test_rejects_invalid_status_with_evaluations(self) -> None:
-        value = copy.deepcopy(self.invalid)
-        value["evaluations"] = []
-        self.assert_error(value, "invalid status requires evaluations null")
-
-    def test_rejects_malformed_active_invalidation_evidence(self) -> None:
-        value = copy.deepcopy(self.invalid)
-        value["activeInvalidation"]["evidenceSha256"] = "0" * 64
-        self.assert_error(value, "activeInvalidation.evidenceSha256: nonzero SHA-256 required")
-
-    def test_rejects_malformed_preserved_invalid_attempt(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["invalidAttempts"][0]["reason"] = ""
-        self.assert_error(value, "invalidAttempts[0].reason: nonempty string required")
-
-    def test_canonical_json_uses_utf8_key_order_and_domain(self) -> None:
-        value = {"é": 2, "z": 1}
-        self.assertEqual('{"z":1,"é":2}', validator.canonical_json(value))
-        expected = hashlib.sha256(
-            validator.CANONICAL_DOMAIN + b'{"z":1,"\xc3\xa9":2}'
-        ).hexdigest()
-        self.assertEqual(expected, validator.canonical_hash(value))
-        self.assertEqual(
-            self.golden["assignment"]["frozenInitialEvidenceHashes"]["candidate-a"],
-            validator.canonical_hash(self.golden["builderFreezes"]["candidate-a"]),
+    def test_builder_supervision_requires_absence_reasons_and_rejects_metadata_conflicts(self) -> None:
+        evidence = copy.deepcopy(self.golden["cliRuntimeEvidence"])
+        evidence["results"][0]["runtimeModelUnavailableReason"] = ""
+        errors = validator.validate_builder_supervision(
+            evidence, self.golden["cliRuntimeContract"],
+            self.golden["cliRuntimeStdoutByInvocation"],
         )
+        self.assertTrue(any("runtimemodel" in e.casefold() for e in errors), errors)
+        evidence = copy.deepcopy(self.golden["cliRuntimeEvidence"])
+        evidence["results"][0]["runtimeModel"] = "wrong-model"
+        evidence["results"][0]["runtimeModelUnavailableReason"] = None
+        errors = validator.validate_builder_supervision(
+            evidence, self.golden["cliRuntimeContract"],
+            self.golden["cliRuntimeStdoutByInvocation"],
+        )
+        self.assertTrue(any("conflicts" in e.casefold() for e in errors), errors)
 
-    def test_assignment_bytes_recompute_exactly(self) -> None:
+    def test_role_contract_accepts_frozen_reviewer(self) -> None:
+        self.assertEqual([], validator.validate_role_runtime_contract(self.valid_role_contract()))
+
+    def test_role_contract_rejects_history_and_binding_injection(self) -> None:
+        mutations = [
+            ("runnerSha256", "f" * 64, "binding"),
+            ("promptTemplateSha256", "f" * 64, "binding"),
+            ("artifactSchemaSha256", "f" * 64, "binding"),
+            ("sandboxMode", "workspace-write", "isolation"),
+        ]
+        for field, replacement, fragment in mutations:
+            with self.subTest(field=field):
+                value = self.valid_role_contract()
+                value[field] = replacement
+                errors = validator.validate_role_runtime_contract(value)
+                self.assertTrue(any(fragment in e.casefold() for e in errors), errors)
+        value = self.valid_role_contract()
+        value["promptSubstitutions"]["HISTORY"] = "prior-thread"
+        self.assertTrue(any("substitution" in e.casefold() for e in validator.validate_role_runtime_contract(value)))
+        value = self.valid_role_contract()
+        value["promptSubstitutions"]["CANDIDATE_LABEL"] = "candidate-example\nresume prior"
+        self.assertTrue(any("single-line" in e.casefold() for e in validator.validate_role_runtime_contract(value)))
+
+    def test_role_supervision_strictly_reconciles_evidence(self) -> None:
+        contract = self.valid_role_contract()
+        result, raw = self.valid_role_evidence(contract)
+        self.assertEqual([], validator.validate_role_supervision_evidence(result, contract, raw))
+        result["artifactBindingValid"] = False
+        self.assertTrue(any("artifact" in e.casefold() for e in
+                            validator.validate_role_supervision_evidence(result, contract, raw)))
+
+    def test_blinded_mapping_accepts_private_provenance(self) -> None:
+        self.assertEqual([], validator.validate_blinded_mapping(self.valid_mapping()))
+
+    def test_blinded_mapping_rejects_traversal_order_and_provenance_omission(self) -> None:
+        value = self.valid_mapping()
+        value["packages"][0]["packageLabel"] = "../escape"
+        self.assertTrue(validator.validate_blinded_mapping(value))
+        value = self.valid_mapping()
+        value["randomizedOrder"] = ["X", "X", "Z"]
+        self.assertTrue(any("permutation" in e.casefold() for e in validator.validate_blinded_mapping(value)))
+        value = self.valid_mapping()
+        value["provenance"]["evidencePaths"] = []
+        self.assertTrue(any("evidencepaths" in e.casefold() for e in validator.validate_blinded_mapping(value)))
+
+    def test_blinded_manifest_accepts_history_free_seals(self) -> None:
+        self.assertEqual([], validator.validate_blinded_manifest(
+            self.golden["blindedPackageManifest"], self.golden["evaluationRandomization"]["order"],
+        ))
+
+    def test_blinded_manifest_rejects_lineage_leak_and_broken_seal(self) -> None:
+        value = copy.deepcopy(self.golden["blindedPackageManifest"])
+        value["packages"][0]["sourceRole"] = "B0"
+        self.assertTrue(any("fields" in e.casefold() or "provenance" in e.casefold()
+                            for e in validator.validate_blinded_manifest(value)))
+        value = copy.deepcopy(self.golden["blindedPackageManifest"])
+        value["packages"][0]["historyFree"] = False
+        self.assertTrue(any("seal" in e.casefold() for e in validator.validate_blinded_manifest(value)))
+        value = copy.deepcopy(self.golden["blindedPackageManifest"])
+        value["packages"][0]["packageSha256"] = "0" * 64
+        self.assertTrue(validator.validate_blinded_manifest(value))
+
+    def test_integrated_run_rejects_runtime_and_manifest_tampering(self) -> None:
+        value = copy.deepcopy(self.golden)
+        value["cliRuntimeContract"]["invariantArgv"][3] = "wrong-model"
+        self.assert_error(value, "model/reasoning")
+        value = copy.deepcopy(self.golden)
+        value["builderFreezes"]["candidate-a"]["runtimeInvocationId"] = "f" * 32
+        self.assert_error(value, "runtime binding")
+        value = copy.deepcopy(self.golden)
+        value["blindedPackageManifest"]["packages"][0]["packageSha256"] = "f" * 64
+        self.assert_error(value, "package seal mismatch")
+
+    def test_integrated_run_rejects_role_reuse_and_evaluation_revision(self) -> None:
+        value = copy.deepcopy(self.golden)
+        value["roleRuntimeEvidence"][1]["processId"] = value["roleRuntimeEvidence"][0]["processId"]
+        value["roleRuntimeEvidence"][1]["invocationId"] = value["roleRuntimeEvidence"][0]["invocationId"]
+        value["roleRuntimeEvidence"][1]["threadId"] = value["roleRuntimeEvidence"][0]["threadId"]
+        self.assert_error(value, "duplicate runtime identity")
+        value = copy.deepcopy(self.golden)
+        value["evaluations"][1]["revisionAllowed"] = True
+        self.assert_error(value, "blinded sequence")
+
+    def test_assignment_and_evaluation_randomization_bytes_recompute(self) -> None:
         assignment = self.golden["assignment"]
         digest, draw, mapping = validator.candidate_assignment(
-            assignment["seedHex"], ["candidate-a", "candidate-b"]
+            assignment["seedHex"], ["candidate-a", "candidate-b"],
         )
-        self.assertEqual(assignment["digestSha256"], digest)
-        self.assertEqual(assignment["draw"], draw)
-        self.assertEqual(assignment["mapping"], mapping)
-
-    def test_evaluation_rank_hash_bytes_recompute_exactly(self) -> None:
+        self.assertEqual((assignment["digestSha256"], assignment["draw"], assignment["mapping"]),
+                         (digest, draw, mapping))
         randomization = self.golden["evaluationRandomization"]
         digest, ranks, mapping = validator.evaluation_randomization(randomization["seedHex"])
-        self.assertEqual(randomization["digestSha256"], digest)
-        self.assertEqual(randomization["rankDigests"], ranks)
-        self.assertEqual(randomization["mapping"], mapping)
+        self.assertEqual((randomization["digestSha256"], randomization["rankDigests"],
+                          randomization["mapping"]), (digest, ranks, mapping))
 
-    def test_rejects_legacy_finding_shape(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["reviews"][0]["findings"] = [{
-            "id": "cycle-1-reviewer-01", "severity": "high", "title": "legacy",
-            "evidence": ["path:1"], "impact": "impact",
-            "required_change": "change", "acceptance_check": "check",
-        }]
-        value["runs"]["candidate-b"]["cycles"][0]["reviewFindingCount"] = 1
-        self.assert_error(value, "fields must be exactly actual,duplicateOf,evidence,expected,id,rubricItems,severity,title,verification")
+    def test_active_invalidation_forbids_scores(self) -> None:
+        value = copy.deepcopy(self.invalid)
+        value["outcome"] = {}
+        self.assert_error(value, "forbids a scored outcome")
 
-    def test_rejects_extra_finding_field(self) -> None:
-        value = copy.deepcopy(self.golden)
-        finding = {
-            "id": "cycle-1-reviewer-01", "severity": "low", "title": "defect",
-            "evidence": ["path:1"], "expected": "expected", "actual": "actual",
-            "rubricItems": ["A1"], "verification": "verify", "duplicateOf": None,
-            "impact": "not public",
-        }
-        value["reviews"][0]["findings"] = [finding]
-        self.assert_error(value, "fields must be exactly actual,duplicateOf,evidence,expected,id,rubricItems,severity,title,verification")
-
-    def test_rejects_nonpublic_fixer_disposition_shape(self) -> None:
-        value = copy.deepcopy(self.golden)
-        finding = {
-            "id": "cycle-1-reviewer-01", "severity": "low", "title": "defect",
-            "evidence": ["path:1"], "expected": "expected", "actual": "actual",
-            "rubricItems": ["A1"], "verification": "verify", "duplicateOf": None,
-        }
-        value["reviews"][0]["findings"] = [finding]
-        value["fixes"] = [{
-            "candidateLabel": "candidate-b", "cycle": 1,
-            "roleInstanceId": "cycle-1-fixer", "workerId": "worker-04-fixer-31a9",
-            "startCommit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
-            "finalCommit": "0d977cbeeb1df357e500f254108535ba025577d7",
-            "startedAt": "2026-07-20T01:10:00Z", "completedAt": "2026-07-20T01:15:00Z",
-            "dispositions": [{
-                "findingId": "cycle-1-reviewer-01", "decision": "accepted",
-                "rationale": "fixed", "evidence": ["path:1"], "legacy": True,
-            }],
-            "changedFiles": ["src/file"], "checks": [], "remainingDefects": [],
-            "deviations": [],
-        }]
-        self.assert_error(value, "fields must be exactly decision,evidence,findingId,rationale")
-
-    def test_rejects_nonpublic_tester_component_shape(self) -> None:
-        value = copy.deepcopy(self.golden)
-        results = [
-            {"command": command, "exitCode": 0} for command in validator.PUBLIC_GATES
-        ]
-        results[0]["output"] = "legacy"
-        value["tests"] = [{
-            "candidateLabel": "candidate-b", "cycle": 1,
-            "roleInstanceId": "cycle-1-tester", "workerId": "worker-05-tester-c472",
-            "snapshotCommit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
-            "startedAt": "2026-07-20T01:15:00Z", "completedAt": "2026-07-20T01:20:00Z",
-            "command": "npm run check", "exitCode": 0, "componentResults": results,
-            "rawOutputSha256": "f" * 64, "workingTreeClean": True,
-        }]
-        self.assert_error(value, "fields must be exactly command,exitCode")
-
-    def test_rejects_old_baseline_stop_reason(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["runs"]["candidate-a"]["stopReason"] = "baseline_frozen"
-        self.assert_error(value, "baseline-zero-cycles")
-
-    def test_rejects_assignment_digest_mismatch(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["assignment"]["digestSha256"] = "f" * 64
-        self.assert_error(value, "assignment: digest bytes diverge")
-
-    def test_rejects_rank_digest_mismatch(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["evaluationRandomization"]["rankDigests"]["T0"] = "f" * 64
-        self.assert_error(value, "rank-hash bytes diverge")
-
-    def test_rejects_noncanonical_xyz_mapping(self) -> None:
-        value = copy.deepcopy(self.golden)
-        mapping = value["evaluationRandomization"]["mapping"]
-        mapping["X"], mapping["Y"] = mapping["Y"], mapping["X"]
-        self.assert_error(value, "X/Y/Z mapping diverges")
-
-    def test_rejects_evidence_sequence_starting_at_one(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["evidenceChain"][0]["sequence"] = 1
-        self.assert_error(value, "sequence must start at 0")
-
-    def test_rejects_evidence_predecessor_mismatch(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["evidenceChain"][1]["previousSha256"] = "f" * 64
-        self.assert_error(value, "previousSha256 mismatch")
-
-    def test_rejects_noncanonical_evidence_artifact_hash(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["evidenceChain"][3]["artifactSha256"] = "f" * 64
-        self.assert_error(value, "domain-separated canonical artifact hash mismatch")
-
-    def test_rejects_missing_evaluation_artifact(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["evaluations"].pop()
-        self.assert_error(value, "exactly three artifacts required")
-
-    def test_rejects_missing_rubric_item(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["evaluations"][0]["items"].pop()
-        self.assert_error(value, "exactly 20 rubric items required")
-
-    def test_rejects_wrong_rubric_item_id_order(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["evaluations"][0]["items"][0]["id"] = "A2"
-        self.assert_error(value, "rubric IDs must appear once in canonical order")
-
-    def test_rejects_nonanchor_score(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["evaluations"][0]["items"][0]["score"] = 5
-        self.assert_error(value, "score is not a written anchor")
-
-    def test_rejects_wrong_item_maximum(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["evaluations"][0]["items"][0]["maximum"] = 7
-        self.assert_error(value, "maximum diverges")
-
-    def test_rejects_wrong_section_subtotal(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["evaluations"][0]["sectionTotals"]["functional"] = 49
-        self.assert_error(value, "functional subtotal arithmetic is incorrect")
-
-    def test_rejects_unapplied_section_cap(self) -> None:
-        value = copy.deepcopy(self.golden)
-        evaluation = value["evaluations"][0]
-        evaluation["capConditions"]["buildFailedOrCannotRender"] = True
-        evaluation["capsApplied"] = ["functional-section-10"]
-        self.assert_error(value, "functional build/render cap not applied")
-
-    def test_rejects_missing_public_results(self) -> None:
-        value = copy.deepcopy(self.golden)
-        del value["evaluations"][0]["publicTests"]
-        self.assert_error(value, "fields must be exactly")
-
-    def test_rejects_missing_hidden_results(self) -> None:
-        value = copy.deepcopy(self.golden)
-        del value["evaluations"][0]["hiddenTests"]
-        self.assert_error(value, "fields must be exactly")
-
-    def test_rejects_evaluator_public_command_drift(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["evaluations"][0]["publicTests"]["command"] = "npm test"
-        self.assert_error(value, "command diverges from commitment")
-
-    def test_rejects_all_wrong_role_wall_budgets(self) -> None:
-        for index, cost in enumerate(self.golden["costs"]):
-            with self.subTest(role=cost["role"]):
-                value = copy.deepcopy(self.golden)
-                value["costs"][index]["wallSecondsMaximum"] += 1
-                self.assert_error(value, "wall budget diverges")
-
-    def test_rejects_positive_or_estimated_max_tokens(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["costs"][0]["maxTokens"] = 2400
-        self.assert_error(value, "maxTokens must be null with reason")
-
-    def test_rejects_null_max_tokens_without_reason(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["costs"][0]["maxTokensUnavailableReason"] = ""
-        self.assert_error(value, "maxTokens must be null with reason")
-
-    def test_rejects_estimated_unavailable_telemetry(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["costs"][0]["totalTokens"] = 123
-        self.assert_error(value, "unavailable telemetry must remain null")
-
-    def test_rejects_public_gate_binding_drift(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["bindings"]["publicGates"][0] = "npm run format"
-        self.assert_error(value, "immutable public gates diverge")
-
-    def test_rejects_hidden_commitment_drift(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["bindings"]["hiddenSuiteSha256"] = "f" * 64
-        self.assert_error(value, "hidden-suite commitment diverges")
-
-    def test_rejects_duplicate_worker_ids(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["workers"][1]["workerId"] = value["workers"][0]["workerId"]
-        self.assert_error(value, "duplicate worker IDs")
-
-    def test_template_mode_allows_sentinels_but_execution_rejects_them(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["bindings"]["commonStartCommit"] = "0" * 40
-        value["environment"]["npm"] = "required-at-run"
-        self.assertEqual([], self.errors(value, mode="template"))
-        errors = self.errors(value, mode="execution")
-        self.assertTrue(any("zero hash/seed" in error for error in errors), errors)
-        self.assertTrue(any("template sentinel" in error for error in errors), errors)
-
-    def test_rejects_mutation_when_golden_hash_is_required(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["environment"]["npm"] = "11.11.1"
-        errors = self.errors(value, expect_golden=True)
-        self.assertTrue(any("does not match frozen golden" in error for error in errors), errors)
-
-    def test_rejects_non_history_free_package(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["packages"][0]["historyFree"] = False
-        self.assert_error(value, "package must be history-free")
-
-    def test_rejects_wrong_outcome_delta(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["outcome"]["primaryTfinalMinusB0"] = 0
-        self.assert_error(value, "primary Tfinal-B0 arithmetic incorrect")
-
-    def test_cli_rejects_template_sentinel_in_execution_mode(self) -> None:
-        value = copy.deepcopy(self.golden)
-        value["bindings"]["lockFileSha256"] = "0" * 64
+    def test_cli_rejects_corrupt_json(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "artifact.json"
-            path.write_text(json.dumps(value), encoding="utf-8")
+            path = Path(directory) / "bad.json"
+            path.write_text("{", encoding="utf-8")
             result = subprocess.run(
-                [sys.executable, str(Path(validator.__file__)), str(path),
-                 "--mode", "execution"], check=False, capture_output=True, text=True,
+                [sys.executable, str(MODULE_PATH), str(path), "--mode", "execution"],
+                capture_output=True, text=True, check=False,
             )
-        self.assertNotEqual(0, result.returncode)
-        self.assertIn("zero hash/seed", result.stdout)
+            self.assertNotEqual(0, result.returncode)
+            self.assertIn("invalid JSON", result.stdout)
 
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(verbosity=2)

@@ -1,0 +1,44 @@
+{
+  "mappingSeedSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "randomizedOrder": ["X", "Y", "Z"],
+  "frozenGateSetSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "provenance": {
+    "candidateIds": [
+      "required-at-run-candidate-a",
+      "required-at-run-candidate-b"
+    ],
+    "runIds": ["required-at-run-run-a", "required-at-run-run-b"],
+    "evidencePaths": ["C:\\absolute\\private-evidence"],
+    "roleArtifactNames": [
+      "review-artifact.json",
+      "fix-artifact.json",
+      "test-artifact.json"
+    ]
+  },
+  "packages": [
+    {
+      "packageLabel": "X",
+      "sourceRole": "B0",
+      "sourcePath": "C:\\absolute\\source-x",
+      "sourceRef": "refs/heads/required-at-run-x",
+      "sourceCommit": "0000000000000000000000000000000000000000",
+      "sourceTree": "0000000000000000000000000000000000000000"
+    },
+    {
+      "packageLabel": "Y",
+      "sourceRole": "T0",
+      "sourcePath": "C:\\absolute\\source-y",
+      "sourceRef": "refs/heads/required-at-run-y",
+      "sourceCommit": "0000000000000000000000000000000000000000",
+      "sourceTree": "0000000000000000000000000000000000000000"
+    },
+    {
+      "packageLabel": "Z",
+      "sourceRole": "Tfinal",
+      "sourcePath": "C:\\absolute\\source-z",
+      "sourceRef": "refs/heads/required-at-run-z",
+      "sourceCommit": "0000000000000000000000000000000000000000",
+      "sourceTree": "0000000000000000000000000000000000000000"
+    }
+  ]
+}

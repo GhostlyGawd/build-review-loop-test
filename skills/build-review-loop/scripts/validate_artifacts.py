@@ -17,23 +17,77 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = SKILL_ROOT / "references" / "canonical-contract.json"
 GOLDEN_PATH = SKILL_ROOT / "tests" / "fixtures" / "golden-run.json"
 INVALID_PATH = SKILL_ROOT / "tests" / "fixtures" / "invalid-current.json"
-ENVELOPE_SCHEMA_PATH = SKILL_ROOT / "references" / "assignment-envelope.schema.json"
+CLI_SCHEMA_PATH = SKILL_ROOT / "references" / "cli-runtime-contract.schema.json"
+CLI_TEMPLATE_PATH = SKILL_ROOT / "references" / "cli-runtime-contract.template.json"
+CLI_RUNNER_PATH = SKILL_ROOT / "scripts" / "run-cli-builders.ps1"
+ROLE_SCHEMA_PATH = SKILL_ROOT / "references" / "role-runtime-contract.schema.json"
+ROLE_TEMPLATE_PATH = SKILL_ROOT / "references" / "role-runtime-contract.template.json"
+ROLE_RUNNER_PATH = SKILL_ROOT / "scripts" / "run-cli-role.ps1"
+EVIDENCE_SCHEMA_PATH = SKILL_ROOT / "references" / "cli-supervision-evidence.schema.json"
+EVIDENCE_TEMPLATE_PATH = SKILL_ROOT / "references" / "cli-supervision-evidence.template.json"
+PACKAGE_SCHEMA_PATH = SKILL_ROOT / "references" / "blinded-package-manifest.schema.json"
+PACKAGE_TEMPLATE_PATH = SKILL_ROOT / "references" / "blinded-package-manifest.template.json"
+MAPPING_SCHEMA_PATH = SKILL_ROOT / "references" / "blinded-package-mapping.schema.json"
+MAPPING_TEMPLATE_PATH = SKILL_ROOT / "references" / "blinded-package-mapping.template.json"
+PACKAGER_PATH = SKILL_ROOT / "scripts" / "package-blinded-snapshots.mjs"
 NEUTRAL_PROMPT_PATH = SKILL_ROOT / "references" / "neutral-builder.md"
+SMOKE_PROMPT_PATH = SKILL_ROOT / "references" / "runner-smoke.md"
 BUILDER_CONFIG_PATH = SKILL_ROOT / "references" / "builder-config.json"
-CONTRACT_CANONICAL_SHA256 = "4b8c4753aca6a83025e72a0a76680bf78895b0e3be94cd64fed8c06c123b1b01"
-GOLDEN_CANONICAL_SHA256 = "58231f1acf65fbc572602712da4247521aeba4beefafa1f520444bdeafd1f062"
-INVALID_CANONICAL_SHA256 = "90b7950bdf2daa14842bacce85e103e8cf305301e80958110f774dc53636f95d"
-CONTRACT_RAW_SHA256 = "7588fb1e58ae89a06bcaf307895664d89bb83bd5c93f340f79715bd62153cc73"
-GOLDEN_RAW_SHA256 = "80d087b959ddf3fdfc9a211ccfb8903187164701bc48171898f2e37d89c84f5c"
-INVALID_RAW_SHA256 = "06c0aad89ddf2eee365688196e1324b26b49ad662e86c3432d76452a7846f72b"
-ENVELOPE_SCHEMA_SHA256 = "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21"
-BUILDER_PROMPT_SHA256 = "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39"
-BUILDER_CONFIG_SHA256 = "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606"
+ROLE_PROMPT_PATHS = {
+    "reviewer": SKILL_ROOT / "references" / "blinded-reviewer.md",
+    "fixer": SKILL_ROOT / "references" / "fixer.md",
+    "tester": SKILL_ROOT / "references" / "tester.md",
+    "evaluator": SKILL_ROOT / "references" / "blinded-evaluator.md",
+}
+CONTRACT_CANONICAL_SHA256 = "541985e02a49b79910282a6e7f26e43fbde3ae500ebfcdf9cef6d031f1a74b49"
+GOLDEN_CANONICAL_SHA256 = "ae96dc2d0f34635ebe979745c5055404943f5ba7578f8bfa325925bebc6070d1"
+INVALID_CANONICAL_SHA256 = "67ff46e219d7dcacfe083db59c31785ca7ce496837f0b0c7ff602267af3b01e0"
+CONTRACT_RAW_SHA256 = "664ce4c05aef01760e02706f152dcea3a26307df60691ad67938bac03e021636"
+GOLDEN_RAW_SHA256 = "20fc476ed2e98056590f36b26d79516f89c6dd878c01b6ec55cb782d7c8be655"
+INVALID_RAW_SHA256 = "7abd35f57da85143a955c6497b83e9f7b81acf3b21fe5c16080911983fdc1415"
+CLI_SCHEMA_SHA256 = "c18db758a6b40194e64c88d3842522ade28ff831806c6315e3c5348e92934c33"
+CLI_TEMPLATE_RAW_SHA256 = "59e5ca33ca97e049a2871330732d6998d0ef4f1077a032d19f79574a78510f87"
+CLI_RUNNER_SHA256 = "24653c35386be28f09aa5719617ca5ab612a67c1fb8700bd7503abe72569ff25"
+ROLE_SCHEMA_SHA256 = "25a30d43ceb77e7bd4b908f8e577dc6ea0c7f9eb41c61f7c8c77af83f528632f"
+ROLE_TEMPLATE_RAW_SHA256 = "9c0e59757ebe2511b122f08233a91c56a91decca7feaee83bd56dc18be101be8"
+ROLE_RUNNER_SHA256 = "385830cc00bebca1541040dababf9496610064d94eb252a02c8de7d77cf6cea3"
+EVIDENCE_SCHEMA_SHA256 = "f6c18acea89f5cfac3b2fe6ad84871f563e217d884b14ecb29e6606bb99dcd89"
+EVIDENCE_TEMPLATE_RAW_SHA256 = "bcdc6a82eb4b7c2f31a2964b8f38ca8c3017eff68c0857991ac3d91166d90532"
+PACKAGE_SCHEMA_SHA256 = "4d9d8397fc068cdf511e99bae6980ed2d2ef5410e5128385043f1c426cdb8bd5"
+PACKAGE_TEMPLATE_RAW_SHA256 = "c35470675fadf7157d954216bba53f88b226786c204ab2d6ce575b31450acadf"
+MAPPING_SCHEMA_SHA256 = "2d0a96f27d43f511c26b57a49dfef5c05acfe0f5dfb1f8419f724d524513fb74"
+MAPPING_TEMPLATE_RAW_SHA256 = "680da1c7b4bfe0e9eb1f056b712e9cc796e9be536097a36dbe244686795d1d43"
+PACKAGER_SHA256 = "98cf033b59916e36a871034ba23a1bcfb06c0783f9e5b9fd04596caca6a216ec"
+BUILDER_PROMPT_SHA256 = "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0"
+SMOKE_PROMPT_SHA256 = "135c5fc59fe72b4b37d924cd6f1a14e4f2a3b7b59711cc12294e81f52cbfd6a2"
+BUILDER_CONFIG_SHA256 = "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4"
 LOCK_PROMPT_SHA256 = BUILDER_PROMPT_SHA256
 LOCK_CONFIG_SHA256 = BUILDER_CONFIG_SHA256
-LOCK_ENVELOPE_SCHEMA_SHA256 = ENVELOPE_SCHEMA_SHA256
-COORDINATION_DIRECTORY = r"C:\Users\rhenm\Documents\Codex\2026-07-20\pilot-002-builder-assignments"
-ASSIGNMENT_WORKSPACE_ROOT = r"C:\Users\rhenm\Documents\Codex\2026-07-20"
+CLI_BINARY_PATH = r"C:\Users\rhenm\.codex\plugins\.plugin-appserver\codex.exe"
+CLI_VERSION = "codex-cli 0.145.0-alpha.18"
+CLI_BINARY_SHA256 = "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4"
+CLI_AUTH_STATUS = "Logged in using ChatGPT"
+PWSH_PATH = r"C:\Users\rhenm\AppData\Local\pwsh7\pwsh.exe"
+PWSH_VERSION = "7.6.2"
+PWSH_SHA256 = "99ec38d8c4910fd5f2feeeec4dedb5076ff39a08ca21e12642822bc8d989e316"
+CLI_INVARIANT_ARGV = (
+    "-a", "never", "-m", "gpt-5.4", "-c", 'model_reasoning_effort="xhigh"',
+    "exec", "--ephemeral", "--ignore-user-config", "--skip-git-repo-check",
+    "--sandbox", "workspace-write", "--json",
+)
+MODEL_ROLE_PROMPT_SHA256 = {
+    "builder": BUILDER_PROMPT_SHA256,
+    "reviewer": "5bd94cc7c44165acae23675f82d74ece6bab0b4dab31f387d338d1c9a5e7dcae",
+    "fixer": "ac4c0a40dbcee8b1ffe11b6eb7e81c5458849859a1ab38d09b78431aa390c9cf",
+    "tester": "644ef262eb7a4c85b3a4d5636d88479082ebca37a5f082dbce165c90a9ef16c3",
+    "evaluator": "ee2e0620aa9a7d55ef047dda9d6d947ee750ebd3bb3bc1f149a229eb11adbe40",
+}
+ROLE_ARTIFACT_SCHEMA_SHA256 = {
+    "reviewer": "66e47c9e4a0a8a4b1d5f09a73f09f753879b8f0f0d8219a1e4b187b88d3d791f",
+    "fixer": "d92b46d65322b053699bdcc8e35a6f9d0c1c91d3dacccddbcfc569c673d7e96b",
+    "tester": "f0d6937137661ef750fe435afbe4ca1cba8ce727ed7bdf0986e98a9c1d476f06",
+    "evaluator": "12a769a0868261e28299b5a7feef71626ea6e1ee51bfb0eb59ce65bbec05e6aa",
+}
 CANONICAL_DOMAIN = b"permissions-playground/canonical-json-v1\0"
 ASSIGNMENT_DOMAIN = b"build-review-loop-assignment-v2\0"
 EVALUATION_DOMAIN = "permissions-playground/protocol-v2/evaluation\n"
@@ -89,20 +143,7 @@ EVALUATOR_PUBLIC_COMMAND = "npm run test:public"
 HIDDEN_ID = "permissions-playground-sealed-v2"
 HIDDEN_COMMAND = "node sealed-hidden-suite/run.mjs"
 HIDDEN_SHA256 = "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b"
-ENVELOPE_FIELDS = (
-    "schemaVersion", "opaqueWorkerKey", "opaqueCandidateId", "absoluteWorktreePath",
-    "buildBranch", "baseBranch", "commonStartCommit", "commonStartTree",
-    "promptSha256", "configSha256", "envelopeSchemaSha256",
-)
-ENVELOPE_DIFFERENCES = {
-    "opaqueWorkerKey", "opaqueCandidateId", "absoluteWorktreePath",
-    "buildBranch", "baseBranch",
-}
-ATTESTATION_FIELDS = ("opaqueCandidateId", "envelopeSha256")
-OPAQUE_ID = re.compile(r"^[a-z0-9]{24}$")
-BRANCH_NAME = re.compile(r"^[a-z0-9][a-z0-9._/-]{2,127}$")
-TASK_LEAF = re.compile(r"^[a-z0-9_]+$")
-WINDOWS_ABSOLUTE_PATH = re.compile(r"^[A-Za-z]:\\[^\r\n]+$")
+INVOCATION_ID = re.compile(r"^[0-9a-f]{32}$")
 
 
 def load_json(path: Path) -> Any:
@@ -205,9 +246,24 @@ def evaluation_randomization(seed_hex: str) -> tuple[str, dict[str, str], dict[s
 def validate_bundles() -> list[str]:
     errors: list[str] = []
     for path, expected, label in (
-        (ENVELOPE_SCHEMA_PATH, ENVELOPE_SCHEMA_SHA256, "assignment-envelope schema"),
+        (CLI_SCHEMA_PATH, CLI_SCHEMA_SHA256, "CLI runtime schema"),
+        (CLI_TEMPLATE_PATH, CLI_TEMPLATE_RAW_SHA256, "CLI runtime template"),
+        (CLI_RUNNER_PATH, CLI_RUNNER_SHA256, "CLI builder runner"),
+        (ROLE_SCHEMA_PATH, ROLE_SCHEMA_SHA256, "role runtime schema"),
+        (ROLE_TEMPLATE_PATH, ROLE_TEMPLATE_RAW_SHA256, "role runtime template"),
+        (ROLE_RUNNER_PATH, ROLE_RUNNER_SHA256, "role runner"),
+        (EVIDENCE_SCHEMA_PATH, EVIDENCE_SCHEMA_SHA256, "supervision evidence schema"),
+        (EVIDENCE_TEMPLATE_PATH, EVIDENCE_TEMPLATE_RAW_SHA256, "supervision evidence template"),
+        (PACKAGE_SCHEMA_PATH, PACKAGE_SCHEMA_SHA256, "blinded manifest schema"),
+        (PACKAGE_TEMPLATE_PATH, PACKAGE_TEMPLATE_RAW_SHA256, "blinded manifest template"),
+        (MAPPING_SCHEMA_PATH, MAPPING_SCHEMA_SHA256, "blinded mapping schema"),
+        (MAPPING_TEMPLATE_PATH, MAPPING_TEMPLATE_RAW_SHA256, "blinded mapping template"),
+        (PACKAGER_PATH, PACKAGER_SHA256, "blinded packager"),
         (NEUTRAL_PROMPT_PATH, BUILDER_PROMPT_SHA256, "neutral builder prompt"),
+        (SMOKE_PROMPT_PATH, SMOKE_PROMPT_SHA256, "runner smoke prompt"),
         (BUILDER_CONFIG_PATH, BUILDER_CONFIG_SHA256, "builder config"),
+        *((path, MODEL_ROLE_PROMPT_SHA256[role], f"{role} prompt")
+          for role, path in ROLE_PROMPT_PATHS.items()),
     ):
         try:
             raw = path.read_bytes()
@@ -270,35 +326,56 @@ def validate_contract(contract: Any) -> list[str]:
     for role, maximum in ROLE_BUDGETS.items():
         require(contract.get("roles", {}).get(role, {}).get("wallSecondsMaximum") == maximum,
                 f"canonical {role} wall budget diverges", errors)
+        if role in MODEL_ROLES:
+            require(contract.get("roles", {}).get(role, {}).get("executionRuntime") ==
+                    "fresh-external-cli-subprocess",
+                    f"canonical {role} CLI subprocess policy diverges", errors)
     require(contract.get("costPolicy", {}).get("maxTokens") is None and
             contract.get("costPolicy", {}).get("maxTokensUnavailableReasonRequired") is True,
             "canonical nullable maxTokens policy diverges", errors)
-    require(contract.get("protocolVersion") == "2.3.0",
+    require(contract.get("protocolVersion") == "2.4.0",
             "canonical protocol version diverges", errors)
     require(contract.get("builderFreeze") == {
         "promptSha256": BUILDER_PROMPT_SHA256,
+        "smokePromptSha256": SMOKE_PROMPT_SHA256,
         "configSha256": BUILDER_CONFIG_SHA256,
-        "rule": "every builder freeze must equal both canonical prompt/config hashes, the corresponding lock commitments, and one separately attested assignment-envelope hash",
+        "rule": "each builder receives the exact raw prompt bytes on stdin under an otherwise identical frozen external CLI execution; only opaque invocation ID and runtime coordinate paths differ",
     }, "canonical builder prompt/config commitments diverge", errors)
-    require(contract.get("assignmentEnvelope") == {
-        "schemaVersion": "1.0.0",
-        "schemaPath": "experiment/schemas/assignment-envelope.schema.json",
-        "schemaSha256": ENVELOPE_SCHEMA_SHA256,
-        "fields": list(ENVELOPE_FIELDS),
-        "attestationFields": list(ATTESTATION_FIELDS),
-        "coordinationDirectory": COORDINATION_DIRECTORY,
-        "fileConvention": "<task-leaf>.json",
-        "taskLeafPattern": "^[a-z0-9_]+$",
-        "workspaceRoot": ASSIGNMENT_WORKSPACE_ROOT,
-        "allowedPairDifferences": [
-            "opaqueWorkerKey", "opaqueCandidateId", "absoluteWorktreePath",
-            "buildBranch", "baseBranch",
-        ],
-        "pairRule": "opaque worker keys, candidate IDs, worktree paths, build branches, and base branches are pairwise distinct; paths are safe absolute children of workspaceRoot and are not nested; every other field is identical",
-        "bindingRule": "promptSha256, configSha256, and envelopeSchemaSha256 equal the canonical and lock commitments; commonStartCommit and commonStartTree are identical across the pair",
-        "semanticExclusion": "the envelope contains no task semantics, arm/treatment/comparison information, timestamps, rankings, prior-run data, or hints",
-        "siblingAccessRule": "listing the coordination directory or reading a sibling assignment file is an experiment invalidation",
-    }, "canonical assignment-envelope contract diverges", errors)
+    runtime = contract.get("cliRuntime", {})
+    require(runtime.get("modelRoleCoverage") ==
+            ["builder", "reviewer", "fixer", "tester", "evaluator"] and
+            "every model-bearing role" in runtime.get("roleLaunchRule", ""),
+            "canonical CLI runtime does not cover every model role", errors)
+    role_runtime = runtime.get("roleRuntime", {})
+    evaluation = contract.get("evaluation", {})
+    require(runtime.get("launchCommand") == "pwsh -NoProfile -File" and
+            runtime.get("powerShellHost") == {
+                "path": PWSH_PATH, "version": PWSH_VERSION, "sha256": PWSH_SHA256,
+            } and
+            runtime.get("schemaSha256") == CLI_SCHEMA_SHA256 and
+            runtime.get("runnerSha256") == CLI_RUNNER_SHA256 and
+            runtime.get("binaryPath") == CLI_BINARY_PATH and
+            runtime.get("binaryVersion") == CLI_VERSION and
+            runtime.get("binarySha256") == CLI_BINARY_SHA256 and
+            runtime.get("authStatus") == CLI_AUTH_STATUS and
+            runtime.get("pinnedModel") == "gpt-5.4" and
+            runtime.get("pinnedReasoning") == "xhigh" and
+            runtime.get("invariantArgv") == list(CLI_INVARIANT_ARGV) and
+            runtime.get("perInvocationArgv") == ["-C", "<workdir>", "-o", "<final-path>", "-"] and
+            role_runtime.get("schemaSha256") == ROLE_SCHEMA_SHA256 and
+            role_runtime.get("runnerSha256") == ROLE_RUNNER_SHA256 and
+            role_runtime.get("evidenceSchemaSha256") == EVIDENCE_SCHEMA_SHA256 and
+            role_runtime.get("promptTemplateSha256") == {
+                role: MODEL_ROLE_PROMPT_SHA256[role]
+                for role in ("reviewer", "fixer", "tester", "evaluator")
+            } and
+            role_runtime.get("artifactSchemaSha256") == ROLE_ARTIFACT_SCHEMA_SHA256 and
+            evaluation.get("packageScriptSha256") == PACKAGER_SHA256 and
+            evaluation.get("packageManifestSchemaSha256") == PACKAGE_SCHEMA_SHA256 and
+            evaluation.get("packageMappingSchemaSha256") == MAPPING_SCHEMA_SHA256 and
+            runtime.get("v4Evidence", {}).get("contractSha256") ==
+            "d1a47087dc0bfcf85638e6c9faef4c7399c98626556747f1fda31e0a67e0645d",
+            "canonical external CLI runtime contract diverges", errors)
     require(contract.get("invalidation") == {
         "completedStatuses": ["valid", "invalid"],
         "activeInvalidationFields": [
@@ -389,7 +466,9 @@ def validate_test_result(value: Any, command: str, location: str, errors: list[s
 
 def validate_evaluation(value: Any, location: str, errors: list[str]) -> None:
     fields = {
-        "packageLabel", "packageSha256", "evaluatorWorkerId", "evaluatedAt",
+        "packageLabel", "packageSha256", "evaluatorWorkerId", "runtimeInvocationId",
+        "runtimeProcessId", "runtimeThreadId", "evaluationSequence", "revisionAllowed",
+        "mappingGuess", "mappingGuessConfidence", "mappingGuessEvidence", "evaluatedAt", "sealedAt",
         "publicTests", "hiddenTests", "items", "sectionTotals", "uncappedTotal",
         "capConditions", "capsApplied", "finalTotal", "uncertainties", "evidenceHash",
     }
@@ -397,6 +476,16 @@ def validate_evaluation(value: Any, location: str, errors: list[str]) -> None:
         return
     require(value.get("packageLabel") in {"X", "Y", "Z"}, f"{location}: invalid packageLabel", errors)
     require(valid_hash(value.get("packageSha256")), f"{location}: packageSha256 invalid", errors)
+    require(isinstance(value.get("runtimeInvocationId"), str) and
+            bool(INVOCATION_ID.fullmatch(value["runtimeInvocationId"])) and
+            isinstance(value.get("runtimeProcessId"), int) and value["runtimeProcessId"] > 0 and
+            nonempty(value.get("runtimeThreadId")), f"{location}: runtime identity invalid", errors)
+    require(isinstance(value.get("evaluationSequence"), int) and 1 <= value["evaluationSequence"] <= 3 and
+            value.get("revisionAllowed") is False and value.get("mappingGuess") in {"B0", "T0", "Tfinal", "unknown"} and
+            isinstance(value.get("mappingGuessConfidence"), int) and
+            0 <= value["mappingGuessConfidence"] <= 100 and
+            nonempty(value.get("mappingGuessEvidence")), f"{location}: blinded sequence/guess invalid", errors)
+    parse_time(value.get("sealedAt"), f"{location}.sealedAt", errors)
     require(nonempty(value.get("evaluatorWorkerId")), f"{location}: evaluatorWorkerId required", errors)
     parse_time(value.get("evaluatedAt"), f"{location}.evaluatedAt", errors)
     validate_test_result(value.get("publicTests"), EVALUATOR_PUBLIC_COMMAND, f"{location}.publicTests", errors)
@@ -482,161 +571,446 @@ def lower_windows_path(value: str) -> str:
     return ntpath.normpath(value).casefold()
 
 
-def nested_windows_path(parent: str, candidate: str) -> bool:
+def nested_windows_path(left: str, right: str) -> bool:
     try:
-        relative = ntpath.relpath(candidate, parent)
-    except ValueError:
+        relative = ntpath.relpath(right, left)
+    except (TypeError, ValueError):
         return False
-    return relative not in {"", "."} and not relative.startswith("..") and not ntpath.isabs(relative)
-
-
-def validate_assignment_envelope(envelope: Any, errors: list[str], location: str,
-                                 source_path: str | None = None) -> None:
-    if not exact_fields(envelope, ENVELOPE_FIELDS, location, errors):
-        return
-    require(envelope.get("schemaVersion") == "1.0.0",
-            f"{location}: schemaVersion diverges", errors)
-    for field in ("opaqueWorkerKey", "opaqueCandidateId"):
-        require(isinstance(envelope.get(field), str) and
-                bool(OPAQUE_ID.fullmatch(envelope[field])),
-                f"{location}: {field} must be 24 lowercase alphanumeric characters", errors)
-    for field in ("buildBranch", "baseBranch"):
-        require(isinstance(envelope.get(field), str) and
-                bool(BRANCH_NAME.fullmatch(envelope[field])),
-                f"{location}: {field} invalid", errors)
-    for field in ("commonStartCommit", "commonStartTree"):
-        require(valid_hash(envelope.get(field), HEX40), f"{location}: {field} invalid", errors)
-    require(envelope.get("promptSha256") == BUILDER_PROMPT_SHA256 and
-            envelope.get("promptSha256") == LOCK_PROMPT_SHA256,
-            f"{location}: prompt commitment mismatch", errors)
-    require(envelope.get("configSha256") == BUILDER_CONFIG_SHA256 and
-            envelope.get("configSha256") == LOCK_CONFIG_SHA256,
-            f"{location}: config commitment mismatch", errors)
-    require(envelope.get("envelopeSchemaSha256") == ENVELOPE_SCHEMA_SHA256 and
-            envelope.get("envelopeSchemaSha256") == LOCK_ENVELOPE_SCHEMA_SHA256,
-            f"{location}: schema commitment mismatch", errors)
-
-    worktree = envelope.get("absoluteWorktreePath")
-    safe_worktree = False
-    if isinstance(worktree, str) and WINDOWS_ABSOLUTE_PATH.fullmatch(worktree):
-        normalized = ntpath.normpath(worktree)
-        try:
-            relative = ntpath.relpath(normalized, ASSIGNMENT_WORKSPACE_ROOT)
-        except ValueError:
-            relative = ".."
-        coordination = lower_windows_path(COORDINATION_DIRECTORY)
-        normalized_lower = lower_windows_path(normalized)
-        safe_worktree = (
-            ntpath.isabs(worktree) and normalized == worktree and relative not in {"", "."}
-            and not relative.startswith("..") and not ntpath.isabs(relative)
-            and normalized_lower != coordination
-            and not nested_windows_path(coordination, normalized_lower)
-        )
-    require(safe_worktree,
-            f"{location}: worktree path is not a safe canonical absolute path", errors)
-
-    if source_path is not None:
-        normalized_source = ntpath.normpath(source_path)
-        leaf, extension = ntpath.splitext(ntpath.basename(normalized_source))
-        require(
-            lower_windows_path(ntpath.dirname(normalized_source)) ==
-            lower_windows_path(COORDINATION_DIRECTORY)
-            and extension == ".json" and bool(TASK_LEAF.fullmatch(leaf)),
-            f"{location}: assignment file violates the frozen task-leaf path convention",
-            errors,
-        )
-
-
-def validate_assignment_envelope_pair(envelopes: Any, attestations: Any,
-                                      source_paths: list[str] | None = None) -> list[str]:
-    errors: list[str] = []
-    if not isinstance(envelopes, list) or len(envelopes) != 2:
-        return ["assignment envelope pair must contain exactly two envelopes"]
-    paths = source_paths or []
-    for index, envelope in enumerate(envelopes):
-        validate_assignment_envelope(envelope, errors, f"assignmentEnvelopes[{index}]",
-                                     paths[index] if index < len(paths) else None)
-    if not all(isinstance(envelope, dict) for envelope in envelopes):
-        return sorted(set(errors))
-    left, right = envelopes
-    for field in ENVELOPE_FIELDS:
-        if field not in ENVELOPE_DIFFERENCES:
-            require(left.get(field) == right.get(field),
-                    f"assignment envelope pair mismatch at {field}", errors)
-    for field in ("opaqueWorkerKey", "opaqueCandidateId"):
-        require(left.get(field) != right.get(field),
-                f"assignment envelope pair duplicates {field}", errors)
-    worktrees = [envelope.get("absoluteWorktreePath") for envelope in envelopes]
-    if all(isinstance(path, str) for path in worktrees):
-        first, second = (lower_windows_path(path) for path in worktrees)
-        require(first != second and not nested_windows_path(first, second) and
-                not nested_windows_path(second, first),
-                "assignment envelope worktree paths must be distinct and nonnested", errors)
-    branches = [
-        left.get("buildBranch"), left.get("baseBranch"),
-        right.get("buildBranch"), right.get("baseBranch"),
-    ]
-    require(len(set(branches)) == 4,
-            "assignment envelope build/base branches must all be distinct", errors)
-
-    if not isinstance(attestations, list) or len(attestations) != 2:
-        errors.append("assignment envelopes require two separate attestations")
-        return sorted(set(errors))
-    candidates: set[Any] = set()
-    hashes: set[Any] = set()
-    for index, attestation in enumerate(attestations):
-        location = f"assignmentEnvelopeAttestations[{index}]"
-        if not exact_fields(attestation, ATTESTATION_FIELDS, location, errors):
-            continue
-        candidate = attestation.get("opaqueCandidateId")
-        envelope = next((item for item in envelopes
-                         if item.get("opaqueCandidateId") == candidate), None)
-        require(envelope is not None and attestation.get("envelopeSha256") == canonical_hash(envelope),
-                f"{location}: assignment envelope attestation hash mismatch", errors)
-        require(candidate not in candidates,
-                f"{location}: assignment envelope candidate is attested more than once", errors)
-        require(attestation.get("envelopeSha256") not in hashes,
-                f"{location}: assignment envelope hash is attested more than once", errors)
-        candidates.add(candidate)
-        hashes.add(attestation.get("envelopeSha256"))
-    require(candidates == {envelope.get("opaqueCandidateId") for envelope in envelopes},
-            "assignment envelope attestations must cover both candidates", errors)
-    return sorted(set(errors))
+    return relative in {"", "."} or (not relative.startswith("..") and not ntpath.isabs(relative))
 
 
 def validate_neutral_builder_prompt(prompt_text: str) -> list[str]:
     required = (
-        "No placeholder substitution, prefix, suffix, candidate label, deadline timestamp, per-builder path wrapper, or added guidance is permitted.",
-        "Read exactly that one assignment file by its direct path.",
-        "You MUST NOT list or enumerate the coordination directory, and you MUST NOT read any sibling assignment file.",
-        "Listing the directory or reading a sibling assignment is an experiment invalidation.",
-        "After validation, use only `absoluteWorktreePath` for every repository read, write, command, and Git operation.",
+        "The operator writes this entire file byte-for-byte to raw standard input for each fresh CLI execution.",
+        "The CLI `-C` argument supplies the isolated checkout and is not model context.",
+        "You are a neutral builder. The current checkout is the frozen common-start commit.",
+        "No prefix, suffix, placeholder substitution, candidate label, deadline timestamp, path wrapper, prompt-embedded runtime override, or added guidance is permitted.",
     )
-    return [f"neutral builder assignment prose missing: {clause}"
+    return [f"neutral builder runtime prose missing: {clause}"
             for clause in required if clause not in prompt_text]
 
 
-def validate_run_envelope_binding(run: dict[str, Any], freeze: Any, location: str,
-                                  errors: list[str]) -> None:
-    source = run.get("assignmentEnvelopePath")
-    if isinstance(source, str):
-        normalized = ntpath.normpath(source)
-        leaf, extension = ntpath.splitext(ntpath.basename(normalized))
-        require(
-            lower_windows_path(ntpath.dirname(normalized)) ==
-            lower_windows_path(COORDINATION_DIRECTORY)
-            and extension == ".json" and bool(TASK_LEAF.fullmatch(leaf)),
-            f"{location}: assignment path violates the frozen task-leaf convention",
-            errors,
-        )
+CLI_CONTRACT_FIELDS = (
+    "contractVersion", "cliPath", "cliVersion", "cliSha256", "authStatus",
+    "lockPath", "lockSha256", "contractSchemaPath", "contractSchemaSha256",
+    "commonStartCommit", "commonStartTree", "promptPath", "promptSha256",
+    "evidenceRoot", "deadlineSeconds", "invariantArgv", "smokeMode", "invocations",
+)
+CLI_INVOCATION_FIELDS = (
+    "invocationId", "workdir", "finalPath", "stdoutPath", "stderrPath",
+    "evidencePath", "tempRoot", "cacheRoot", "dependencyRoot", "port",
+)
+
+
+def validate_cli_runtime_contract(contract: Any) -> list[str]:
+    errors: list[str] = []
+    if not exact_fields(contract, CLI_CONTRACT_FIELDS, "cliRuntimeContract", errors):
+        return errors
+    require(contract.get("contractVersion") == "1.0.0",
+            "cliRuntimeContract: contractVersion diverges", errors)
+    require(contract.get("cliPath") == CLI_BINARY_PATH and
+            contract.get("cliVersion") == CLI_VERSION and
+            contract.get("cliSha256") == CLI_BINARY_SHA256,
+            "CLI binary path/version/hash commitment mismatch", errors)
+    require(contract.get("authStatus") == CLI_AUTH_STATUS,
+            "CLI ChatGPT auth attestation mismatch", errors)
+    require(valid_hash(contract.get("lockSha256")) and
+            contract.get("contractSchemaSha256") == CLI_SCHEMA_SHA256 and
+            valid_hash(contract.get("commonStartCommit"), HEX40) and contract.get("commonStartCommit") != "0" * 40 and
+            valid_hash(contract.get("commonStartTree"), HEX40) and contract.get("commonStartTree") != "0" * 40,
+            "CLI lock/schema/common-start binding mismatch", errors)
+    for field in ("lockPath", "contractSchemaPath", "evidenceRoot"):
+        require(nonempty(contract.get(field)), f"CLI {field} required", errors)
+    require(nonempty(contract.get("promptPath")), "CLI promptPath required", errors)
+    expected_prompt = SMOKE_PROMPT_SHA256 if contract.get("smokeMode") else BUILDER_PROMPT_SHA256
+    require(contract.get("promptSha256") == expected_prompt,
+            "CLI raw stdin prompt commitment mismatch", errors)
+    deadline = contract.get("deadlineSeconds")
+    require(isinstance(deadline, int) and not isinstance(deadline, bool) and
+            1 <= deadline <= 2400, "CLI external deadline invalid", errors)
+    argv = contract.get("invariantArgv")
+    require(argv == list(CLI_INVARIANT_ARGV),
+            "CLI invariant argv or global-before-exec ordering mismatch", errors)
+    if isinstance(argv, list):
+        require("--ephemeral" in argv and "resume" not in argv,
+                "CLI runtime must be ephemeral and never resumed", errors)
+        require(argv[2:6] == ["-m", "gpt-5.4", "-c", 'model_reasoning_effort="xhigh"'],
+                "CLI model/reasoning pins or ordering diverge", errors)
+    require(isinstance(contract.get("smokeMode"), bool),
+            "CLI smokeMode must be boolean", errors)
+    invocations = contract.get("invocations")
+    if not isinstance(invocations, list) or len(invocations) != 2:
+        errors.append("CLI runtime requires exactly two invocations")
+        return errors
+    for index, invocation in enumerate(invocations):
+        location = f"cliRuntimeContract.invocations[{index}]"
+        if not exact_fields(invocation, CLI_INVOCATION_FIELDS, location, errors):
+            continue
+        require(isinstance(invocation.get("invocationId"), str) and
+                bool(INVOCATION_ID.fullmatch(invocation["invocationId"])),
+                f"{location}: invocationId invalid", errors)
+        for field in CLI_INVOCATION_FIELDS[1:-1]:
+            require(isinstance(invocation.get(field), str) and len(invocation[field]) >= 3,
+                    f"{location}: {field} invalid", errors)
+        require(isinstance(invocation.get("port"), int) and
+                1024 <= invocation.get("port", 0) <= 65535,
+                f"{location}: port invalid", errors)
+    if all(isinstance(item, dict) for item in invocations):
+        for field in CLI_INVOCATION_FIELDS:
+            values = [str(item.get(field)).casefold() for item in invocations]
+            require(len(set(values)) == 2, f"CLI invocations duplicate {field}", errors)
+        workdirs = [lower_windows_path(item["workdir"]) for item in invocations]
+        require(not nested_windows_path(workdirs[0], workdirs[1]) and
+                not nested_windows_path(workdirs[1], workdirs[0]),
+                "CLI workdirs must be distinct and nonnested", errors)
+        root = lower_windows_path(str(contract.get("evidenceRoot", "")))
+        for index, invocation in enumerate(invocations):
+            for field in ("finalPath", "stdoutPath", "stderrPath", "evidencePath",
+                          "tempRoot", "cacheRoot", "dependencyRoot"):
+                require(nested_windows_path(root, lower_windows_path(invocation[field])) and
+                        not nested_windows_path(workdirs[index], lower_windows_path(invocation[field])),
+                        f"CLI invocation {index} {field} escapes evidence isolation", errors)
+    return errors
+
+
+SUPERVISION_FIELDS = (
+    "role", "invocationId", "contractSha256", "artifactSchemaSha256", "processId",
+    "started", "startedAt", "startError", "stdinDelivered", "stdinError", "exitCode",
+    "timedOut", "argv", "argvSha256", "promptSha256", "stdoutPath", "stdoutSha256",
+    "stderrPath", "stderrSha256", "finalPath", "finalSha256", "finalSchemaValid",
+    "artifactBindingValid", "threadIds", "turnCompleted", "rawJsonlValid",
+    "unauthorizedToolOrWriteDetected", "unauthorizedToolOrWriteUnavailableReason",
+    "sandboxMode", "inputDisposition", "isolationEnforcedBy", "usage",
+    "usageUnavailableReason", "runtimeModel", "runtimeModelUnavailableReason",
+    "runtimeProvider", "runtimeProviderUnavailableReason", "reasoningSetting",
+    "reasoningSettingUnavailableReason", "metadataSource",
+)
+
+
+def parse_jsonl(raw: Any, location: str, errors: list[str]) -> list[dict[str, Any]]:
+    if not isinstance(raw, str):
+        errors.append(f"{location}: raw JSONL required")
+        return []
+    events: list[dict[str, Any]] = []
+    for index, line in enumerate(line for line in raw.splitlines() if line.strip()):
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            errors.append(f"{location}: malformed JSONL line {index + 1}")
+            continue
+        if not isinstance(event, dict):
+            errors.append(f"{location}: JSONL event must be an object")
+        else:
+            events.append(event)
+    return events
+
+
+def validate_supervision_result(result: Any, invocation: dict[str, Any], raw: Any,
+                                location: str, role: str = "builder") -> list[str]:
+    errors: list[str] = []
+    if not exact_fields(result, SUPERVISION_FIELDS, location, errors):
+        return errors
+    expected_sandbox = "workspace-write" if role != "reviewer" else "read-only"
+    expected_disposition = {
+        "builder": "authorized-worktree-write", "reviewer": "read-only-snapshot",
+        "fixer": "authorized-worktree-write", "tester": "discard-after-run",
+        "evaluator": "discard-after-run",
+    }[role]
+    require(result.get("role") == role and result.get("invocationId") == invocation.get("invocationId"),
+            f"{location}: role/invocation binding mismatch", errors)
+    require(valid_hash(result.get("contractSha256")) and
+            (role == "builder" and result.get("artifactSchemaSha256") is None or
+             role != "builder" and result.get("artifactSchemaSha256") == ROLE_ARTIFACT_SCHEMA_SHA256[role]),
+            f"{location}: contract/artifact schema hash invalid", errors)
+    require(isinstance(result.get("processId"), int) and result["processId"] > 0,
+            f"{location}: processId invalid", errors)
+    require(result.get("started") is True and result.get("startError") is None and
+            result.get("stdinDelivered") is True and result.get("stdinError") is None and
+            result.get("exitCode") == 0 and result.get("timedOut") is False,
+            f"{location}: process lifecycle invalid", errors)
+    expected_argv = [*CLI_INVARIANT_ARGV[:-3], "--sandbox", expected_sandbox, "--json",
+                     "-C", invocation.get("workdir"), "-o", invocation.get("finalPath"), "-"]
+    require(result.get("argv") == expected_argv,
+            f"{location}: argv ordering or pin mismatch", errors)
+    if isinstance(result.get("argv"), list):
+        require(result.get("argvSha256") == sha256_text("\0".join(result["argv"])),
+                f"{location}: argv hash mismatch", errors)
+    require((role == "builder" and result.get("promptSha256") == BUILDER_PROMPT_SHA256) or
+            (role != "builder" and valid_hash(result.get("promptSha256")) and
+             result.get("promptSha256") != "0" * 64),
+            f"{location}: prompt hash invalid", errors)
+    for field in ("stdoutPath", "stderrPath", "finalPath"):
+        require(lower_windows_path(str(result.get(field))) ==
+                lower_windows_path(str(invocation.get(field))),
+                f"{location}: {field} binding mismatch", errors)
+    events = parse_jsonl(raw, location, errors)
+    if isinstance(raw, str):
+        require(result.get("stdoutSha256") == sha256_text(raw),
+                f"{location}: raw stdout hash mismatch", errors)
+    require(valid_hash(result.get("stderrSha256")) and valid_hash(result.get("finalSha256")),
+            f"{location}: stderr/final hash invalid", errors)
+    threads = [event.get("thread_id") for event in events if event.get("type") == "thread.started"]
+    turns = [event for event in events if event.get("type") == "turn.completed"]
+    require(result.get("threadIds") == threads and len(threads) == 1,
+            f"{location}: exactly one reconciled thread.started required", errors)
+    require(result.get("turnCompleted") is True and len(turns) == 1 and
+            result.get("rawJsonlValid") is True,
+            f"{location}: turn lifecycle or JSONL reconciliation invalid", errors)
+    usage = turns[0].get("usage") if len(turns) == 1 else None
+    require(result.get("usage") == usage,
+            f"{location}: usage must equal trusted turn.completed usage", errors)
+    require((usage is not None and result.get("usageUnavailableReason") is None) or
+            (usage is None and nonempty(result.get("usageUnavailableReason"))),
+            f"{location}: missing usage treatment", errors)
+    require(result.get("sandboxMode") == expected_sandbox and
+            result.get("inputDisposition") == expected_disposition and
+            result.get("isolationEnforcedBy") == "audited-procedural-boundary-plus-cli-sandbox",
+            f"{location}: procedural isolation policy mismatch", errors)
+    require(result.get("unauthorizedToolOrWriteDetected") is not True and
+            (result.get("unauthorizedToolOrWriteDetected") is False or
+             nonempty(result.get("unauthorizedToolOrWriteUnavailableReason"))),
+            f"{location}: unauthorized write/tool evidence invalid", errors)
+    for field in ("runtimeModel", "runtimeProvider", "reasoningSetting"):
+        reason = result.get(f"{field}UnavailableReason")
+        require((result.get(field) is not None and reason is None) or
+                (result.get(field) is None and nonempty(reason)),
+                f"{location}: {field} requires trusted value or absence reason", errors)
+    require(result.get("metadataSource") in {"trusted-jsonl", "unavailable"},
+            f"{location}: metadata source invalid", errors)
+    if result.get("runtimeModel") is not None:
+        require(result.get("runtimeModel") == "gpt-5.4",
+                f"{location}: trusted runtime model conflicts with pin", errors)
+    if result.get("reasoningSetting") is not None:
+        require(result.get("reasoningSetting") == "xhigh",
+                f"{location}: trusted reasoning setting conflicts with pin", errors)
+    if result.get("runtimeProvider") is not None:
+        require("openai" in str(result.get("runtimeProvider")).casefold(),
+                f"{location}: trusted runtime provider conflicts with pin", errors)
+    return errors
+
+
+def validate_builder_supervision(evidence: Any, contract: Any, stdout_by_id: Any) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(evidence, dict) or set(evidence) != {"valid", "results"}:
+        return ["cliRuntimeEvidence: exact valid/results object required"]
+    require(evidence.get("valid") is True, "cliRuntimeEvidence: valid must be true", errors)
+    results = evidence.get("results")
+    invocations = contract.get("invocations", []) if isinstance(contract, dict) else []
+    require(isinstance(results, list) and len(results) == 2,
+            "cliRuntimeEvidence: exactly two results required", errors)
+    require(isinstance(stdout_by_id, dict) and
+            set(stdout_by_id) == {item.get("invocationId") for item in invocations if isinstance(item, dict)},
+            "cliRuntimeStdoutByInvocation: exact invocation coverage required", errors)
+    if isinstance(results, list) and len(invocations) == 2:
+        for index, result in enumerate(results):
+            raw = stdout_by_id.get(result.get("invocationId")) if isinstance(stdout_by_id, dict) and isinstance(result, dict) else None
+            errors.extend(validate_supervision_result(result, invocations[index], raw,
+                                                     f"cliRuntimeEvidence.results[{index}]"))
+        process_ids = [item.get("processId") for item in results if isinstance(item, dict)]
+        thread_ids = [item.get("threadIds", [None])[0] for item in results
+                      if isinstance(item, dict) and len(item.get("threadIds", [])) == 1]
+        require(len(set(process_ids)) == 2, "builder supervision duplicates process IDs", errors)
+        require(len(thread_ids) == 2 and len(set(thread_ids)) == 2,
+                "builder supervision duplicates thread IDs", errors)
+        require(len({item.get("promptSha256") for item in results if isinstance(item, dict)}) == 1,
+                "builder supervision prompt bytes differ", errors)
+    return errors
+
+
+ROLE_POLICIES = {
+    "reviewer": (900, "read-only", "read-only-snapshot"),
+    "fixer": (1500, "workspace-write", "authorized-worktree-write"),
+    "tester": (900, "workspace-write", "discard-after-run"),
+    "evaluator": (1800, "workspace-write", "discard-after-run"),
+}
+ROLE_SUBSTITUTIONS = {
+    "reviewer": {"CANDIDATE_LABEL", "CYCLE_NUMBER", "SNAPSHOT_COMMIT", "WALL_CLOCK_DEADLINE_ISO"},
+    "fixer": {"CANDIDATE_LABEL", "CYCLE_NUMBER", "SNAPSHOT_COMMIT", "FINDINGS_PATH", "WALL_CLOCK_DEADLINE_ISO"},
+    "tester": {"CANDIDATE_LABEL", "CYCLE_NUMBER", "SNAPSHOT_COMMIT", "WALL_CLOCK_DEADLINE_ISO"},
+    "evaluator": {"PACKAGE_LABEL", "PACKAGE_PATH", "EVALUATION_SEQUENCE", "RUBRIC_PATH",
+                  "EVALUATION_SCHEMA_PATH", "HIDDEN_SUITE_PATH", "HIDDEN_SUITE_SHA256",
+                  "WALL_CLOCK_DEADLINE_ISO"},
+}
+
+
+def validate_role_runtime_contract(contract: Any) -> list[str]:
+    errors: list[str] = []
+    try:
+        expected_fields = set(load_json(ROLE_SCHEMA_PATH)["required"])
+    except (OSError, KeyError, json.JSONDecodeError):
+        return ["bundled role schema required fields unreadable"]
+    if not exact_fields(contract, expected_fields, "roleRuntimeContract", errors):
+        return errors
+    role = contract.get("role")
+    require(role in ROLE_POLICIES, "roleRuntimeContract: unsupported model role", errors)
+    if role not in ROLE_POLICIES:
+        return errors
+    maximum, sandbox, disposition = ROLE_POLICIES[role]
+    require(contract.get("contractVersion") == "1.0.0" and
+            contract.get("cliPath") == CLI_BINARY_PATH and
+            contract.get("cliVersion") == CLI_VERSION and
+            contract.get("cliSha256") == CLI_BINARY_SHA256 and
+            contract.get("authStatus") == CLI_AUTH_STATUS,
+            "roleRuntimeContract: CLI/auth commitment mismatch", errors)
+    require(contract.get("contractSchemaSha256") == ROLE_SCHEMA_SHA256 and
+            contract.get("runnerSha256") == ROLE_RUNNER_SHA256 and
+            contract.get("evidenceSchemaSha256") == EVIDENCE_SCHEMA_SHA256 and
+            contract.get("promptTemplateSha256") == MODEL_ROLE_PROMPT_SHA256[role] and
+            contract.get("artifactSchemaSha256") == ROLE_ARTIFACT_SCHEMA_SHA256[role],
+            "roleRuntimeContract: frozen runner/prompt/evidence/artifact binding mismatch", errors)
+    require(isinstance(contract.get("deadlineSeconds"), int) and
+            1 <= contract.get("deadlineSeconds", 0) <= maximum and
+            contract.get("sandboxMode") == sandbox and
+            contract.get("inputDisposition") == disposition,
+            "roleRuntimeContract: budget or isolation policy mismatch", errors)
+    require(isinstance(contract.get("invocationId"), str) and
+            bool(INVOCATION_ID.fullmatch(contract["invocationId"])),
+            "roleRuntimeContract: invocationId invalid", errors)
+    substitutions = contract.get("promptSubstitutions")
+    require(isinstance(substitutions, dict) and set(substitutions) == ROLE_SUBSTITUTIONS[role],
+            "roleRuntimeContract: substitution keys diverge", errors)
+    if isinstance(substitutions, dict):
+        require(all(nonempty(value) and "\n" not in value and "\r" not in value and "{{" not in value
+                    for value in substitutions.values()),
+                "roleRuntimeContract: substitutions must be bounded single-line literals", errors)
+    require(valid_hash(contract.get("promptSha256")),
+            "roleRuntimeContract: rendered prompt hash invalid", errors)
+    for field in ("lockPath", "contractSchemaPath", "runnerPath", "evidenceSchemaPath",
+                  "promptTemplatePath", "artifactSchemaPath", "promptPath", "workdir",
+                  "evidenceRoot", "finalPath", "stdoutPath", "stderrPath", "evidencePath",
+                  "tempRoot", "cacheRoot", "dependencyRoot"):
+        require(nonempty(contract.get(field)), f"roleRuntimeContract: {field} required", errors)
+    root = lower_windows_path(str(contract.get("evidenceRoot", "")))
+    workdir = lower_windows_path(str(contract.get("workdir", "")))
+    require(not nested_windows_path(root, workdir) and not nested_windows_path(workdir, root),
+            "roleRuntimeContract: evidence and input must be separate and nonnested", errors)
+    for field in ("finalPath", "stdoutPath", "stderrPath", "evidencePath", "tempRoot", "cacheRoot", "dependencyRoot"):
+        require(nested_windows_path(root, lower_windows_path(str(contract.get(field, "")))),
+                f"roleRuntimeContract: {field} escapes evidence root", errors)
+    if role == "evaluator":
+        require(contract.get("candidateLabel") is None and contract.get("cycle") is None and
+                isinstance(contract.get("evaluationSequence"), int) and 1 <= contract["evaluationSequence"] <= 3 and
+                contract.get("inputCommit") is None and contract.get("inputTree") is None,
+                "roleRuntimeContract: evaluator identity/history fields invalid", errors)
+        require(contract.get("packageLabel") in {"X", "Y", "Z"} and
+                valid_hash(contract.get("packageSha256")) and
+                contract.get("packageManifestSchemaSha256") == PACKAGE_SCHEMA_SHA256 and
+                contract.get("packageScriptSha256") == PACKAGER_SHA256 and
+                contract.get("rubricSha256") == "f0f4b5b918a9a50183455bf237a90706dcac58ce3cf708996bdc9ceb3b0978ef" and
+                contract.get("hiddenSuiteId") == HIDDEN_ID and
+                contract.get("hiddenSuiteSha256") == HIDDEN_SHA256,
+                "roleRuntimeContract: evaluator package/rubric/hidden bindings diverge", errors)
     else:
-        errors.append(f"{location}: assignmentEnvelopePath required")
-    require(run.get("assignmentEnvelopeSchemaSha256") == ENVELOPE_SCHEMA_SHA256 and
-            run.get("assignmentEnvelopeSchemaSha256") == LOCK_ENVELOPE_SCHEMA_SHA256,
-            f"{location}: assignment envelope schema binding mismatch", errors)
-    require(isinstance(freeze, dict) and
-            run.get("assignmentEnvelopeSha256") == freeze.get("assignmentEnvelopeSha256"),
-            f"{location}: run/envelope binding mismatch", errors)
+        require(isinstance(contract.get("candidateLabel"), str) and
+                bool(re.fullmatch(r"candidate-[a-z0-9-]+", contract["candidateLabel"])) and
+                isinstance(contract.get("cycle"), int) and 1 <= contract["cycle"] <= 5 and
+                contract.get("evaluationSequence") is None and
+                valid_hash(contract.get("inputCommit"), HEX40) and valid_hash(contract.get("inputTree"), HEX40),
+                "roleRuntimeContract: candidate/cycle/input binding invalid", errors)
+        for field in ("packageManifestPath", "packageManifestSha256", "packageLabel", "packageSha256",
+                      "rubricPath", "rubricSha256", "hiddenSuiteId", "hiddenSuitePath",
+                      "hiddenSuiteSha256", "packageManifestSchemaPath", "packageManifestSchemaSha256",
+                      "packageScriptPath", "packageScriptSha256"):
+            require(contract.get(field) is None,
+                    f"roleRuntimeContract: {role} must not receive evaluator field {field}", errors)
+    require((role == "fixer" and nonempty(contract.get("handoffPath")) and
+             valid_hash(contract.get("handoffSha256"))) or
+            (role != "fixer" and contract.get("handoffPath") is None and
+             contract.get("handoffSha256") is None),
+            "roleRuntimeContract: fixer handoff binding invalid", errors)
+    return errors
+
+
+def validate_role_supervision_evidence(result: Any, contract: Any, raw: Any) -> list[str]:
+    errors = validate_role_runtime_contract(contract)
+    if errors or not isinstance(contract, dict):
+        return errors
+    invocation = {field: contract.get(field) for field in CLI_INVOCATION_FIELDS}
+    errors.extend(validate_supervision_result(result, invocation, raw, "roleSupervisionEvidence",
+                                             contract["role"]))
+    if isinstance(result, dict):
+        require(result.get("artifactSchemaSha256") == contract.get("artifactSchemaSha256") and
+                result.get("finalSchemaValid") is True and result.get("artifactBindingValid") is True and
+                valid_hash(result.get("finalSha256")),
+                "roleSupervisionEvidence: final artifact schema/binding invalid", errors)
+    return errors
+
+
+def validate_blinded_mapping(mapping: Any) -> list[str]:
+    errors: list[str] = []
+    fields = {"mappingSeedSha256", "randomizedOrder", "frozenGateSetSha256", "provenance", "packages"}
+    if not exact_fields(mapping, fields, "blindedMapping", errors):
+        return errors
+    require(valid_hash(mapping.get("mappingSeedSha256")) and
+            valid_hash(mapping.get("frozenGateSetSha256")),
+            "blindedMapping: seed/gate hash invalid", errors)
+    order = mapping.get("randomizedOrder")
+    require(isinstance(order, list) and len(order) == 3 and set(order) == {"X", "Y", "Z"},
+            "blindedMapping: randomizedOrder must be an X/Y/Z permutation", errors)
+    provenance = mapping.get("provenance")
+    provenance_fields = {"candidateIds", "runIds", "evidencePaths", "roleArtifactNames"}
+    if exact_fields(provenance, provenance_fields, "blindedMapping.provenance", errors):
+        for field in provenance_fields:
+            values = provenance.get(field)
+            require(isinstance(values, list) and bool(values) and len(values) == len(set(values)) and
+                    all(nonempty(item) for item in values),
+                    f"blindedMapping.provenance.{field}: unique nonempty values required", errors)
+    packages = mapping.get("packages")
+    require(isinstance(packages, list) and len(packages) == 3,
+            "blindedMapping: exactly three packages required", errors)
+    if isinstance(packages, list):
+        require([item.get("packageLabel") for item in packages if isinstance(item, dict)] == order,
+                "blindedMapping: package order must equal randomizedOrder", errors)
+        require({item.get("sourceRole") for item in packages if isinstance(item, dict)} == {"B0", "T0", "Tfinal"},
+                "blindedMapping: source roles must be exact B0/T0/Tfinal set", errors)
+        for index, package in enumerate(packages):
+            location = f"blindedMapping.packages[{index}]"
+            if not exact_fields(package, {"packageLabel", "sourceRole", "sourcePath", "sourceRef",
+                                          "sourceCommit", "sourceTree"}, location, errors):
+                continue
+            require(nonempty(package.get("sourcePath")) and
+                    isinstance(package.get("sourceRef"), str) and package["sourceRef"].startswith("refs/") and
+                    valid_hash(package.get("sourceCommit"), HEX40) and
+                    valid_hash(package.get("sourceTree"), HEX40),
+                    f"{location}: source provenance invalid", errors)
+    return errors
+
+
+def validate_blinded_manifest(manifest: Any, order: list[str] | None = None) -> list[str]:
+    errors: list[str] = []
+    fields = {"manifestVersion", "mappingSeedSha256", "randomizedOrder", "frozenGateSetSha256",
+              "packages", "sanitizationPolicySha256"}
+    if not exact_fields(manifest, fields, "blindedPackageManifest", errors):
+        return errors
+    require(manifest.get("manifestVersion") == "1.0.0" and
+            valid_hash(manifest.get("mappingSeedSha256")) and
+            valid_hash(manifest.get("frozenGateSetSha256")) and
+            valid_hash(manifest.get("sanitizationPolicySha256")),
+            "blindedPackageManifest: version/hash commitments invalid", errors)
+    randomized = manifest.get("randomizedOrder")
+    require(isinstance(randomized, list) and len(randomized) == 3 and set(randomized) == {"X", "Y", "Z"} and
+            (order is None or randomized == order),
+            "blindedPackageManifest: randomized order invalid", errors)
+    packages = manifest.get("packages")
+    require(isinstance(packages, list) and len(packages) == 3,
+            "blindedPackageManifest: exactly three packages required", errors)
+    if isinstance(packages, list):
+        require([item.get("packageLabel") for item in packages if isinstance(item, dict)] == randomized,
+                "blindedPackageManifest: package order mismatch", errors)
+        for index, package in enumerate(packages):
+            location = f"blindedPackageManifest.packages[{index}]"
+            if not exact_fields(package, {"packageLabel", "packageSha256", "fileCount", "historyFree",
+                                          "lineageScanPassed", "timestampsNormalized"}, location, errors):
+                continue
+            require(valid_hash(package.get("packageSha256")) and package.get("packageSha256") != "0" * 64 and
+                    isinstance(package.get("fileCount"), int) and package["fileCount"] > 0 and
+                    package.get("historyFree") is True and package.get("lineageScanPassed") is True and
+                    package.get("timestampsNormalized") is True,
+                    f"{location}: package seal invalid", errors)
+    forbidden = {"sourceRole", "sourceRef", "sourceCommit", "sourceTree", "sourcePath", "provenance"}
+    require(not any(isinstance(item, dict) and forbidden.intersection(item) for item, _ in walk_values(manifest)),
+            "blindedPackageManifest: evaluator-facing manifest leaks provenance", errors)
+    return errors
 
 
 ACTIVE_INVALIDATION_FIELDS = (
@@ -705,16 +1079,11 @@ def validate_execution(fixture: Any) -> list[str]:
         return sorted(set(errors))
     validate_conclusion(fixture, errors)
     require(fixture.get("fixtureVersion") == "1.0.0", "run: fixtureVersion diverges", errors)
-    require(fixture.get("protocolVersion") == "2.3.0", "run: protocolVersion diverges", errors)
-    errors.extend(validate_assignment_envelope_pair(
-        fixture.get("assignmentEnvelopes"),
-        fixture.get("assignmentEnvelopeAttestations"),
-    ))
+    require(fixture.get("protocolVersion") == "2.4.0", "run: protocolVersion diverges", errors)
     if fixture.get("status") == "invalid":
         invalid_fields = {
             "fixtureVersion", "fixtureKind", "protocolVersion",
-            "assignmentEnvelopes", "assignmentEnvelopeAttestations", "status",
-            "activeInvalidation", "invalidAttempts", "evaluations", "outcome",
+            "status", "activeInvalidation", "invalidAttempts", "evaluations", "outcome",
         }
         exact_fields(fixture, invalid_fields, "run", errors)
         require(fixture.get("fixtureKind") == "prospective-invalid-current",
@@ -723,16 +1092,21 @@ def validate_execution(fixture: Any) -> list[str]:
     top_fields = {
         "fixtureVersion", "fixtureKind", "protocolVersion", "canonicalContractSha256",
         "status", "activeInvalidation", "invalidAttempts",
-        "assignmentEnvelopes", "assignmentEnvelopeAttestations",
-        "bindings", "environment", "workers", "builderFreezes", "assignment",
+        "bindings", "environment", "cliRuntimeContract", "cliRuntimeEvidence",
+        "cliRuntimeStdoutByInvocation", "roleRuntimeEvidence", "workers", "builderFreezes", "assignment",
         "evaluationRandomization", "runs", "reviews", "fixes", "tests", "packages",
-        "evaluations", "outcome", "costs", "evidenceChain",
+        "blindedPackageManifest", "evaluations", "outcome", "costs", "evidenceChain",
     }
     if not exact_fields(fixture, top_fields, "run", errors):
         return sorted(set(errors))
     require(fixture.get("fixtureKind") == "prospective-conformance", "run: fixtureKind diverges", errors)
     require(fixture.get("canonicalContractSha256") == CONTRACT_CANONICAL_SHA256,
             "run: canonical contract binding diverges", errors)
+
+    cli_contract = fixture.get("cliRuntimeContract")
+    errors.extend(validate_cli_runtime_contract(cli_contract))
+    errors.extend(validate_builder_supervision(fixture.get("cliRuntimeEvidence"), cli_contract,
+                                               fixture.get("cliRuntimeStdoutByInvocation")))
 
     bindings = fixture.get("bindings")
     binding_fields = {
@@ -787,7 +1161,7 @@ def validate_execution(fixture: Any) -> list[str]:
             freeze = freezes.get(candidate)
             location = f"builderFreezes.{candidate}"
             fields = {"candidateLabel", "workerId", "promptSha256", "configSha256",
-                      "assignmentEnvelopeSha256", "commit", "treeSha256", "sealedAt"}
+                      "runtimeInvocationId", "runtimeEvidenceSha256", "commit", "treeSha256", "sealedAt"}
             if not exact_fields(freeze, fields, location, errors):
                 continue
             require(freeze.get("candidateLabel") == candidate, f"{location}: candidateLabel mismatch", errors)
@@ -801,8 +1175,10 @@ def validate_execution(fixture: Any) -> list[str]:
             require(freeze.get("configSha256") == BUILDER_CONFIG_SHA256 and
                     freeze.get("configSha256") == LOCK_CONFIG_SHA256,
                     f"{location}: config commitment drift from canonical contract and lock", errors)
-            require(valid_hash(freeze.get("assignmentEnvelopeSha256")),
-                    f"{location}: assignment envelope hash invalid", errors)
+            require(isinstance(freeze.get("runtimeInvocationId"), str) and
+                    bool(INVOCATION_ID.fullmatch(freeze["runtimeInvocationId"])) and
+                    valid_hash(freeze.get("runtimeEvidenceSha256")),
+                    f"{location}: runtime identity/evidence binding invalid", errors)
             require(valid_hash(freeze.get("commit"), HEX40), f"{location}: commit invalid", errors)
             parsed = parse_time(freeze.get("sealedAt"), f"{location}.sealedAt", errors)
             if parsed:
@@ -812,16 +1188,12 @@ def validate_execution(fixture: Any) -> list[str]:
                     "builder freezes: prompt bytes differ", errors)
             require(freezes["candidate-a"].get("configSha256") == freezes["candidate-b"].get("configSha256"),
                     "builder freezes: config bytes differ", errors)
-            attested_hashes = {
-                item.get("envelopeSha256") for item in
-                fixture.get("assignmentEnvelopeAttestations", []) if isinstance(item, dict)
-            }
-            freeze_hashes = {
-                freezes[candidate].get("assignmentEnvelopeSha256")
-                for candidate in ("candidate-a", "candidate-b")
-            }
-            require(len(freeze_hashes) == 2 and freeze_hashes == attested_hashes,
-                    "builder freezes: assignment envelopes must be separately attested", errors)
+            runtime_ids = {freezes[candidate].get("runtimeInvocationId")
+                           for candidate in ("candidate-a", "candidate-b")}
+            evidence_hashes = {freezes[candidate].get("runtimeEvidenceSha256")
+                               for candidate in ("candidate-a", "candidate-b")}
+            require(len(runtime_ids) == 2 and len(evidence_hashes) == 2,
+                    "builder freezes: runtime identities/evidence must be distinct", errors)
     if not isinstance(freezes, dict):
         freezes = {}
 
@@ -843,8 +1215,8 @@ def validate_execution(fixture: Any) -> list[str]:
         frozen_hashes = assignment.get("frozenInitialEvidenceHashes")
         if exact_fields(frozen_hashes, {"candidate-a", "candidate-b"}, "assignment.frozenInitialEvidenceHashes", errors):
             for candidate in ("candidate-a", "candidate-b"):
-                require(isinstance(freezes, dict) and frozen_hashes.get(candidate) == canonical_hash(freezes.get(candidate)),
-                        f"assignment: {candidate} frozen evidence hash diverges", errors)
+                require(valid_hash(frozen_hashes.get(candidate)),
+                        f"assignment: {candidate} frozen evidence hash invalid", errors)
 
     randomization = fixture.get("evaluationRandomization")
     random_fields = {"seedHex", "digestSha256", "rankDigests", "order", "mapping"}
@@ -869,12 +1241,13 @@ def validate_execution(fixture: Any) -> list[str]:
         baseline = runs.get("candidate-a")
         treatment = runs.get("candidate-b")
         run_fields = {"candidateLabel", "assignedArm", "builderWorkerId",
-                      "assignmentEnvelopePath", "assignmentEnvelopeSha256",
-                      "assignmentEnvelopeSchemaSha256", "initialSnapshot", "finalSnapshot",
+                      "runtimeInvocationId", "runtimeEvidenceSha256", "initialSnapshot", "finalSnapshot",
                       "cycles", "stopReason", "convergence", "status"}
         if exact_fields(baseline, run_fields, "runs.candidate-a", errors):
-            validate_run_envelope_binding(baseline, freezes.get("candidate-a"),
-                                          "runs.candidate-a", errors)
+            require(isinstance(freezes.get("candidate-a"), dict) and
+                    baseline.get("runtimeInvocationId") == freezes["candidate-a"].get("runtimeInvocationId") and
+                    baseline.get("runtimeEvidenceSha256") == freezes["candidate-a"].get("runtimeEvidenceSha256"),
+                    "runs.candidate-a: runtime binding mismatch", errors)
             require(baseline.get("assignedArm") == "baseline", "baseline: assignedArm diverges", errors)
             require(baseline.get("cycles") == [], "baseline: must have zero cycles", errors)
             require(baseline.get("stopReason") == "baseline-zero-cycles",
@@ -883,8 +1256,10 @@ def validate_execution(fixture: Any) -> list[str]:
             require(baseline.get("initialSnapshot") == baseline.get("finalSnapshot"),
                     "baseline: final snapshot must equal initial", errors)
         if exact_fields(treatment, run_fields, "runs.candidate-b", errors):
-            validate_run_envelope_binding(treatment, freezes.get("candidate-b"),
-                                          "runs.candidate-b", errors)
+            require(isinstance(freezes.get("candidate-b"), dict) and
+                    treatment.get("runtimeInvocationId") == freezes["candidate-b"].get("runtimeInvocationId") and
+                    treatment.get("runtimeEvidenceSha256") == freezes["candidate-b"].get("runtimeEvidenceSha256"),
+                    "runs.candidate-b: runtime binding mismatch", errors)
             require(treatment.get("assignedArm") == "treatment", "treatment: assignedArm diverges", errors)
             cycles = treatment.get("cycles")
             require(isinstance(cycles, list) and 1 <= len(cycles) <= 5, "treatment: one to five cycles required", errors)
@@ -917,7 +1292,9 @@ def validate_execution(fixture: Any) -> list[str]:
     require(isinstance(reviews, list), "reviews: array required", errors)
     findings_by_cycle: dict[int, list[dict[str, Any]]] = {}
     if isinstance(reviews, list):
-        review_fields = {"candidateLabel", "cycle", "snapshotCommit", "roleInstanceId", "workerId", "startedAt", "completedAt", "checksRun", "evidenceExamined", "coverageGaps", "findings"}
+        review_fields = {"candidateLabel", "cycle", "snapshotCommit", "roleInstanceId", "workerId",
+                         "runtimeInvocationId", "runtimeProcessId", "runtimeThreadId", "startedAt",
+                         "completedAt", "checksRun", "evidenceExamined", "coverageGaps", "findings"}
         for index, review in enumerate(reviews):
             location = f"reviews[{index}]"
             if not exact_fields(review, review_fields, location, errors):
@@ -1028,6 +1405,27 @@ def validate_execution(fixture: Any) -> list[str]:
             require(valid_hash(package.get("sourceCommit"), HEX40), f"{location}: sourceCommit invalid", errors)
             require(valid_hash(package.get("treeSha256")), f"{location}: treeSha256 invalid", errors)
 
+    manifest = fixture.get("blindedPackageManifest")
+    errors.extend(validate_blinded_manifest(
+        manifest,
+        fixture.get("evaluationRandomization", {}).get("order")
+        if isinstance(fixture.get("evaluationRandomization"), dict) else None,
+    ))
+    if isinstance(manifest, dict) and isinstance(packages, list):
+        manifest_by_label = {item.get("packageLabel"): item for item in manifest.get("packages", [])
+                             if isinstance(item, dict)}
+        seed_hex = str(randomization.get("seedHex", ""))
+        expected_seed_hash = hashlib.sha256(bytes.fromhex(seed_hex)).hexdigest() if valid_hash(seed_hex) else None
+        require(manifest.get("mappingSeedSha256") == expected_seed_hash and
+                manifest.get("frozenGateSetSha256") ==
+                load_json(CONTRACT_PATH).get("evaluation", {}).get("frozenGateSetSha256"),
+                "blindedPackageManifest: seed/gate binding mismatch", errors)
+        for package in packages:
+            if isinstance(package, dict):
+                sealed = manifest_by_label.get(package.get("packageLabel"), {})
+                require(sealed.get("packageSha256") == canonical_hash(package),
+                        f"blindedPackageManifest: {package.get('packageLabel')} package seal mismatch", errors)
+
     evaluations = fixture.get("evaluations")
     require(isinstance(evaluations, list) and len(evaluations) == 3,
             "evaluations: exactly three artifacts required", errors)
@@ -1046,6 +1444,36 @@ def validate_execution(fixture: Any) -> list[str]:
                         f"{location}: packageSha256 diverges", errors)
                 require(worker_by_id.get(evaluation.get("evaluatorWorkerId"), {}).get("role") == "evaluator",
                         f"{location}: worker is not evaluator", errors)
+
+    role_evidence = fixture.get("roleRuntimeEvidence")
+    require(isinstance(role_evidence, list), "roleRuntimeEvidence: array required", errors)
+    if isinstance(role_evidence, list):
+        expected_artifacts = [*fixture.get("reviews", []), *fixture.get("fixes", []),
+                              *fixture.get("tests", []), *fixture.get("evaluations", [])]
+        identities: set[tuple[Any, Any, Any]] = set()
+        for index, item in enumerate(role_evidence):
+            location = f"roleRuntimeEvidence[{index}]"
+            fields = {"role", "invocationId", "processId", "threadId", "lifecycleComplete",
+                      "evidenceSha256", "usage"}
+            if not exact_fields(item, fields, location, errors):
+                continue
+            require(item.get("role") in ROLE_POLICIES and
+                    isinstance(item.get("invocationId"), str) and
+                    bool(INVOCATION_ID.fullmatch(item["invocationId"])) and
+                    isinstance(item.get("processId"), int) and item["processId"] > 0 and
+                    nonempty(item.get("threadId")) and item.get("lifecycleComplete") is True and
+                    valid_hash(item.get("evidenceSha256")) and isinstance(item.get("usage"), dict),
+                    f"{location}: runtime lifecycle evidence invalid", errors)
+            identity = (item.get("invocationId"), item.get("processId"), item.get("threadId"))
+            require(identity not in identities, f"{location}: duplicate runtime identity", errors)
+            identities.add(identity)
+            matches = [artifact for artifact in expected_artifacts if isinstance(artifact, dict) and
+                       artifact.get("runtimeInvocationId") == item.get("invocationId") and
+                       artifact.get("runtimeProcessId") == item.get("processId") and
+                       artifact.get("runtimeThreadId") == item.get("threadId")]
+            require(len(matches) == 1, f"{location}: role artifact binding missing or ambiguous", errors)
+        require(len(role_evidence) == len(expected_artifacts),
+                "roleRuntimeEvidence: must cover every model-role artifact exactly once", errors)
 
     outcome = fixture.get("outcome")
     outcome_fields = {"packageMapping", "scores", "primaryTfinalMinusB0", "secondaryTfinalMinusT0", "mainSelection", "tiePolicy", "evaluationArtifactHashes", "evidenceHash", "unblinderWorkerId", "gitWorkerId"}
@@ -1180,80 +1608,19 @@ def validate_path(path: Path, mode: str, expect_golden: bool = False) -> list[st
     return sorted(set(errors))
 
 
-def validate_envelope_pair_files(first_path: Path, second_path: Path) -> list[str]:
-    errors: list[str] = []
-    try:
-        envelopes = [load_json(first_path), load_json(second_path)]
-        for envelope in envelopes:
-            errors.extend(validate_artifact_mode(envelope, "execution"))
-        attestations = [
-            {"opaqueCandidateId": envelope.get("opaqueCandidateId"),
-             "envelopeSha256": canonical_hash(envelope)}
-            for envelope in envelopes if isinstance(envelope, dict)
-        ]
-        errors.extend(validate_assignment_envelope_pair(
-            envelopes, attestations, [str(first_path), str(second_path)]
-        ))
-    except FileNotFoundError as exc:
-        errors.append(f"missing envelope input: {exc.filename}")
-    except (OSError, UnicodeError, json.JSONDecodeError, TypeError) as exc:
-        errors.append(f"invalid envelope input: {exc}")
-    return sorted(set(errors))
-
-
-def validate_envelope_paths(first_path: Path, second_path: Path | None = None) -> list[str]:
-    errors = validate_bundles()
-    try:
-        errors.extend(validate_contract(load_json(CONTRACT_PATH)))
-    except (OSError, UnicodeError, json.JSONDecodeError, TypeError) as exc:
-        errors.append(f"canonical contract invalid: {exc}")
-    try:
-        first = load_json(first_path)
-        if second_path is None:
-            if not isinstance(first, dict):
-                return sorted(set([*errors, "envelope fixture must be an object"]))
-            envelopes = first.get("assignmentEnvelopes")
-            attestations = first.get("assignmentEnvelopeAttestations")
-            errors.extend(validate_artifact_mode(first, "execution"))
-            source_paths: list[str] = []
-        else:
-            errors.extend(validate_envelope_pair_files(first_path, second_path))
-            return sorted(set(errors))
-        errors.extend(validate_assignment_envelope_pair(envelopes, attestations, source_paths))
-    except FileNotFoundError as exc:
-        errors.append(f"missing envelope input: {exc.filename}")
-    except (OSError, UnicodeError, json.JSONDecodeError, TypeError) as exc:
-        errors.append(f"invalid envelope input: {exc}")
-    return sorted(set(errors))
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("artifact", type=Path, help="integrated protocol-v2 JSON artifact")
-    parser.add_argument("--mode", choices=("template", "execution", "envelope"), required=True)
-    parser.add_argument("--second", type=Path,
-                        help="second direct assignment file for envelope-pair validation")
+    parser.add_argument("--mode", choices=("template", "execution"), required=True)
     parser.add_argument("--expect-golden", action="store_true",
                         help="require the frozen golden fixture canonical SHA-256")
     args = parser.parse_args(argv)
-    if args.mode == "envelope":
-        if args.expect_golden:
-            parser.error("--expect-golden is only valid with --mode execution")
-        errors = validate_envelope_paths(
-            args.artifact.resolve(), args.second.resolve() if args.second else None
-        )
-    else:
-        if args.second:
-            parser.error("--second is only valid with --mode envelope")
-        errors = validate_path(args.artifact.resolve(), args.mode, args.expect_golden)
+    errors = validate_path(args.artifact.resolve(), args.mode, args.expect_golden)
     if errors:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    if args.mode == "envelope":
-        print("OK: protocol-v2 envelope pair is canonically valid")
-    else:
-        print(f"OK: protocol-v2 {args.mode} artifact is canonically valid")
+    print(f"OK: protocol-v2 {args.mode} artifact is canonically valid")
     return 0
 
 
