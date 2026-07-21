@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/experiment-manifest.schema.json",
+  "title": "Private protocol 2.3.0 operator manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocolVersion",
+    "experimentId",
+    "startedAt",
+    "operator",
+    "bindings",
+    "canonicalContractSha256",
+    "gateBindings",
+    "candidateLabels",
+    "assignment",
+    "evaluationRandomization",
+    "environment",
+    "budgets",
+    "deviations"
+  ],
+  "properties": {
+    "protocolVersion": { "const": "2.3.0" },
+    "experimentId": { "type": "string", "minLength": 1 },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "operator": { "type": "string", "minLength": 1 },
+    "bindings": { "$ref": "#/$defs/bindings" },
+    "canonicalContractSha256": { "$ref": "#/$defs/sha256" },
+    "gateBindings": { "$ref": "#/$defs/gateBindings" },
+    "candidateLabels": { "const": ["candidate-a", "candidate-b"] },
+    "assignment": { "$ref": "#/$defs/assignment" },
+    "evaluationRandomization": { "$ref": "#/$defs/evaluationRandomization" },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "provider",
+        "reasoningSetting",
+        "node",
+        "npm",
+        "os",
+        "networkPolicy",
+        "toolPolicy",
+        "builderConfigSha256"
+      ],
+      "properties": {
+        "model": { "type": "string", "minLength": 1 },
+        "provider": { "type": "string", "minLength": 1 },
+        "reasoningSetting": { "type": "string", "minLength": 1 },
+        "node": { "const": "22.x" },
+        "npm": { "type": "string", "minLength": 1 },
+        "os": { "type": "string", "minLength": 1 },
+        "networkPolicy": { "type": "string", "minLength": 1 },
+        "toolPolicy": { "type": "string", "minLength": 1 },
+        "builderConfigSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "builder",
+        "reviewer",
+        "fixer",
+        "tester",
+        "evaluator",
+        "unblinder",
+        "git_worker"
+      ],
+      "properties": {
+        "builder": { "$ref": "#/$defs/builderBudget" },
+        "reviewer": { "$ref": "#/$defs/reviewerBudget" },
+        "fixer": { "$ref": "#/$defs/fixerBudget" },
+        "tester": { "$ref": "#/$defs/testerBudget" },
+        "evaluator": { "$ref": "#/$defs/evaluatorBudget" },
+        "unblinder": { "$ref": "#/$defs/unblinderBudget" },
+        "git_worker": { "$ref": "#/$defs/gitWorkerBudget" }
+      }
+    },
+    "deviations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commonStartCommit",
+        "preregistrationLockCommit",
+        "lockFileSha256"
+      ],
+      "properties": {
+        "commonStartCommit": { "$ref": "#/$defs/sha1" },
+        "preregistrationLockCommit": { "$ref": "#/$defs/sha1" },
+        "lockFileSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "gateBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "testerCommand",
+        "componentCommands",
+        "evaluatorPublicCommand",
+        "hiddenSuiteId",
+        "hiddenSuiteCommand",
+        "hiddenSuiteSha256"
+      ],
+      "properties": {
+        "testerCommand": { "const": "npm run check" },
+        "componentCommands": {
+          "const": [
+            "npm run format:check",
+            "npm run lint",
+            "npm run typecheck",
+            "npm run validate:scaffold",
+            "npm run test:protocol",
+            "npm run test:public:if-implemented",
+            "npm run build"
+          ]
+        },
+        "evaluatorPublicCommand": { "const": "npm run test:public" },
+        "hiddenSuiteId": { "const": "permissions-playground-sealed-v2" },
+        "hiddenSuiteCommand": { "const": "node sealed-hidden-suite/run.mjs" },
+        "hiddenSuiteSha256": {
+          "const": "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b"
+        }
+      }
+    },
+    "assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seedHex",
+        "digestSha256",
+        "draw",
+        "generatedAt",
+        "generator",
+        "mapping"
+      ],
+      "properties": {
+        "seedHex": { "$ref": "#/$defs/sha256" },
+        "digestSha256": { "$ref": "#/$defs/sha256" },
+        "draw": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "generator": { "type": "string", "minLength": 1 },
+        "mapping": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["candidate-a", "candidate-b"],
+          "properties": {
+            "candidate-a": { "enum": ["baseline", "treatment"] },
+            "candidate-b": { "enum": ["baseline", "treatment"] }
+          }
+        }
+      }
+    },
+    "evaluationRandomization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seedHex", "digestSha256", "order", "mapping"],
+      "properties": {
+        "seedHex": { "$ref": "#/$defs/sha256" },
+        "digestSha256": { "$ref": "#/$defs/sha256" },
+        "order": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": { "enum": ["X", "Y", "Z"] }
+        },
+        "mapping": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["X", "Y", "Z"],
+          "properties": {
+            "X": { "enum": ["B0", "T0", "Tfinal"] },
+            "Y": { "enum": ["B0", "T0", "Tfinal"] },
+            "Z": { "enum": ["B0", "T0", "Tfinal"] }
+          }
+        }
+      }
+    },
+    "budgetBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wallSecondsMaximum",
+        "maxTokens",
+        "maxTokensUnavailableReason",
+        "turnLimit"
+      ],
+      "properties": {
+        "wallSecondsMaximum": { "type": "integer" },
+        "maxTokens": { "const": null },
+        "maxTokensUnavailableReason": { "type": "string", "minLength": 1 },
+        "turnLimit": { "const": 1 }
+      }
+    },
+    "builderBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 2400 } } }
+      ]
+    },
+    "reviewerBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 900 } } }
+      ]
+    },
+    "fixerBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 1500 } } }
+      ]
+    },
+    "testerBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 900 } } }
+      ]
+    },
+    "evaluatorBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 1800 } } }
+      ]
+    },
+    "unblinderBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 300 } } }
+      ]
+    },
+    "gitWorkerBudget": {
+      "allOf": [
+        { "$ref": "#/$defs/budgetBase" },
+        { "properties": { "wallSecondsMaximum": { "const": 600 } } }
+      ]
+    }
+  }
+}

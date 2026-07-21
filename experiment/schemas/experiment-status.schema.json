@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/experiment-status.schema.json",
+  "title": "Protocol 2.3.0-frozen completed experiment status",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "activeInvalidation",
+    "invalidAttempts",
+    "evaluations",
+    "outcome"
+  ],
+  "properties": {
+    "status": { "enum": ["valid", "invalid"] },
+    "activeInvalidation": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/activeInvalidation" }]
+    },
+    "invalidAttempts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/invalidAttempt" }
+    },
+    "evaluations": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "object" }
+        }
+      ]
+    },
+    "outcome": { "type": ["object", "null"] }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+    "activeInvalidation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invalidationId",
+        "scope",
+        "code",
+        "reason",
+        "detectedAt",
+        "evidenceSha256",
+        "preservedArtifactSha256"
+      ],
+      "properties": {
+        "invalidationId": { "type": "string", "minLength": 1 },
+        "scope": { "type": "string", "minLength": 1 },
+        "code": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "detectedAt": { "type": "string", "format": "date-time" },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" },
+        "preservedArtifactSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "invalidAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attemptId",
+        "scope",
+        "code",
+        "reason",
+        "invalidatedAt",
+        "evidenceSha256",
+        "preservedArtifactSha256"
+      ],
+      "properties": {
+        "attemptId": { "type": "string", "minLength": 1 },
+        "scope": { "type": "string", "minLength": 1 },
+        "code": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "invalidatedAt": { "type": "string", "format": "date-time" },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" },
+        "preservedArtifactSha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "valid" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "activeInvalidation": { "type": "null" },
+          "evaluations": { "type": "array", "minItems": 3, "maxItems": 3 },
+          "outcome": { "type": "object" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "invalid" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "activeInvalidation": { "$ref": "#/$defs/activeInvalidation" },
+          "evaluations": { "type": "null" },
+          "outcome": { "type": "null" }
+        }
+      }
+    }
+  ]
+}

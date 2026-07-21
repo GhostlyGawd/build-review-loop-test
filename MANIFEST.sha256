@@ -1,7 +1,7 @@
 # Frozen SHA-256 manifest for build-review-loop skill v1 / public protocol 2.4.0-draft.
 # Hashes cover canonical Git blobs for attributes, skill sources, public fixtures, parity, and evidence.
 # Excluded: this manifest (to avoid self-reference), ignored bytecode, and unrelated repository files.
-d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c  .gitattributes
+23302dd90b8bb74b44d365fafef8df20f809b61cb347023951ecf60a88a29651  .gitattributes
 ea25649e9b4b69cc8a05059e13a29d15ef6289f462f58d3069df997652476a54  skills/build-review-loop/SKILL.md
 ee593caa63d7d0f5c160414581babb4762c0978ef136107f0ec55bb70c09dc94  skills/build-review-loop/agents/openai.yaml
 afe98f81a2b37617ccdc79b15dc0f3dc559ca99ad7bcc8f93cf405c3d9f6afd2  skills/build-review-loop/references/artifact-contract.md

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/experiment-lock.schema.json",
+  "title": "Protocol 2.3.0-frozen integrated experiment lock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocolVersion",
+    "protocolStatus",
+    "supersedesLockCommit",
+    "lockParentCommit",
+    "hiddenSuiteId",
+    "hiddenSuiteSha256",
+    "treatmentSkillCommit",
+    "treatmentSkillTree",
+    "treatmentSkillManifestSha256",
+    "treatmentAlgorithmSha256",
+    "neutralBuilderPromptSha256",
+    "neutralBuilderConfigSha256",
+    "assignmentEnvelopeSchemaSha256",
+    "assignmentCoordinationDirectory",
+    "canonicalContractSha256",
+    "goldenFixtureSha256",
+    "invalidCurrentFixtureSha256",
+    "commonStartCommitPolicy",
+    "nodeVersion",
+    "packageManager",
+    "freezeState"
+  ],
+  "properties": {
+    "protocolVersion": { "const": "2.3.0-frozen" },
+    "protocolStatus": { "const": "locked" },
+    "supersedesLockCommit": { "$ref": "#/$defs/sha1" },
+    "lockParentCommit": { "$ref": "#/$defs/sha1" },
+    "hiddenSuiteId": { "const": "permissions-playground-sealed-v2" },
+    "hiddenSuiteSha256": { "$ref": "#/$defs/sha256" },
+    "treatmentSkillCommit": { "$ref": "#/$defs/sha1" },
+    "treatmentSkillTree": { "$ref": "#/$defs/sha1" },
+    "treatmentSkillManifestSha256": { "$ref": "#/$defs/sha256" },
+    "treatmentAlgorithmSha256": { "$ref": "#/$defs/sha256" },
+    "neutralBuilderPromptSha256": { "$ref": "#/$defs/sha256" },
+    "neutralBuilderConfigSha256": { "$ref": "#/$defs/sha256" },
+    "assignmentEnvelopeSchemaSha256": { "$ref": "#/$defs/sha256" },
+    "assignmentCoordinationDirectory": {
+      "const": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-builder-assignments"
+    },
+    "canonicalContractSha256": { "$ref": "#/$defs/sha256" },
+    "goldenFixtureSha256": { "$ref": "#/$defs/sha256" },
+    "invalidCurrentFixtureSha256": { "$ref": "#/$defs/sha256" },
+    "commonStartCommitPolicy": {
+      "const": "Record the final GitHub commonStartCommit post-merge in the experiment and run manifests, together with the refrozen preregistration lock commit and lock-file SHA-256."
+    },
+    "nodeVersion": { "const": "22.x" },
+    "packageManager": { "const": "npm@11.11.0" },
+    "freezeState": { "const": "frozen" }
+  },
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

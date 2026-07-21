@@ -1,0 +1,15 @@
+{
+  "candidateLabel": "candidate-b",
+  "cycle": 1,
+  "roleInstanceId": "cycle-1-fixer",
+  "workerId": "template-fixer-worker-id",
+  "startCommit": "0000000000000000000000000000000000000000",
+  "finalCommit": "0000000000000000000000000000000000000000",
+  "startedAt": "2026-07-20T00:00:00Z",
+  "completedAt": "2026-07-20T00:00:00Z",
+  "dispositions": [],
+  "changedFiles": [],
+  "checks": [],
+  "remainingDefects": [],
+  "deviations": []
+}

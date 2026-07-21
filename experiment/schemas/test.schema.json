@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/test.schema.json",
+  "title": "Fresh history-free treatment-cycle gate test",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidateLabel",
+    "cycle",
+    "roleInstanceId",
+    "workerId",
+    "snapshotCommit",
+    "startedAt",
+    "completedAt",
+    "command",
+    "exitCode",
+    "componentResults",
+    "rawOutputSha256",
+    "workingTreeClean"
+  ],
+  "properties": {
+    "candidateLabel": { "type": "string", "pattern": "^candidate-[a-z0-9-]+$" },
+    "cycle": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "roleInstanceId": { "type": "string", "pattern": "^cycle-[1-5]-tester$" },
+    "workerId": { "type": "string", "minLength": 8 },
+    "snapshotCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": "string", "format": "date-time" },
+    "command": { "const": "npm run check" },
+    "exitCode": { "type": "integer" },
+    "componentResults": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": false,
+      "prefixItems": [
+        { "$ref": "#/$defs/formatCheck" },
+        { "$ref": "#/$defs/lint" },
+        { "$ref": "#/$defs/typecheck" },
+        { "$ref": "#/$defs/scaffold" },
+        { "$ref": "#/$defs/protocolTests" },
+        { "$ref": "#/$defs/publicTests" },
+        { "$ref": "#/$defs/build" }
+      ]
+    },
+    "rawOutputSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "workingTreeClean": { "const": true }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "exitCode"],
+      "properties": {
+        "command": { "type": "string" },
+        "exitCode": { "type": "integer" }
+      }
+    },
+    "formatCheck": {
+      "allOf": [
+        { "$ref": "#/$defs/result" },
+        { "properties": { "command": { "const": "npm run format:check" } } }
+      ]
+    },
+    "lint": {
+      "allOf": [
+        { "$ref": "#/$defs/result" },
+        { "properties": { "command": { "const": "npm run lint" } } }
+      ]
+    },
+    "typecheck": {
+      "allOf": [
+        { "$ref": "#/$defs/result" },
+        { "properties": { "command": { "const": "npm run typecheck" } } }
+      ]
+    },
+    "scaffold": {
+      "allOf": [
+        { "$ref": "#/$defs/result" },
+        {
+          "properties": { "command": { "const": "npm run validate:scaffold" } }
+        }
+      ]
+    },
+    "protocolTests": {
+      "allOf": [
+        { "$ref": "#/$defs/result" },
+        { "properties": { "command": { "const": "npm run test:protocol" } } }
+      ]
+    },
+    "publicTests": {
+      "allOf": [
+        { "$ref": "#/$defs/result" },
+        {
+          "properties": {
+            "command": { "const": "npm run test:public:if-implemented" }
+          }
+        }
+      ]
+    },
+    "build": {
+      "allOf": [
+        { "$ref": "#/$defs/result" },
+        { "properties": { "command": { "const": "npm run build" } } }
+      ]
+    }
+  }
+}
