@@ -64,7 +64,7 @@
     "schemaPath": "experiment/schemas/cli-runtime-contract.schema.json",
     "schemaSha256": "bb6c1ca1e91e07d2304c4d014910d6dca031aef2eabf144403f8f8de84905ecb",
     "runnerPath": "scripts/run-cli-builders.ps1",
-    "runnerSha256": "55891b9b32633e6bf1c823a271d9cd8496469fcb9a3a55fcc106f979c44e625e",
+    "runnerSha256": "295e7526146f52f463bd26699c3ef9da1c06c239259d726f115384ff03ea4c6e",
     "binaryPath": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe",
     "binaryVersion": "codex-cli 0.145.0-alpha.18",
     "binarySha256": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",

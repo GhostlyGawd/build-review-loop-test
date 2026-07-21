@@ -125,7 +125,7 @@ foreach ($spec in $contract.invocations) {
   if ((Invoke-Git $workdir @("rev-parse", "HEAD")) -ne $contract.commonStartCommit -or (Invoke-Git $workdir @("rev-parse", "HEAD^{tree}")) -ne $contract.commonStartTree) { throw "Builder common-start commit/tree mismatch" }
   if ((Invoke-Git $workdir @("rev-list", "--count", "HEAD")) -ne "1" -or (Invoke-Git $workdir @("rev-list", "--parents", "-n", "1", "HEAD")).Split(" ").Count -ne 1) { throw "Builder input must be a source-history-free root commit" }
   if ((Invoke-Git $workdir @("config", "--get", "core.autocrlf")) -ne "false") { throw "Builder clone must pin core.autocrlf=false" }
-  $trackedPaths = @((Invoke-Git $workdir @("ls-files")) -split "`n" | Where-Object { $_ -ne "" })
+  $trackedPaths = @((Invoke-Git $workdir @("ls-files")) -split "\r?\n" | Where-Object { $_ -ne "" })
   $manifestPaths = @($builderManifest.files | ForEach-Object { $_.path })
   if (($trackedPaths -join "`0") -ne ($manifestPaths -join "`0")) { throw "Builder tracked paths diverge from the private allowlist manifest" }
   $projectionMaterial = [System.Text.StringBuilder]::new()
