@@ -1,15 +1,15 @@
 # Permissions Playground review-loop experiment
 
-This repository is the private prospective source scaffold for protocol version 2.4.0-draft. Before builder launch, a deterministic allowlist projects only neutral Permissions Playground task files into two byte-identical, freshly initialized one-root Git repositories. Builders never receive this repository, its history, README, experiment material, skills, hidden material, or evidence.
+This repository is the private prospective source scaffold for locked protocol version 2.4.0. Before builder launch, a deterministic allowlist projects only neutral Permissions Playground task files into two byte-identical, freshly initialized one-root Git repositories. Builders never receive this repository, its history, README, experiment material, skills, hidden material, or evidence.
 
 ## Status
 
-- Phase: protocol 2.4.0-draft provisional lock, before builder exposure and final runner smoke
+- Phase: protocol 2.4.0 locked, before builder exposure
 - Product: intentionally not implemented on this branch
 - Public contract tests: committed but gated until all required implementation files exist
 - Hidden tests: sealed externally; the existing v2 commitment remains unchanged
 - Treatment algorithm: exact skill-v1 flow incorporated and content-addressed
-- Experiment lock: 2.4.0-draft provisional; the skill and final runner-smoke commitments remain null until their prospective gates complete
+- Experiment lock: 2.4.0 locked to parent P, treatment skill S, and preflight gates A/B/C
 - License: none has been granted; no license file is included
 
 Do not present this branch as a completed application or executable experiment. A passing scaffold check establishes internal consistency only.
@@ -60,7 +60,10 @@ The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact t
 - [`experiment/treatment-loop-algorithm.md`](experiment/treatment-loop-algorithm.md): exact frozen skill-v1 flow
 - [`experiment/schemas/`](experiment/schemas/): machine-readable artifact contracts and the authoritative finding schema
 - [`experiment/templates/`](experiment/templates/): prospective, non-evidentiary artifact examples
-- [`experiment/lock.json`](experiment/lock.json): provisional 2.4 commitments; final runner-smoke and treatment-skill fields remain null
+- [`experiment/lock.json`](experiment/lock.json): final 2.4 commitments and the sanitized aggregate preflight binding
+- [`experiment/preflight/`](experiment/preflight/): P-bound 41-file S↔P parity inventory and sanitized A/B/C evidence commitments
+
+The three gates were executed against parent commit `f957cdf3054b8055a3d4b90d7cae0fbb8c79394c` (P), not against the administrative finalization commit (F). F only seals P, skill commit S, and the A/B/C evidence. No candidate received task material and no model run was performed at F. The copied 41-file inventory proves S matches P; F intentionally differs only in enumerated administrative sealing files. The legacy `runnerSmoke*` fields remain null because gate B is a reviewer exact-commit closure, not an exact instance of the older runner-smoke contract.
 
 ## Architecture and boundaries
 

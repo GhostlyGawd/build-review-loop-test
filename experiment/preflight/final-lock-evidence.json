@@ -1,0 +1,122 @@
+{
+  "evidenceVersion": "1.0.0",
+  "aggregation": {
+    "algorithm": "sha256",
+    "canonicalization": "UTF-8 JSON with object keys sorted by UTF-8 byte order, arrays retained in order, and no insignificant whitespace",
+    "domain": "permissions-playground/protocol-lock-preflight-v1\\u0000",
+    "excludedTopLevelProperty": "gateAggregateSha256"
+  },
+  "protocolParent": {
+    "commit": "f957cdf3054b8055a3d4b90d7cae0fbb8c79394c",
+    "tree": "23c9c1005efa704d42e79fe8b80f3dc33aa5ab17",
+    "lockSha256": "450870be5209d8a6bfc6080a52869ae0ed543ee4a674d7eb7bff24acf36fb44d"
+  },
+  "treatmentSkill": {
+    "commit": "0cb11eba2d48ce3b9a50b62530fe1e171f5dbd37",
+    "tree": "a314beffef8a6c7c6912d725ca3286877927f4eb",
+    "manifestFile": "MANIFEST.sha256",
+    "manifestSha256": "e4cd377e9f1d71eaef497cced0fb680bcd22881958dbf0638950521ee1c3d63c",
+    "sourceParitySha256": "6a31b071d752fe24a4fba0643492482623307f2184ba2e5ff69e4a629bc230e9",
+    "sourceParityFileCount": 41,
+    "sourceParityAllMatch": true
+  },
+  "gates": {
+    "A": {
+      "scenario": "projected-concurrent-builder-smoke",
+      "attestationSha256": "2157bb3a422988bc517354a486dcd0ac20c1b463a76e3a663007bd571b202bbe",
+      "artifacts": {
+        "contractSha256": "78f8b8db5578751db09a87338f765e5c6ad9cffbf8563df2631c6d4f5c0c5e7a",
+        "inputManifestSha256": "9877b58bcd692e24f3271cb91821fff74770a445f809931a6d767e1fc6659487",
+        "builderA": {
+          "evidenceSha256": "3ff2b22d2b8304a5d7cfba70e01c008756f8df32202f8798c357c2967f08fcfe",
+          "finalSha256": "3bc12ddb1ab3a5c25d5018b3347532c6f96808c68bf44d6426fb8826550a9f2d",
+          "postStateSha256": "d3ad8e5512d2d9621647e8da7415908b0d3e33e60451bb2f682efbc59ede439e",
+          "stderrSha256": "66dba4299beaadc9d0e9cfe53803bb316f31799d52ef4cce8bbec052d11b62c1",
+          "stdoutSha256": "a96884fee3fd4755e69e8a2711ca41a0870c1b56debaa226782bb045acafe8f1"
+        },
+        "builderB": {
+          "evidenceSha256": "f39b2717544a57c88f7180ea07163487d5ff8c771d43a714eef348b813ed3238",
+          "finalSha256": "3bc12ddb1ab3a5c25d5018b3347532c6f96808c68bf44d6426fb8826550a9f2d",
+          "postStateSha256": "d3ad8e5512d2d9621647e8da7415908b0d3e33e60451bb2f682efbc59ede439e",
+          "stderrSha256": "1115cae90ad9b0e6fe6f1e61b74f8f4033c1ac3613c90d903dd01b9bb545ba12",
+          "stdoutSha256": "e97e22c8f6e0f236c2dd8af8f2fb0d89be5eb783f70dca0a01af347edd3f439b"
+        }
+      },
+      "commitments": {
+        "projectionCommit": "4398ba6eb5c3b81809057de36867c11e5720fcaf",
+        "projectionTree": "7c0062264a207d5dd56a8c91c2421a946cc4ff9a",
+        "projectionSha256": "73bd8bc576f78ac81a324c682daf4e13a21ddab037f3d96987c5927585f4bedf",
+        "projectedFileCount": 21,
+        "distinctProcesses": true,
+        "distinctThreads": true,
+        "identicalPostStates": true,
+        "workdirsClean": true,
+        "remotesDisabled": true,
+        "sentinelScanClean": true,
+        "valid": true
+      }
+    },
+    "B": {
+      "scenario": "single-reviewer-exact-commit-closure",
+      "attestationSha256": "3a987b0b17b17d460491df0eb2af4814410a9b7f6a2300198ecfbdf040a0ca5f",
+      "artifacts": {
+        "contractSha256": "bf45c444b11fdf626402a66786acb6813a42933bf4c4c7ae5d54f8044c77fcd9",
+        "promptSha256": "7daf91bf757f19a34ead415444bf7ef89c878f67ea0072ca0367a6dabba923b3",
+        "evidenceSha256": "096e64eb11a2989271309f06423e3fbe93872fc0348729eea19dcb5a6b9258eb",
+        "finalSha256": "028bb2be9611abdb3f258556a5ebc60c418f4e49f867ac9125b02a235bc90928",
+        "stderrSha256": "204ce6eb322331e00202fb408dde4b2ebade1220db9dea5fed5bd004914993fd",
+        "stdoutSha256": "7ff8473c61d95c273b819606172aae10c63e9e9ee578c217ce2ae1c9e880b77b"
+      },
+      "commitments": {
+        "supervisorExitCode": 0,
+        "modelExitCode": 0,
+        "stdinDelivered": true,
+        "rawJsonlValid": true,
+        "turnCompleted": true,
+        "usagePresent": true,
+        "finalSchemaValid": true,
+        "artifactBindingValid": true,
+        "artifactChronologyValid": true,
+        "repositoryCleanAfter": true,
+        "remotesDisabled": true,
+        "exactEvidenceClosure": true,
+        "valid": true
+      }
+    },
+    "C": {
+      "scenario": "deterministic-exact-head-blinded-packaging",
+      "attestationSha256": "e1be8620932501f12327dc1534c19953f403d8cec897946ca52cdf67fe61d2bd",
+      "artifacts": {
+        "mappingSha256": "ec9c1cd1f5f5bef890149fd00365c9de1f36aed7dedfd372edf92d6d49437d1c",
+        "firstManifestSha256": "4cd1abefd6f517dafeff13d684e08b87e9a3d9ded2e7de95409ec059a23e0acf",
+        "secondManifestSha256": "4cd1abefd6f517dafeff13d684e08b87e9a3d9ded2e7de95409ec059a23e0acf",
+        "packageSha256": "edebdc4addf10b0f5355866263795dd3598e3d2015facb0091921374ef6d58ec",
+        "firstRunPackageHashes": {
+          "X": "edebdc4addf10b0f5355866263795dd3598e3d2015facb0091921374ef6d58ec",
+          "Y": "edebdc4addf10b0f5355866263795dd3598e3d2015facb0091921374ef6d58ec",
+          "Z": "edebdc4addf10b0f5355866263795dd3598e3d2015facb0091921374ef6d58ec"
+        },
+        "secondRunPackageHashes": {
+          "X": "edebdc4addf10b0f5355866263795dd3598e3d2015facb0091921374ef6d58ec",
+          "Y": "edebdc4addf10b0f5355866263795dd3598e3d2015facb0091921374ef6d58ec",
+          "Z": "edebdc4addf10b0f5355866263795dd3598e3d2015facb0091921374ef6d58ec"
+        }
+      },
+      "commitments": {
+        "sourceCommit": "4398ba6eb5c3b81809057de36867c11e5720fcaf",
+        "sourceTree": "7c0062264a207d5dd56a8c91c2421a946cc4ff9a",
+        "frozenGateSetSha256": "af8a2d6f7a29ff3dcbc1ca4240361e6bdbba520078a0cd39dbd0f4e4ba0f7930",
+        "packageCountPerRun": 3,
+        "fileCountPerPackage": 21,
+        "manifestsByteIdentical": true,
+        "packageHashesIdentical": true,
+        "historyFree": true,
+        "lineageScanPassed": true,
+        "sourceWorktreesClean": true,
+        "remotesDisabled": true,
+        "valid": true
+      }
+    }
+  },
+  "gateAggregateSha256": "654c3bce5abb53816960125a22006a12de2e68f0374579ba6f7af87055761997"
+}

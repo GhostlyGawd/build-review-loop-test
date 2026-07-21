@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/final-lock-evidence.schema.json",
+  "title": "Protocol 2.4.0 final-lock preflight evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "evidenceVersion",
+    "aggregation",
+    "protocolParent",
+    "treatmentSkill",
+    "gates",
+    "gateAggregateSha256"
+  ],
+  "properties": {
+    "evidenceVersion": { "const": "1.0.0" },
+    "aggregation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "canonicalization",
+        "domain",
+        "excludedTopLevelProperty"
+      ],
+      "properties": {
+        "algorithm": { "const": "sha256" },
+        "canonicalization": { "type": "string", "minLength": 1 },
+        "domain": {
+          "const": "permissions-playground/protocol-lock-preflight-v1\\u0000"
+        },
+        "excludedTopLevelProperty": { "const": "gateAggregateSha256" }
+      }
+    },
+    "protocolParent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit", "tree", "lockSha256"],
+      "properties": {
+        "commit": { "$ref": "#/$defs/sha1" },
+        "tree": { "$ref": "#/$defs/sha1" },
+        "lockSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "treatmentSkill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commit",
+        "tree",
+        "manifestFile",
+        "manifestSha256",
+        "sourceParitySha256",
+        "sourceParityFileCount",
+        "sourceParityAllMatch"
+      ],
+      "properties": {
+        "commit": { "$ref": "#/$defs/sha1" },
+        "tree": { "$ref": "#/$defs/sha1" },
+        "manifestFile": { "const": "MANIFEST.sha256" },
+        "manifestSha256": { "$ref": "#/$defs/sha256" },
+        "sourceParitySha256": { "$ref": "#/$defs/sha256" },
+        "sourceParityFileCount": { "const": 41 },
+        "sourceParityAllMatch": { "const": true }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["A", "B", "C"],
+      "properties": {
+        "A": { "$ref": "#/$defs/gate" },
+        "B": { "$ref": "#/$defs/gate" },
+        "C": { "$ref": "#/$defs/gate" }
+      }
+    },
+    "gateAggregateSha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenario", "attestationSha256", "artifacts", "commitments"],
+      "properties": {
+        "scenario": { "type": "string", "minLength": 1 },
+        "attestationSha256": { "$ref": "#/$defs/sha256" },
+        "artifacts": { "$ref": "#/$defs/nestedCommitments" },
+        "commitments": { "$ref": "#/$defs/nestedCommitments" }
+      }
+    },
+    "nestedCommitments": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "anyOf": [
+          { "$ref": "#/$defs/sha1" },
+          { "$ref": "#/$defs/sha256" },
+          { "type": "boolean" },
+          { "type": "integer", "minimum": 0 },
+          { "$ref": "#/$defs/nestedCommitments" }
+        ]
+      }
+    }
+  }
+}

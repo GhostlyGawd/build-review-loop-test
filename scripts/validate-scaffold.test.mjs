@@ -17,6 +17,7 @@ import path from "node:path";
 import { describe, it } from "node:test";
 import {
   canonicalHash,
+  preflightAggregateHash,
   readJson,
   remainingRoleWaitMilliseconds,
   roleWaitFromAbsoluteDeadline,
@@ -29,6 +30,7 @@ import {
   validateCostSemantics,
   validateEvaluationSemantics,
   validateExperimentConclusion,
+  validateFinalLockEvidence,
   validateGoldenRun,
   validateNeutralBuilderPrompt,
   validateOutcomeSemantics,
@@ -452,7 +454,7 @@ const createRoleRunnerFixture = () => {
   };
 };
 
-describe("protocol 2.4.0-draft cross-contract validation", () => {
+describe("protocol 2.4.0 locked cross-contract validation", () => {
   it("projects only allowlisted bytes into identical one-root builder repositories", () => {
     const fixture = createProjectionFixture(
       [{ source: "product.txt", destination: "product.txt" }],
@@ -999,6 +1001,39 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
         readJson("experiment/templates/experiment-manifest.json"),
       ),
       [],
+    );
+  });
+
+  it("binds the final lock to sanitized P/S/A/B/C preflight evidence", () => {
+    const lock = readJson("experiment/lock.json");
+    const evidence = readJson("experiment/preflight/final-lock-evidence.json");
+    const inventory = readJson(
+      "experiment/preflight/operational-parent-inventory.json",
+    );
+    assert.equal(
+      evidence.gateAggregateSha256,
+      preflightAggregateHash(evidence),
+    );
+    assert.deepEqual(validateFinalLockEvidence(evidence, inventory, lock), []);
+    assert.equal(lock.runnerSmokeContractSha256, null);
+    assert.equal(lock.runnerSmokeSupervisionSha256, null);
+    assert.equal(lock.runnerSmokeAttestationSha256, null);
+
+    const tamperedEvidence = clone(evidence);
+    tamperedEvidence.gates.A.artifacts.contractSha256 = hash("0");
+    assert.match(
+      validateFinalLockEvidence(tamperedEvidence, inventory, lock).join("\n"),
+      /aggregate hash mismatch/,
+    );
+
+    const tamperedInventory = clone(inventory);
+    const prompt = tamperedInventory.files.find(
+      ({ source }) => source === "experiment/prompts/neutral-builder.md",
+    );
+    prompt.sha256 = hash("0");
+    assert.match(
+      validateFinalLockEvidence(evidence, tamperedInventory, lock).join("\n"),
+      /operational byte diverges/,
     );
   });
 

@@ -68,6 +68,106 @@ export const canonicalHash = (value) =>
   sha256Bytes(
     Buffer.concat([canonicalDomain, Buffer.from(canonicalJson(value), "utf8")]),
   );
+const preflightAggregateDomain = Buffer.from(
+  "permissions-playground/protocol-lock-preflight-v1\0",
+  "ascii",
+);
+export const preflightAggregateHash = (evidence) => {
+  const payload = structuredClone(evidence);
+  delete payload.gateAggregateSha256;
+  return sha256Bytes(
+    Buffer.concat([
+      preflightAggregateDomain,
+      Buffer.from(canonicalJson(payload), "utf8"),
+    ]),
+  );
+};
+
+const administrativeParityExceptions = new Set([
+  "experiment/lock.json",
+  "experiment/protocol.md",
+  "experiment/schemas/experiment-lock.schema.json",
+]);
+
+export function validateFinalLockEvidence(evidence, inventory, lock) {
+  const failures = [];
+  const expectedParentCommit = "f957cdf3054b8055a3d4b90d7cae0fbb8c79394c";
+  const expectedParentTree = "23c9c1005efa704d42e79fe8b80f3dc33aa5ab17";
+  if (preflightAggregateHash(evidence) !== evidence.gateAggregateSha256)
+    failures.push("final-lock preflight aggregate hash mismatch");
+  if (evidence.gateAggregateSha256 !== lock.gateAggregateSha256)
+    failures.push("final-lock preflight aggregate diverges from lock");
+  if (
+    evidence.protocolParent.commit !== expectedParentCommit ||
+    evidence.protocolParent.tree !== expectedParentTree ||
+    evidence.protocolParent.lockSha256 !== lock.lockParentLockSha256
+  )
+    failures.push("final-lock preflight parent binding mismatch");
+  if (
+    evidence.treatmentSkill.commit !== lock.treatmentSkillCommit ||
+    evidence.treatmentSkill.tree !== lock.treatmentSkillTree ||
+    evidence.treatmentSkill.manifestFile !== lock.treatmentSkillManifestFile ||
+    evidence.treatmentSkill.manifestSha256 !==
+      lock.treatmentSkillManifestSha256 ||
+    evidence.treatmentSkill.sourceParitySha256 !==
+      lock.treatmentSkillSourceParitySha256 ||
+    evidence.treatmentSkill.sourceParityFileCount !== 41 ||
+    evidence.treatmentSkill.sourceParityAllMatch !== true
+  )
+    failures.push("final-lock treatment-skill binding mismatch");
+  for (const gate of ["A", "B", "C"])
+    if (
+      evidence.gates[gate].attestationSha256 !==
+      lock[`gate${gate}AttestationSha256`]
+    )
+      failures.push(`final-lock gate ${gate} attestation binding mismatch`);
+
+  const serialized = JSON.stringify(evidence);
+  if (
+    /(?:[A-Za-z]:\\\\|processId|threadId|startedAt|exitedAt|deadline|candidateId|runId)/u.test(
+      serialized,
+    )
+  )
+    failures.push(
+      "final-lock preflight evidence contains prohibited local metadata",
+    );
+
+  if (
+    inventory.protocolCommit !== expectedParentCommit ||
+    inventory.protocolTree !== expectedParentTree ||
+    inventory.fileCount !== 41 ||
+    inventory.allMatch !== true ||
+    !Array.isArray(inventory.files) ||
+    inventory.files.length !== 41
+  )
+    failures.push("operational parent inventory header mismatch");
+  const seen = new Set();
+  for (const record of inventory.files ?? []) {
+    if (
+      typeof record.source !== "string" ||
+      seen.has(record.source) ||
+      record.gitBlob !== record.bundledBlob ||
+      record.match !== true ||
+      !/^[0-9a-f]{40}$/u.test(record.gitBlob ?? "") ||
+      !/^[0-9a-f]{64}$/u.test(record.sha256 ?? "")
+    ) {
+      failures.push("operational parent inventory record is malformed");
+      continue;
+    }
+    seen.add(record.source);
+    if (!administrativeParityExceptions.has(record.source)) {
+      const absolute = path.join(root, ...record.source.split("/"));
+      if (
+        !existsSync(absolute) ||
+        sha256Bytes(readFileSync(absolute)) !== record.sha256
+      )
+        failures.push(
+          `operational byte diverges from parent inventory: ${record.source}`,
+        );
+    }
+  }
+  return failures;
+}
 const uint64be = (value) => {
   const buffer = Buffer.alloc(8);
   buffer.writeBigUInt64BE(BigInt(value));
@@ -1788,6 +1888,8 @@ export function validateScaffold() {
     "experiment/golden-run/golden-run.json",
     "experiment/golden-run/invalid-current.json",
     "experiment/lock.json",
+    "experiment/preflight/operational-parent-inventory.json",
+    "experiment/preflight/final-lock-evidence.json",
     "experiment/builder-config.json",
     "experiment/builder-package.json",
     "experiment/builder-input-allowlist.json",
@@ -1808,6 +1910,7 @@ export function validateScaffold() {
     "experiment/schemas/cli-supervision-evidence.schema.json",
     "experiment/schemas/blinded-package-manifest.schema.json",
     "experiment/schemas/blinded-package-mapping.schema.json",
+    "experiment/schemas/final-lock-evidence.schema.json",
     "experiment/templates/test.json",
     "experiment/templates/outcome.json",
     "experiment/templates/experiment-status.json",
@@ -1905,6 +2008,10 @@ export function validateScaffold() {
       "experiment/schemas/blinded-package-mapping.schema.json",
       "experiment/templates/blinded-package-mapping.json",
     ],
+    [
+      "experiment/schemas/final-lock-evidence.schema.json",
+      "experiment/preflight/final-lock-evidence.json",
+    ],
   ];
   const ajv = new Ajv2020({
     allErrors: true,
@@ -1929,6 +2036,12 @@ export function validateScaffold() {
   }
 
   const lock = readJson("experiment/lock.json");
+  const finalLockEvidence = readJson(
+    "experiment/preflight/final-lock-evidence.json",
+  );
+  const operationalParentInventory = readJson(
+    "experiment/preflight/operational-parent-inventory.json",
+  );
   const algorithmText = readFileSync(
     path.join(root, "experiment/treatment-loop-algorithm.md"),
     "utf8",
@@ -2008,6 +2121,21 @@ export function validateScaffold() {
       "utf8",
     ),
   );
+  const actualOperationalParentInventoryHash = sha256Bytes(
+    readFileSync(
+      path.join(root, "experiment/preflight/operational-parent-inventory.json"),
+    ),
+  );
+  const actualPreflightEvidenceHash = sha256Bytes(
+    readFileSync(
+      path.join(root, "experiment/preflight/final-lock-evidence.json"),
+    ),
+  );
+  const actualPreflightEvidenceSchemaHash = sha256Bytes(
+    readFileSync(
+      path.join(root, "experiment/schemas/final-lock-evidence.schema.json"),
+    ),
+  );
   const actualReviewerPromptHash = sha256(
     readFileSync(path.join(root, "experiment/prompts/blinded-reviewer.md")),
   );
@@ -2040,16 +2168,25 @@ export function validateScaffold() {
   const goldenRun = readJson("experiment/golden-run/golden-run.json");
   const invalidCurrent = readJson("experiment/golden-run/invalid-current.json");
   const finalCommitments = {
-    protocolVersion: "2.4.0-draft",
-    protocolStatus: "provisional",
+    protocolVersion: "2.4.0",
+    protocolStatus: "locked",
     supersedesLockCommit: "0fc2e5c6d0cc2355310f10e4f04fcf8e2131d636",
-    lockParentCommit: null,
+    lockParentCommit: "f957cdf3054b8055a3d4b90d7cae0fbb8c79394c",
+    lockParentTree: "23c9c1005efa704d42e79fe8b80f3dc33aa5ab17",
+    lockParentLockSha256:
+      "450870be5209d8a6bfc6080a52869ae0ed543ee4a674d7eb7bff24acf36fb44d",
     hiddenSuiteId: "permissions-playground-sealed-v2",
     hiddenSuiteSha256:
       "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
-    treatmentSkillCommit: null,
-    treatmentSkillTree: null,
-    treatmentSkillManifestSha256: null,
+    treatmentSkillCommit: "0cb11eba2d48ce3b9a50b62530fe1e171f5dbd37",
+    treatmentSkillTree: "a314beffef8a6c7c6912d725ca3286877927f4eb",
+    treatmentSkillManifestFile: "MANIFEST.sha256",
+    treatmentSkillManifestSha256:
+      "e4cd377e9f1d71eaef497cced0fb680bcd22881958dbf0638950521ee1c3d63c",
+    treatmentSkillSourceParitySha256:
+      "6a31b071d752fe24a4fba0643492482623307f2184ba2e5ff69e4a629bc230e9",
+    treatmentSkillSourceParityFileCount: 41,
+    treatmentSkillSourceParityAllMatch: true,
     treatmentAlgorithmSha256: actualAlgorithmHash,
     neutralBuilderPromptSha256: actualPromptHash,
     runnerSmokePromptSha256: actualSmokePromptHash,
@@ -2096,16 +2233,51 @@ export function validateScaffold() {
     runnerSmokeContractSha256: null,
     runnerSmokeSupervisionSha256: null,
     runnerSmokeAttestationSha256: null,
+    gateAAttestationSha256:
+      "2157bb3a422988bc517354a486dcd0ac20c1b463a76e3a663007bd571b202bbe",
+    gateBAttestationSha256:
+      "3a987b0b17b17d460491df0eb2af4814410a9b7f6a2300198ecfbdf040a0ca5f",
+    gateCAttestationSha256:
+      "e1be8620932501f12327dc1534c19953f403d8cec897946ca52cdf67fe61d2bd",
+    operationalParentInventoryPath:
+      "experiment/preflight/operational-parent-inventory.json",
+    operationalParentInventorySha256:
+      "6a31b071d752fe24a4fba0643492482623307f2184ba2e5ff69e4a629bc230e9",
+    preflightEvidencePath: "experiment/preflight/final-lock-evidence.json",
+    preflightEvidenceSha256:
+      "da80a3eb358a106c4bf888108b17d59a3e89791906222300a62319fdba162fae",
+    preflightEvidenceSchemaPath:
+      "experiment/schemas/final-lock-evidence.schema.json",
+    preflightEvidenceSchemaSha256:
+      "0b0512e5e0cd7925a4535782c30e2d5a0112a7790f511dbc5fb257f91f65c544",
+    gateAggregateSha256:
+      "654c3bce5abb53816960125a22006a12de2e68f0374579ba6f7af87055761997",
     canonicalContractSha256: canonicalHash(canonicalContract),
     goldenFixtureSha256: canonicalHash(goldenRun),
     invalidCurrentFixtureSha256: canonicalHash(invalidCurrent),
-    freezeState: "provisional",
+    commonStartCommitPolicy:
+      "At execution, record the GitHub commonStartCommit in experiment and run manifests together with this locked preregistration commit and its lock-file SHA-256; this finalization commit seals preflight evidence only and was not itself executed as a gate.",
+    freezeState: "locked",
   };
+  if (
+    actualOperationalParentInventoryHash !==
+    lock.operationalParentInventorySha256
+  )
+    failures.push("operational parent inventory byte hash mismatch");
+  if (actualPreflightEvidenceHash !== lock.preflightEvidenceSha256)
+    failures.push("preflight evidence byte hash mismatch");
+  if (actualPreflightEvidenceSchemaHash !== lock.preflightEvidenceSchemaSha256)
+    failures.push("preflight evidence schema byte hash mismatch");
   for (const [key, expected] of Object.entries(finalCommitments)) {
     if (lock[key] !== expected)
       failures.push(`${key} does not match the final integrated lock`);
   }
   failures.push(
+    ...validateFinalLockEvidence(
+      finalLockEvidence,
+      operationalParentInventory,
+      lock,
+    ),
     ...validateCanonicalContract(canonicalContract),
     ...validateGoldenRun(goldenRun, canonicalContract, lock),
     ...validateExperimentConclusion(invalidCurrent),
@@ -2247,6 +2419,6 @@ if (isEntrypoint) {
     process.exit(1);
   }
   console.log(
-    `Protocol 2.4.0-draft provisional scaffold validation passed (${schemaPairCount} schema/data pairs; CLI runtime and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.4.0 locked scaffold validation passed (${schemaPairCount} schema/data pairs; P-bound preflight and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }
