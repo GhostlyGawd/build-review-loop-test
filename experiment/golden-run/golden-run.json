@@ -2,7 +2,7 @@
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-conformance",
   "protocolVersion": "2.5.0",
-  "canonicalContractSha256": "604741c82d917d2cb5901ba4b1c046d29e2091ce4c91a68a514b713a24348b01",
+  "canonicalContractSha256": "2303f8fc8963fdfa132ee84acd8388e7a081f6a1cbdd5907c37ea8077f62a9c3",
   "status": "valid",
   "activeInvalidation": null,
   "invalidAttempts": [
@@ -62,7 +62,7 @@
       "npm run format:check",
       "npm run lint",
       "npm run typecheck",
-      "npm run test:public:if-implemented",
+      "npm run test:public",
       "npm run build"
     ],
     "testerCommand": "npm run check",
@@ -84,7 +84,7 @@
     "lockPath": "C:\\synthetic\\protocol\\experiment\\lock.json",
     "lockSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "contractSchemaPath": "C:\\synthetic\\protocol\\experiment\\schemas\\cli-runtime-contract.schema.json",
-    "contractSchemaSha256": "665016233b950a2f39f0bbee1f5f75b530980d3bcd979e543943cf976b0a2689",
+    "contractSchemaSha256": "3678f9482e5082b8ae19ff31c5dd1c4405d60bb75891d372d2b6dae5a1c0c716",
     "canonicalPathHelperPath": "C:\\synthetic\\protocol\\scripts\\canonicalize-paths.mjs",
     "canonicalPathHelperSha256": "194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e",
     "sourceCommonStartCommit": "29454a133f990982253744a85ccb8516d62f5a19",

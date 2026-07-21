@@ -25,7 +25,7 @@
       "exitCode": 0
     },
     {
-      "command": "npm run test:public:if-implemented",
+      "command": "npm run test:public",
       "exitCode": 0
     },
     {

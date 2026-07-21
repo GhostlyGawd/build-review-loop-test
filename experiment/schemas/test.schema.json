@@ -83,7 +83,7 @@
         { "$ref": "#/$defs/result" },
         {
           "properties": {
-            "command": { "const": "npm run test:public:if-implemented" }
+            "command": { "const": "npm run test:public" }
           }
         }
       ]

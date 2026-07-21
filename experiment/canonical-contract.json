@@ -62,7 +62,7 @@
     ],
     "roleLaunchRule": "every model-bearing role invocation is a fresh external Codex CLI subprocess using the frozen binary/auth/invariant argv, role-specific exact raw prompt bytes on stdin, --ephemeral, no resume, and distinct process and thread.started IDs; the bundled two-invocation contract and supervisor instantiate this rule for builders",
     "schemaPath": "experiment/schemas/cli-runtime-contract.schema.json",
-    "schemaSha256": "665016233b950a2f39f0bbee1f5f75b530980d3bcd979e543943cf976b0a2689",
+    "schemaSha256": "3678f9482e5082b8ae19ff31c5dd1c4405d60bb75891d372d2b6dae5a1c0c716",
     "runnerPath": "scripts/run-cli-builders.ps1",
     "runnerSha256": "b2e848a193c28d93893829a3dceeba323999193a0d96acee8848d0eff06e70b7",
     "canonicalPathHelperPath": "scripts/canonicalize-paths.mjs",
@@ -109,11 +109,11 @@
     "successRule": "each process starts, receives stdin, exits zero before the external deadline, emits exactly one thread.started and turn.completed, exposes or explains absent usage, uses a distinct thread ID, reconciles raw JSONL and hashes, leaves an exact closed evidence tree, and finishes with a clean committed clone",
     "roleRuntime": {
       "schemaPath": "experiment/schemas/role-runtime-contract.schema.json",
-      "schemaSha256": "ac620774663e6ce8dd9917f760f6f53eeb8063e70b88240999ffc6bef6184c5a",
+      "schemaSha256": "7dfdbb16b8f3c760c123fdb3981d7253f28feb57e0c7751eced9f6bb4d650da3",
       "runnerPath": "scripts/run-cli-role.ps1",
       "runnerSha256": "f78ec27cc30f66a58464be6f5b60a4437808b97ec85186916171ee22e9b6b3b4",
       "evidenceSchemaPath": "experiment/schemas/cli-supervision-evidence.schema.json",
-      "evidenceSchemaSha256": "b43690cdb988df31e3a778acf8021052fa0e9dae0767f518d9c8c126a8866556",
+      "evidenceSchemaSha256": "6a6a79d47617208a49e75b6f48a4a67be083a7e6482e26923ccc99c863611af5",
       "promptTemplateSha256": {
         "reviewer": "5bd94cc7c44165acae23675f82d74ece6bab0b4dab31f387d338d1c9a5e7dcae",
         "fixer": "ac4c0a40dbcee8b1ffe11b6eb7e81c5458849859a1ab38d09b78431aa390c9cf",
@@ -123,7 +123,7 @@
       "artifactSchemaSha256": {
         "reviewer": "66e47c9e4a0a8a4b1d5f09a73f09f753879b8f0f0d8219a1e4b187b88d3d791f",
         "fixer": "d92b46d65322b053699bdcc8e35a6f9d0c1c91d3dacccddbcfc569c673d7e96b",
-        "tester": "f0d6937137661ef750fe435afbe4ca1cba8ce727ed7bdf0986e98a9c1d476f06",
+        "tester": "e9774f5d6a718582b9871cfbf54519508c0f80424181f0bdeb35158b026fc2fd",
         "evaluator": "12a769a0868261e28299b5a7feef71626ea6e1ee51bfb0eb59ce65bbec05e6aa"
       },
       "promptSubstitutionRule": "exact role-specific key set; single-line bounded values; candidate/cycle/snapshot, fixer handoff, and evaluator package/sequence/rubric/schema/hidden-suite values must equal their contract bindings",
@@ -373,7 +373,7 @@
       "npm run format:check",
       "npm run lint",
       "npm run typecheck",
-      "npm run test:public:if-implemented",
+      "npm run test:public",
       "npm run build"
     ],
     "evaluatorPublicCommand": "npm run test:public"
