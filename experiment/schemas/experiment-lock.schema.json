@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/experiment-lock.schema.json",
-  "title": "Protocol 2.5.0-draft provisional experiment lock",
+  "title": "Protocol 2.5.0 locked experiment lock",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -89,31 +89,33 @@
     "freezeState"
   ],
   "properties": {
-    "protocolVersion": { "const": "2.5.0-draft" },
-    "protocolStatus": { "const": "provisional" },
+    "protocolVersion": { "const": "2.5.0" },
+    "protocolStatus": { "const": "locked" },
     "supersedesLockCommit": { "$ref": "#/$defs/sha1" },
-    "supersedesFinalizationCommit": { "type": "null" },
-    "lockParentCommit": { "type": "null" },
-    "lockParentTree": { "type": "null" },
-    "lockParentLockSha256": { "type": "null" },
+    "supersedesFinalizationCommit": {
+      "const": "f85357139efd9d192afc4ad2494dd180a8c7e5cf"
+    },
+    "lockParentCommit": { "$ref": "#/$defs/sha1" },
+    "lockParentTree": { "$ref": "#/$defs/sha1" },
+    "lockParentLockSha256": { "$ref": "#/$defs/sha256" },
     "hiddenSuiteId": { "const": "permissions-playground-sealed-v2" },
     "hiddenSuiteSha256": { "$ref": "#/$defs/sha256" },
-    "treatmentSkillCommit": { "type": "null" },
-    "treatmentSkillTree": { "type": "null" },
+    "treatmentSkillCommit": { "$ref": "#/$defs/sha1" },
+    "treatmentSkillTree": { "$ref": "#/$defs/sha1" },
     "treatmentSkillManifestFile": { "const": "MANIFEST.sha256" },
-    "treatmentSkillManifestSha256": { "type": "null" },
-    "treatmentSkillManifestEntryCount": { "type": "null" },
+    "treatmentSkillManifestSha256": { "$ref": "#/$defs/sha256" },
+    "treatmentSkillManifestEntryCount": { "const": 53 },
     "treatmentSkillManifestCommentLineCount": { "const": 3 },
-    "treatmentSkillManifestPhysicalLineCount": { "type": "null" },
+    "treatmentSkillManifestPhysicalLineCount": { "const": 56 },
     "treatmentSkillManifestByteSource": { "const": "canonical-git-blob" },
     "treatmentSkillManifestToolPath": {
       "const": "validation/manifest_tool.py"
     },
     "treatmentSkillManifestToolSha256": { "$ref": "#/$defs/sha256" },
     "treatmentSkillAttributesSha256": { "$ref": "#/$defs/sha256" },
-    "treatmentSkillSourceParitySha256": { "type": "null" },
-    "treatmentSkillSourceParityFileCount": { "type": "null" },
-    "treatmentSkillSourceParityAllMatch": { "type": "null" },
+    "treatmentSkillSourceParitySha256": { "$ref": "#/$defs/sha256" },
+    "treatmentSkillSourceParityFileCount": { "const": 42 },
+    "treatmentSkillSourceParityAllMatch": { "const": true },
     "treatmentAlgorithmSha256": { "$ref": "#/$defs/sha256" },
     "neutralBuilderPromptSha256": { "$ref": "#/$defs/sha256" },
     "runnerSmokePromptSha256": { "$ref": "#/$defs/sha256" },
@@ -163,15 +165,19 @@
     "gateAAttestationSha256": { "$ref": "#/$defs/sha256" },
     "gateBAttestationSha256": { "$ref": "#/$defs/sha256" },
     "gateCAttestationSha256": { "$ref": "#/$defs/sha256" },
-    "operationalParentInventoryPath": { "type": "null" },
-    "operationalParentInventorySha256": { "type": "null" },
-    "preflightEvidencePath": { "type": "null" },
-    "preflightEvidenceSha256": { "type": "null" },
+    "operationalParentInventoryPath": {
+      "const": "experiment/preflight/operational-parent-inventory.json"
+    },
+    "operationalParentInventorySha256": { "$ref": "#/$defs/sha256" },
+    "preflightEvidencePath": {
+      "const": "experiment/preflight/final-lock-evidence.json"
+    },
+    "preflightEvidenceSha256": { "$ref": "#/$defs/sha256" },
     "preflightEvidenceSchemaPath": {
       "const": "experiment/schemas/final-lock-evidence.schema.json"
     },
-    "preflightEvidenceSchemaSha256": { "type": "null" },
-    "gateAggregateSha256": { "type": "null" },
+    "preflightEvidenceSchemaSha256": { "$ref": "#/$defs/sha256" },
+    "gateAggregateSha256": { "$ref": "#/$defs/sha256" },
     "abortedPrelaunchRecordPath": {
       "const": "experiment/preflight/aborted-lock-2.4.0.json"
     },
@@ -182,7 +188,7 @@
     "commonStartCommitPolicy": { "type": "string", "minLength": 1 },
     "nodeVersion": { "const": "22.x" },
     "packageManager": { "const": "npm@11.11.0" },
-    "freezeState": { "const": "provisional" }
+    "freezeState": { "const": "locked" }
   },
   "$defs": {
     "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },

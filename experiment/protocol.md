@@ -1,6 +1,6 @@
 # Preregistered neutral-build versus review-loop protocol
 
-Protocol version: 2.5.0-draft (provisional correction)
+Protocol version: 2.5.0 (locked correction)
 
 Design: paired, blinded pilot with two independent neutral builds, post-build random assignment, and treatment-only iterative review
 
@@ -22,7 +22,7 @@ The primary estimand is `score(Tfinal) - score(B0)`. The secondary within-treatm
 
 ## 2. Canonical contract and frozen lock boundary
 
-This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. Protocol 2.5.0 is the preregistered correction to the unexecuted 2.4.0 lock at `f85357139efd9d192afc4ad2494dd180a8c7e5cf`. That lock was aborted before any builder/model launch, seed draw, assignment, treatment, or evaluation because its projected candidate `npm run check` exposed five stages while its tester artifact required seven. The sanitized record is `experiment/preflight/aborted-lock-2.4.0.json`. Protocol 2.5.0 preserves the projected candidate bytes and registers those same five stages as the tester contract. Before builder exposure, the final lock MUST:
+This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. Protocol 2.5.0 is the preregistered correction to the unexecuted 2.4.0 lock at `f85357139efd9d192afc4ad2494dd180a8c7e5cf`. That lock was aborted before any builder/model launch, seed draw, assignment, treatment, or evaluation because its projected candidate `npm run check` exposed five stages while its tester artifact required seven. The sanitized record is `experiment/preflight/aborted-lock-2.4.0.json`. Protocol 2.5.0 preserves the projected candidate bytes and registers those same five stages as the tester contract. The locked lineage binds corrected parent P `18dda9691711086733d8dde1084931a9d23d5fdf`, portable skill S3 `68cdc5feb25ab42b23a2675e49f1a9d7ab7ae167`, and the unchanged applicable A/B/C preflight attestations. Before builder exposure, the final lock MUST:
 
 1. pass `npm ci` and `npm run check` on Node 22;
 2. record the exact lock-parent commit;

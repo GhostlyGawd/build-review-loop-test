@@ -1017,11 +1017,11 @@ describe("protocol 2.5.0 locked cross-contract validation", () => {
     assert.deepEqual(validateFinalLockEvidence(evidence, inventory, lock), []);
     assert.equal(
       lock.supersedesFinalizationCommit,
-      "a37774cf25821103861ed94c261ac5db4f433860",
+      "f85357139efd9d192afc4ad2494dd180a8c7e5cf",
     );
-    assert.equal(lock.treatmentSkillManifestEntryCount, 52);
+    assert.equal(lock.treatmentSkillManifestEntryCount, 53);
     assert.equal(lock.treatmentSkillManifestCommentLineCount, 3);
-    assert.equal(lock.treatmentSkillManifestPhysicalLineCount, 55);
+    assert.equal(lock.treatmentSkillManifestPhysicalLineCount, 56);
     assert.equal(lock.treatmentSkillManifestByteSource, "canonical-git-blob");
     assert.equal(lock.runnerSmokeContractSha256, null);
     assert.equal(lock.runnerSmokeSupervisionSha256, null);

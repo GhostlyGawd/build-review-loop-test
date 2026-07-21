@@ -4,12 +4,12 @@ This repository is the prospective source scaffold for protocol version 2.5.0. B
 
 ## Status
 
-- Phase: protocol 2.5.0 preregistration correction, before builder exposure
+- Phase: protocol 2.5.0 locked, before builder exposure
 - Product: intentionally not implemented on this branch
 - Public contract tests: committed but gated until all required implementation files exist
 - Hidden tests: sealed externally; the existing v2 commitment remains unchanged
 - Treatment algorithm: exact skill-v1 flow incorporated and content-addressed
-- Experiment lock: 2.5.0 successor to the aborted-before-launch 2.4.0 lock
+- Experiment lock: 2.5.0 locked to corrected parent P, portable skill S3, and unchanged applicable preflight gates A/B/C
 - License: none has been granted; no license file is included
 
 Do not present this branch as a completed application or executable experiment. A passing scaffold check establishes internal consistency only.

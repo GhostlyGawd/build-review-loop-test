@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/final-lock-evidence.schema.json",
-  "title": "Protocol 2.4.0 final-lock preflight evidence",
+  "title": "Protocol 2.5.0 final-lock preflight evidence",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -10,13 +10,14 @@
     "aggregation",
     "protocolParent",
     "treatmentSkill",
+    "abortedPrelaunch",
     "gates",
     "gateAggregateSha256"
   ],
   "properties": {
     "evidenceVersion": { "const": "1.0.0" },
     "supersedesFinalizationCommit": {
-      "const": "a37774cf25821103861ed94c261ac5db4f433860"
+      "const": "f85357139efd9d192afc4ad2494dd180a8c7e5cf"
     },
     "aggregation": {
       "type": "object",
@@ -69,15 +70,26 @@
         "tree": { "$ref": "#/$defs/sha1" },
         "manifestFile": { "const": "MANIFEST.sha256" },
         "manifestSha256": { "$ref": "#/$defs/sha256" },
-        "manifestEntryCount": { "const": 52 },
+        "manifestEntryCount": { "const": 53 },
         "manifestCommentLineCount": { "const": 3 },
-        "manifestPhysicalLineCount": { "const": 55 },
+        "manifestPhysicalLineCount": { "const": 56 },
         "manifestByteSource": { "const": "canonical-git-blob" },
         "manifestToolSha256": { "$ref": "#/$defs/sha256" },
         "attributesSha256": { "$ref": "#/$defs/sha256" },
         "sourceParitySha256": { "$ref": "#/$defs/sha256" },
-        "sourceParityFileCount": { "const": 41 },
+        "sourceParityFileCount": { "const": 42 },
         "sourceParityAllMatch": { "const": true }
+      }
+    },
+    "abortedPrelaunch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "disposition", "activityCount"],
+      "properties": {
+        "path": { "const": "experiment/preflight/aborted-lock-2.4.0.json" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "disposition": { "const": "aborted-before-launch" },
+        "activityCount": { "const": 0 }
       }
     },
     "gates": {
