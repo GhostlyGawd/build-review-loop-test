@@ -1,17 +1,17 @@
-build-review-loop skill v2 / protocol 2.6.0-draft validation evidence
+build-review-loop skill v2 / protocol 2.7.0-draft validation evidence
 validated: 2026-07-21 America/New_York
-skill base commit: 24b04d47ea906605e736e5b20ac1ba37eb6b7379
-skill base tree: 749c66d82360f4d0b46344065b27694b7395f3a1
-skill branch: agent/protocol-v2.6-execution-repair
-protocol source commit: 24b04d47ea906605e736e5b20ac1ba37eb6b7379
-protocol source tree: 749c66d82360f4d0b46344065b27694b7395f3a1
-candidate access: no replacement builder access; the two invalid 2.5 launches are recorded only by sanitized commitment
+skill base commit: 32f0899b74c20958a3a9163c0cd94e9ef5be494d
+skill base tree: f40662a6766ff0112d8f7b8593ed540d0d95254b
+skill branch: agent/protocol-v2.7-actual-exec
+protocol source commit: 32f0899b74c20958a3a9163c0cd94e9ef5be494d
+protocol source tree: f40662a6766ff0112d8f7b8593ed540d0d95254b
+candidate access: no replacement builder access after the two invalid 2.6 launches; no assignment, treatment, hidden access, evaluation, or outcome
 push/PR/publication: none
 
 Source-byte parity
-- validation/source-parity.json records 44 protocol-derived source mappings, including the sanitized 2.5 abort record, no-model permission probe, and trusted commit/probe helpers.
+- validation/source-parity.json records 49 protocol-derived source mappings, including the sanitized 2.6 abort record, authoritative actual-exec probe, secondary no-model probe, and trusted commit/probe helpers.
 - Each bundled Git blob equals the named protocol commit's Git blob.
-- allMatch: true; fileCount: 44.
+- allMatch: true; fileCount: 49.
 - Sources include canonical/config/golden/invalid fixtures and golden note; builder/smoke/four role prompts; builder projection allowlist/package/manifest schema/preparer; CLI/role/supervision/mapping/manifest schemas and templates; artifact schemas; protocol prose and abort/probe records; canonical path helper; both PowerShell runners; trusted commit/probe helpers; exact-HEAD packager; and frozen public projection surfaces. The provisional skill lock/schema are portable administrative files rather than P-exact parity members.
 
 Portable manifest
@@ -26,12 +26,13 @@ Hardened runtime coverage
 - builder preflight rejects ignored or untracked visible contamination, private inputs inside mutable roots, containment-graph overlap, and non-exact projected state.
 - builder supervision binds deterministic post-model visible-filesystem snapshots and the exact evidence-root parent closure.
 - model roles keep approval at never and do not write `.git`; exact external temp/cache/dependency roots are passed with `--add-dir`.
-- the no-model sandbox probe confirms ordinary workspace writes and Git/Node/npm commands, protected Git metadata, unchanged private/outside canaries, and a trusted one-child commit handoff.
+- the authoritative harmless actual `codex exec` probe uses the pinned binary/model/reasoning, approval never, workspace-write, explicit Windows elevated backend, network false, ignored user config/rules, and builder-identical environment/add-dir dimensions; it confirms model-session workspace/add-dir writes, Git/Node/npm, protected Git metadata, unchanged private/outside canaries, and a trusted clean one-child commit handoff.
+- the no-model sandbox probe remains secondary evidence and is not treated as proof of actual model-session permissions.
 - the trusted supervisor commit helper rejects frozen paths and in-worktree indexes, disables hooks/signing, advances only the expected parent, and requires a clean one-child history.
 - role supervision charges pre-launch delay, uses a strict UTC absolute deadline, binds actual OS exit separately from completion observation, and preserves the two-second observation/termination tolerance only.
 - packager requires exact HEAD/ref/commit/tree and rejects traversal, physical aliases, reparse points, lineage leakage, and source drift.
 - The corrected tester contract exactly matches the projected candidate package: format, lint, typecheck, public tests, and build. The protocol repository's administrative checks are not grafted into candidate workdirs.
-- No live model runner, replacement candidate execution, seed draw, assignment, treatment, or evaluation was performed by this repair validation.
+- One harmless task-free actual-exec capability probe ran. No replacement candidate task execution, seed draw, assignment, treatment, hidden access, or evaluation was performed by this repair validation.
 
 Skill validator
 command: python -m unittest -v skills/build-review-loop/scripts/test_validate_artifacts.py
@@ -73,3 +74,4 @@ Limitations preserved
 - Blinding is mapping blinding, not proof that implementation lineage is intrinsically unknowable.
 - Authoritative role schemas require supervisor-observed identity and chronology, so --output-schema remains omitted until distinct frozen pre-injection schemas exist.
 - The exact packager resolves its schema/Ajv dependency from the frozen protocol repository layout; the skill copy is a byte-exact commitment.
+- The Windows elevated sandbox is an explicit pinned backend whose safety claim remains bounded by the committed canary and protected-metadata checks.
