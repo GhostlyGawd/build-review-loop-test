@@ -1,0 +1,23 @@
+{
+  "recordVersion": "1.0.0",
+  "protocolVersion": "2.5.0",
+  "lockCommit": "c373d77cbbd82cadcd24a456d68fac771f34ffd3",
+  "disposition": "invalidated-before-assignment",
+  "defect": {
+    "code": "sandboxed-git-metadata-write-contradiction",
+    "failureSummarySha256": "887353c32048ef4eeece06156b7bab31a6938e39a1ed29901035f6a643a27bc7",
+    "summary": "Two fresh neutral builders were launched concurrently, but the locked workspace-write sandbox protects Git metadata while the prompt required each model to commit. Both turns exited without an implementation or child commit."
+  },
+  "executionState": {
+    "candidateLaunches": 2,
+    "modelInvocations": 2,
+    "validInitialBuilds": 0,
+    "assignmentSeedDrawn": false,
+    "assignmentPerformed": false,
+    "treatmentStarted": false,
+    "evaluationStarted": false,
+    "outcomeDataProduced": false,
+    "hiddenSuiteAccessed": false
+  },
+  "replacementPolicy": "Preserve protocol 2.5.0 history and preregister a corrected successor with a no-model capability probe and supervisor-owned commit before any replacement builder launch."
+}

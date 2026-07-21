@@ -101,8 +101,10 @@ $lock = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $lockPath -Raw)
 Assert-PowerShellHost $lock
 $canonicalPathHelperPath = [System.IO.Path]::GetFullPath($contract.canonicalPathHelperPath)
 if ((Get-Sha256 $canonicalPathHelperPath) -ne $contract.canonicalPathHelperSha256 -or $contract.canonicalPathHelperSha256 -ne $lock.canonicalPathHelperSha256) { throw "Canonical path helper binding mismatch" }
+$candidateCommitScriptPath = [System.IO.Path]::GetFullPath((Join-Path (Split-Path -Parent $PSCommandPath) "commit-candidate.ps1"))
+if ((Get-Sha256 $candidateCommitScriptPath) -ne $lock.candidateCommitScriptSha256) { throw "Supervisor commit helper binding mismatch" }
 $pathsToCanonicalize = [ordered]@{
-  contract = $contractFullPath; lock = $lockPath; schema = $schemaPath; helper = $canonicalPathHelperPath
+  contract = $contractFullPath; lock = $lockPath; schema = $schemaPath; helper = $canonicalPathHelperPath; commitHelper = $candidateCommitScriptPath
   runner = $runnerPath; currentRunner = [System.IO.Path]::GetFullPath($PSCommandPath); evidenceSchema = $evidenceSchemaPath
   promptTemplate = $promptTemplatePath; artifactSchema = $artifactSchemaPath; prompt = [System.IO.Path]::GetFullPath($contract.promptPath)
   workdir = [System.IO.Path]::GetFullPath($contract.workdir); git = [System.IO.Path]::GetFullPath((Join-Path $contract.workdir ".git"))
@@ -121,7 +123,7 @@ if ($contract.role -eq "evaluator") {
 }
 foreach ($rawPath in $pathsToCanonicalize.Values) { Assert-NoReparseAncestors $rawPath "Role runtime path" }
 $physical = Get-CanonicalPhysicalMap $canonicalPathHelperPath $pathsToCanonicalize
-$privatePathKeys = @("contract", "lock", "schema", "helper", "runner", "evidenceSchema", "promptTemplate", "artifactSchema", "prompt", "handoffPath", "packageManifestPath", "packageManifestSchemaPath", "packageScriptPath", "rubricPath", "hiddenSuitePath")
+$privatePathKeys = @("contract", "lock", "schema", "helper", "commitHelper", "runner", "evidenceSchema", "promptTemplate", "artifactSchema", "prompt", "handoffPath", "packageManifestPath", "packageManifestSchemaPath", "packageScriptPath", "rubricPath", "hiddenSuitePath")
 $workdir = $physical.workdir.TrimEnd([System.IO.Path]::DirectorySeparatorChar)
 $evidenceRoot = $physical.evidenceRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar)
 $authoritativeOutputKeys = @("finalPath", "stdoutPath", "stderrPath", "evidencePath")
@@ -213,7 +215,7 @@ $stdoutPath = Resolve-Beneath $evidenceRoot $physical.stdoutPath
 $stderrPath = Resolve-Beneath $evidenceRoot $physical.stderrPath
 $evidencePath = Resolve-Beneath $evidenceRoot $physical.evidencePath
 if ([System.IO.Directory]::Exists($evidenceRoot) -and $null -ne (Get-ChildItem -LiteralPath $evidenceRoot -Force | Select-Object -First 1)) { throw "Evidence root must be fresh and empty" }
-$argv = @("-a", "never", "-m", "gpt-5.4", "-c", 'model_reasoning_effort="xhigh"', "exec", "--ephemeral", "--ignore-user-config", "--skip-git-repo-check", "--sandbox", $contract.sandboxMode, "--json", "-C", $workdir, "-o", $finalPath, "-")
+$argv = @("-a", "never", "-m", "gpt-5.4", "-c", 'model_reasoning_effort="xhigh"', "exec", "--ephemeral", "--ignore-user-config", "--skip-git-repo-check", "--sandbox", $contract.sandboxMode, "--json", "--add-dir", $physical.tempRoot, "--add-dir", $physical.cacheRoot, "--add-dir", $physical.dependencyRoot, "-C", $workdir, "-o", $finalPath, "-")
 $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
 $startInfo.FileName = $contract.cliPath
 $startInfo.WorkingDirectory = $workdir
@@ -252,6 +254,12 @@ $usage = if ($turnEvents.Count -eq 1 -and $null -ne $turnEvents[0].usage) { $tur
 $finalSha256 = $null
 $finalSchemaValid = $false
 $artifactBindingValid = $false
+$commitInfo = $null; $commitError = $null
+if ($contract.role -eq "fixer" -and $started -and $stdinDelivered -and -not $timedOut -and $process.ExitCode -eq 0 -and $rawJsonlValid -and $threadIds.Count -eq 1 -and $turnEvents.Count -eq 1 -and [System.IO.File]::Exists($finalPath)) {
+  try {
+    $commitInfo = (& $candidateCommitScriptPath -Workdir $workdir -ExpectedParent $contract.inputCommit -TemporaryIndexPath (Join-Path $physical.dependencyRoot "supervisor-index") -Message "Seal treatment fix cycle $($contract.cycle)" -Timestamp $completedAt.ToString("o")) | ConvertFrom-JsonLiteral
+  } catch { $commitError = $_.Exception.ToString() }
+}
 if ([System.IO.File]::Exists($finalPath) -and $threadIds.Count -eq 1 -and $started) {
   try {
     $artifact = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $finalPath -Raw)
@@ -259,6 +267,7 @@ if ([System.IO.File]::Exists($finalPath) -and $threadIds.Count -eq 1 -and $start
     $artifact | Add-Member -NotePropertyName runtimeInvocationId -NotePropertyValue $contract.invocationId -Force
     $artifact | Add-Member -NotePropertyName runtimeProcessId -NotePropertyValue $process.Id -Force
     $artifact | Add-Member -NotePropertyName runtimeThreadId -NotePropertyValue $threadIds[0] -Force
+    if ($contract.role -eq "fixer" -and $null -ne $commitInfo) { $artifact | Add-Member -NotePropertyName finalCommit -NotePropertyValue $commitInfo.commit -Force }
     if ($contract.role -eq "evaluator") {
       $artifact | Add-Member -NotePropertyName evaluatedAt -NotePropertyValue $completedAt.ToString("o") -Force
       $artifact | Add-Member -NotePropertyName sealedAt -NotePropertyValue $completedAt.ToString("o") -Force
@@ -293,6 +302,7 @@ $result = [ordered]@{
   role = $contract.role; invocationId = $contract.invocationId; contractSha256 = Get-Sha256 $contractFullPath; artifactSchemaSha256 = $contract.artifactSchemaSha256; processId = if ($started) { $process.Id } else { $null }; started = $started; startedAt = $startedAt.ToString("o"); completedAt = $completedAt.ToString("o"); completionObservedAt = $completionObservedAt.ToString("o"); absoluteDeadline = $absoluteDeadline.ToString("o"); startError = $startError
   stdinDelivered = $stdinDelivered; stdinError = $stdinError; exitCode = if ($started) { $process.ExitCode } else { $null }; timedOut = $timedOut; argv = $argv; argvSha256 = Get-TextSha256 ($argv -join "`0"); promptSha256 = $contract.promptSha256
   stdoutPath = $stdoutPath; stderrPath = $stderrPath; finalPath = $finalPath; finalSha256 = $finalSha256; finalSchemaValid = $finalSchemaValid; artifactBindingValid = $artifactBindingValid; threadIds = $threadIds; turnCompleted = $turnEvents.Count -eq 1; rawJsonlValid = $rawJsonlValid; unauthorizedToolOrWriteDetected = $null; unauthorizedToolOrWriteUnavailableReason = "runner cannot observe every external tool or write; scoped input checks are enforced separately"; sandboxMode = $contract.sandboxMode; inputDisposition = $contract.inputDisposition; isolationEnforcedBy = "audited-procedural-boundary-plus-cli-sandbox"
+  inputCommit = $contract.inputCommit; supervisorCommit = if ($null -ne $commitInfo) { $commitInfo.commit } else { $null }; supervisorCommitTree = if ($null -ne $commitInfo) { $commitInfo.tree } else { $null }; supervisorCommitScriptSha256 = $lock.candidateCommitScriptSha256; supervisorCommitError = $commitError
   usage = $usage; usageUnavailableReason = if ($null -eq $usage) { "turn.completed did not expose usage" } else { $null }
   runtimeModel = $null; runtimeModelUnavailableReason = "not present in trusted JSONL lifecycle metadata"; runtimeProvider = $null; runtimeProviderUnavailableReason = "not present in trusted JSONL lifecycle metadata"; reasoningSetting = $null; reasoningSettingUnavailableReason = "not present in trusted JSONL lifecycle metadata"; metadataSource = "unavailable"
   stdoutSha256 = Get-Sha256 $stdoutPath; stderrSha256 = Get-Sha256 $stderrPath

@@ -14,7 +14,7 @@ Use [blinded-reviewer.md](blinded-reviewer.md). Exact substitutions: `CANDIDATE_
 
 ## Fixer
 
-Use [fixer.md](fixer.md). Exact substitutions: reviewer tokens plus `FINDINGS_PATH`. Bind that path and hash to the current sealed review artifact. Give no prior-cycle or baseline history. Maximum 1500 seconds. Require exactly one clean child commit.
+Use [fixer.md](fixer.md). Exact substitutions: reviewer tokens plus `FINDINGS_PATH`. Bind that path and hash to the current sealed review artifact. Give no prior-cycle or baseline history. Maximum 1500 seconds. The model edits the worktree only; the trusted supervisor validates the change, creates exactly one clean hook-free child commit, and injects its SHA into `finalCommit`.
 
 ## Tester
 

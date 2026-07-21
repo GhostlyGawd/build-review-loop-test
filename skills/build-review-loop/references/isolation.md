@@ -16,14 +16,16 @@ Freeze the exact global argv order:
 --sandbox workspace-write --json
 ```
 
-Append only `-C <workdir> -o <final-path> -`. Write the exact neutral builder prompt bytes to stdin without prefix/suffix/substitution/wrapper, then close stdin. Never resume. The smoke prompt is a separate frozen harmless preflight input and is forbidden for a builder execution.
+Append the three exact `--add-dir <temp/cache/dependency-root>` pairs, then only `-C <workdir> -o <final-path> -`. Keep approval at `never` and network disabled. Write the exact neutral builder prompt bytes to stdin without prefix/suffix/substitution/wrapper, then close stdin. Never resume. The smoke prompt is a separate frozen harmless preflight input and is forbidden for a builder execution.
+
+The sandboxed model must not modify `.git` or commit. After one successful turn, the trusted supervisor uses the hash-bound commit helper with an external temporary index, hooks/signing disabled, frozen-path rejection, and atomic expected-parent advancement. Require exactly one child commit and a clean worktree.
 
 ## Treatment-role boundary
 
 Use one fresh external CLI subprocess for each reviewer, fixer, tester, and evaluator. Never fork or resume a conversation containing another role or cycle.
 
 - Reviewer: independent read-only clone at the bound commit/tree; HEAD/tree/status must remain unchanged.
-- Fixer: authorized full-clone workspace-write input; it may create exactly one child commit and must finish clean.
+- Fixer: authorized full-clone workspace-write input; it may edit the worktree but must not modify `.git` or commit. The trusted supervisor creates exactly one hook-free child and injects its SHA.
 - Tester: disposable workspace-write clone; HEAD/tree/status and package transfer remain unchanged after discarding the copy.
 - Evaluator: disposable workspace-write history-free package outside every Git worktree; package content hash must remain unchanged.
 

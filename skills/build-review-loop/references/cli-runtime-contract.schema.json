@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/cli-runtime-contract.schema.json",
-  "title": "Protocol 2.5 external CLI runtime contract",
+  "title": "Protocol 2.6 external CLI runtime contract",
   "type": "object",
   "additionalProperties": false,
   "required": [
