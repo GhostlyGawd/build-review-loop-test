@@ -56,6 +56,8 @@
     "processId": { "type": ["integer", "null"], "minimum": 1 },
     "started": { "type": "boolean" },
     "startedAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": "string", "format": "date-time" },
+    "absoluteDeadline": { "type": "string", "format": "date-time" },
     "startError": { "type": ["string", "null"] },
     "stdinDelivered": { "type": "boolean" },
     "stdinError": { "type": ["string", "null"] },
@@ -117,6 +119,19 @@
           "postStateSha256": true
         },
         "required": ["postStatePath", "postStateSha256"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "role": { "not": { "const": "builder" } } },
+        "required": ["role"]
+      },
+      "then": {
+        "properties": {
+          "completedAt": true,
+          "absoluteDeadline": true
+        },
+        "required": ["completedAt", "absoluteDeadline"]
       }
     }
   ],

@@ -110,9 +110,9 @@
       "schemaPath": "experiment/schemas/role-runtime-contract.schema.json",
       "schemaSha256": "ac620774663e6ce8dd9917f760f6f53eeb8063e70b88240999ffc6bef6184c5a",
       "runnerPath": "scripts/run-cli-role.ps1",
-      "runnerSha256": "24e506043efab33f19ee00c8eea8e1ab6da7c72884078c4a0d16c072637c8993",
+      "runnerSha256": "6f0c9ee7beab4f0b8cc66b82065866cf80521b03ef8b638d87ed155af6880b45",
       "evidenceSchemaPath": "experiment/schemas/cli-supervision-evidence.schema.json",
-      "evidenceSchemaSha256": "ef1711aab227a288ed9c71eae2343f9b3f2aae212bbdc4db72d5c196349b934e",
+      "evidenceSchemaSha256": "42b4b4f89e0401d602466c844820397cecb27dcd9c1fb61dd61f95b7eea98f50",
       "promptTemplateSha256": {
         "reviewer": "5bd94cc7c44165acae23675f82d74ece6bab0b4dab31f387d338d1c9a5e7dcae",
         "fixer": "ac4c0a40dbcee8b1ffe11b6eb7e81c5458849859a1ab38d09b78431aa390c9cf",
@@ -126,7 +126,9 @@
         "evaluator": "12a769a0868261e28299b5a7feef71626ea6e1ee51bfb0eb59ce65bbec05e6aa"
       },
       "promptSubstitutionRule": "exact role-specific key set; single-line bounded values; candidate/cycle/snapshot, fixer handoff, and evaluator package/sequence/rubric/schema/hidden-suite values must equal their contract bindings",
-      "outputSchemaPolicy": "codex exec supports --output-schema, but authoritative final schemas require supervisor-observed runtime identity; omit the flag until distinct frozen pre-injection schemas exist, then inject observed identity and validate the authoritative final schema",
+      "deadlinePolicy": "before evidence creation, strict-parse WALL_CLOCK_DEADLINE_ISO as UTC, capture supervisor start, require start < absolute deadline <= start + deadlineSeconds with zero scheduling tolerance, wait only for the remaining absolute interval, and allow two seconds solely for completion observation or process-tree termination",
+      "pathMutationPolicy": "complete every physical containment, equality, distinctness, and nonnesting check before creating evidenceRoot or any runtime output directory",
+      "outputSchemaPolicy": "codex exec supports --output-schema, but authoritative final schemas require supervisor-observed runtime identity and chronology; omit the flag until distinct frozen pre-injection schemas exist, then inject identity, overwrite role artifact chronology with observed start/end, and validate the authoritative final schema",
       "reviewerPolicy": "read-only snapshot",
       "fixerPolicy": "authorized isolated full-clone write followed by clean commit",
       "testerPolicy": "workspace-write disposable copy; no mutation transfer",

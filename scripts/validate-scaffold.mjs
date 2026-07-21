@@ -838,6 +838,24 @@ export function validateRoleSupervisionEvidence(
     !result.processId
   )
     failures.push("role result lifecycle invalid");
+  const startedAt = Date.parse(result.startedAt);
+  const completedAt = Date.parse(result.completedAt);
+  const absoluteDeadline = Date.parse(result.absoluteDeadline);
+  const contractedDeadline = Date.parse(
+    contract.promptSubstitutions?.WALL_CLOCK_DEADLINE_ISO,
+  );
+  if (
+    !Number.isFinite(startedAt) ||
+    !Number.isFinite(completedAt) ||
+    !Number.isFinite(absoluteDeadline) ||
+    !Number.isFinite(contractedDeadline) ||
+    absoluteDeadline !== contractedDeadline ||
+    startedAt >= absoluteDeadline ||
+    absoluteDeadline - startedAt > contract.deadlineSeconds * 1000 ||
+    completedAt < startedAt ||
+    completedAt > absoluteDeadline + 2000
+  )
+    failures.push("role result observed chronology/deadline binding invalid");
   if (result.argvSha256 !== sha256(result.argv.join("\0")))
     failures.push("role result argv hash mismatch");
   if (result.promptSha256 !== contract.promptSha256)
@@ -902,6 +920,31 @@ export function validateRoleSupervisionEvidence(
       failures.push("role usage reconciliation failed");
   }
   return failures;
+}
+
+export function validateRoleArtifactChronology(artifact, evidence) {
+  const evaluatorArtifact = artifact?.evaluatedAt != null;
+  const artifactStart = Date.parse(
+    evaluatorArtifact ? artifact?.evaluatedAt : artifact?.startedAt,
+  );
+  const artifactEnd = Date.parse(
+    evaluatorArtifact ? artifact?.sealedAt : artifact?.completedAt,
+  );
+  const evidenceStart = Date.parse(evidence?.startedAt);
+  const evidenceEnd = Date.parse(evidence?.completedAt);
+  if (
+    !Number.isFinite(artifactStart) ||
+    !Number.isFinite(artifactEnd) ||
+    !Number.isFinite(evidenceStart) ||
+    !Number.isFinite(evidenceEnd) ||
+    (evaluatorArtifact
+      ? artifactStart < evidenceStart || artifactStart > evidenceEnd
+      : artifactStart !== evidenceStart) ||
+    artifactEnd !== evidenceEnd ||
+    artifactEnd < artifactStart
+  )
+    return ["role artifact chronology is not supervisor-observed"];
+  return [];
 }
 
 export function validateExperimentConclusion(record) {
@@ -1147,8 +1190,12 @@ export function validateCanonicalContract(contract) {
       fileSha256("experiment/schemas/cli-supervision-evidence.schema.json") ||
     contract.cliRuntime?.roleRuntime?.evidenceSchemaSha256 !==
       lock.supervisionEvidenceSchemaSha256 ||
+    contract.cliRuntime?.roleRuntime?.deadlinePolicy !==
+      "before evidence creation, strict-parse WALL_CLOCK_DEADLINE_ISO as UTC, capture supervisor start, require start < absolute deadline <= start + deadlineSeconds with zero scheduling tolerance, wait only for the remaining absolute interval, and allow two seconds solely for completion observation or process-tree termination" ||
+    contract.cliRuntime?.roleRuntime?.pathMutationPolicy !==
+      "complete every physical containment, equality, distinctness, and nonnesting check before creating evidenceRoot or any runtime output directory" ||
     contract.cliRuntime?.roleRuntime?.outputSchemaPolicy !==
-      "codex exec supports --output-schema, but authoritative final schemas require supervisor-observed runtime identity; omit the flag until distinct frozen pre-injection schemas exist, then inject observed identity and validate the authoritative final schema" ||
+      "codex exec supports --output-schema, but authoritative final schemas require supervisor-observed runtime identity and chronology; omit the flag until distinct frozen pre-injection schemas exist, then inject identity, overwrite role artifact chronology with observed start/end, and validate the authoritative final schema" ||
     contract.evaluation?.packageScriptSha256 !==
       fileSha256("scripts/package-blinded-snapshots.mjs") ||
     contract.evaluation?.packageScriptSha256 !==
@@ -1339,6 +1386,7 @@ export function validateGoldenRun(
       failures.push(
         "golden downstream artifact/runtime evidence binding mismatch",
       );
+    else failures.push(...validateRoleArtifactChronology(artifact, evidence));
   }
   const evidenceInvocationIds = [...roleEvidence.values()].map(
     ({ invocationId }) => invocationId,

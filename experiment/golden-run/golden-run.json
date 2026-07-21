@@ -2,7 +2,7 @@
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-conformance",
   "protocolVersion": "2.4.0",
-  "canonicalContractSha256": "d3389f37987954ecadd9b7628daaf84288f2b9868a459580c6be0b51c0d140ae",
+  "canonicalContractSha256": "e85e12cf635d9d18f840c8b4852d4721b4fe62bc7288c23bb9d757d7ba9db205",
   "status": "valid",
   "activeInvalidation": null,
   "invalidAttempts": [
@@ -300,6 +300,8 @@
       "invocationId": "44444444444444444444444444444444",
       "processId": 12003,
       "threadId": "019f827b-221c-7000-8000-000000000003",
+      "startedAt": "2026-07-20T01:02:00Z",
+      "completedAt": "2026-07-20T01:10:00Z",
       "lifecycleComplete": true,
       "evidenceSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "usage": {
@@ -313,6 +315,8 @@
       "invocationId": "66666666666666666666666666666666",
       "processId": 12006,
       "threadId": "019f827b-221c-7000-8000-000000000006",
+      "startedAt": "2026-07-20T01:20:00Z",
+      "completedAt": "2026-07-20T01:30:00Z",
       "lifecycleComplete": true,
       "evidenceSha256": "6666666666666666666666666666666666666666666666666666666666666666",
       "usage": {
@@ -326,6 +330,8 @@
       "invocationId": "77777777777777777777777777777777",
       "processId": 12007,
       "threadId": "019f827b-221c-7000-8000-000000000007",
+      "startedAt": "2026-07-20T01:31:00Z",
+      "completedAt": "2026-07-20T01:40:00Z",
       "lifecycleComplete": true,
       "evidenceSha256": "7777777777777777777777777777777777777777777777777777777777777777",
       "usage": {
@@ -339,6 +345,8 @@
       "invocationId": "88888888888888888888888888888888",
       "processId": 12008,
       "threadId": "019f827b-221c-7000-8000-000000000008",
+      "startedAt": "2026-07-20T01:41:00Z",
+      "completedAt": "2026-07-20T01:50:00Z",
       "lifecycleComplete": true,
       "evidenceSha256": "8888888888888888888888888888888888888888888888888888888888888888",
       "usage": {

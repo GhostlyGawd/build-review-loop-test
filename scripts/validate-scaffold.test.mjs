@@ -30,6 +30,7 @@ import {
   validateGoldenRun,
   validateNeutralBuilderPrompt,
   validateOutcomeSemantics,
+  validateRoleArtifactChronology,
   validateRoleRuntimeContract,
   validateRoleSupervisionEvidence,
   validateRunManifestSemantics,
@@ -359,7 +360,7 @@ const createRoleRunnerFixture = () => {
     CANDIDATE_LABEL: "candidate-alias-test",
     CYCLE_NUMBER: "1",
     SNAPSHOT_COMMIT: inputCommit,
-    WALL_CLOCK_DEADLINE_ISO: "2026-07-21T23:59:59Z",
+    WALL_CLOCK_DEADLINE_ISO: new Date(Date.now() + 60_000).toISOString(),
   };
   let rendered = readFileSync(templatePath, "utf8");
   for (const [key, value] of Object.entries(substitutions))
@@ -428,7 +429,23 @@ const createRoleRunnerFixture = () => {
       { cwd: root, encoding: "utf8", timeout: 120000 },
     );
   };
-  return { temporaryRoot, workdir, promptPath, evidenceRoot, contract, run };
+  const setDeadline = (deadline) => {
+    contract.promptSubstitutions.WALL_CLOCK_DEADLINE_ISO = deadline;
+    let prompt = readFileSync(templatePath, "utf8");
+    for (const [key, value] of Object.entries(contract.promptSubstitutions))
+      prompt = prompt.replaceAll(`{{${key}}}`, value);
+    writeFileSync(promptPath, prompt);
+    contract.promptSha256 = sha256(readFileSync(promptPath));
+  };
+  return {
+    temporaryRoot,
+    workdir,
+    promptPath,
+    evidenceRoot,
+    contract,
+    run,
+    setDeadline,
+  };
 };
 
 describe("protocol 2.4.0-draft cross-contract validation", () => {
@@ -715,6 +732,75 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       rmSync(fixture.temporaryRoot, { recursive: true, force: true });
     }
   });
+
+  it("rejects stale and malformed absolute role deadlines before evidence or model launch", () => {
+    for (const deadline of ["2000-01-01T00:00:00Z", "2026-02-30T00:00:00Z"]) {
+      const fixture = createRoleRunnerFixture();
+      try {
+        fixture.setDeadline(deadline);
+        const result = fixture.run();
+        assert.notEqual(result.status, 0);
+        assert.match(
+          `${result.stdout}\n${result.stderr}`,
+          /absolute deadline is (expired|malformed)/i,
+        );
+        assert.equal(existsSync(fixture.evidenceRoot), false);
+      } finally {
+        rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+      }
+    }
+    const runnerSource = readFileSync(
+      path.join(root, "scripts/run-cli-role.ps1"),
+      "utf8",
+    );
+    assert.ok(
+      runnerSource.indexOf("Role prompt absolute deadline is expired") <
+        runnerSource.indexOf("CreateDirectory($evidenceRoot)"),
+    );
+    assert.ok(
+      runnerSource.indexOf("Role prompt absolute deadline is malformed") <
+        runnerSource.indexOf("$started = $process.Start()"),
+    );
+  });
+
+  it("rejects duplicate and nested role runtime paths before evidence or model launch", () => {
+    for (const mutate of [
+      (contract) => {
+        contract.stdoutPath = contract.finalPath;
+      },
+      (contract) => {
+        contract.tempRoot = path.join(contract.cacheRoot, "nested-temp");
+      },
+    ]) {
+      const fixture = createRoleRunnerFixture();
+      try {
+        mutate(fixture.contract);
+        const result = fixture.run();
+        assert.notEqual(result.status, 0);
+        assert.match(
+          `${result.stdout}\n${result.stderr}`,
+          /runtime paths must be distinct|roots must be nonnested/i,
+        );
+        assert.equal(existsSync(fixture.evidenceRoot), false);
+      } finally {
+        rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+      }
+    }
+    const runnerSource = readFileSync(
+      path.join(root, "scripts/run-cli-role.ps1"),
+      "utf8",
+    );
+    assert.ok(
+      runnerSource.indexOf("Role runtime paths must be distinct") <
+        runnerSource.indexOf("CreateDirectory($evidenceRoot)"),
+    );
+    assert.ok(
+      runnerSource.indexOf(
+        "Role temp, cache, and dependency roots must be nonnested",
+      ) < runnerSource.indexOf("$started = $process.Start()"),
+    );
+  });
+
   it("accepts the prospective scaffold and seeded assignment algorithms", () => {
     assert.deepEqual(validateScaffold().failures, []);
     assert.deepEqual(
@@ -1304,6 +1390,26 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
     assert.match(
       validateRoleSupervisionEvidence(result, contract).join("\n"),
       /raw JSONL is required/i,
+    );
+  });
+
+  it("rejects role artifact timestamps before launch or after observed completion", () => {
+    const evidence = {
+      startedAt: "2026-07-21T12:00:00.000Z",
+      completedAt: "2026-07-21T12:05:00.000Z",
+    };
+    const artifact = clone(evidence);
+    assert.deepEqual(validateRoleArtifactChronology(artifact, evidence), []);
+    artifact.startedAt = "2026-07-21T11:59:59.999Z";
+    assert.match(
+      validateRoleArtifactChronology(artifact, evidence).join("\n"),
+      /supervisor-observed/i,
+    );
+    artifact.startedAt = evidence.startedAt;
+    artifact.completedAt = "2026-07-21T12:05:00.001Z";
+    assert.match(
+      validateRoleArtifactChronology(artifact, evidence).join("\n"),
+      /supervisor-observed/i,
     );
   });
 

@@ -5,6 +5,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+$DeadlineObservationToleranceSeconds = 2
 $RolePolicy = @{
   reviewer = @{ Max = 900; Sandbox = "read-only"; Disposition = "read-only-snapshot"; PromptLock = "reviewerPromptTemplateSha256"; ArtifactLock = "reviewArtifactSchemaSha256" }
   fixer = @{ Max = 1500; Sandbox = "workspace-write"; Disposition = "authorized-worktree-write"; PromptLock = "fixerPromptTemplateSha256"; ArtifactLock = "fixArtifactSchemaSha256" }
@@ -147,6 +148,9 @@ if (-not [System.IO.Directory]::Exists($workdir)) { throw "Workdir must exist" }
 $substitutions = @{}; foreach ($property in $contract.promptSubstitutions.PSObject.Properties) { $substitutions[$property.Name] = [string]$property.Value; if ($substitutions[$property.Name] -match "[`r`n]" -or $substitutions[$property.Name] -match '\{\{') { throw "Prompt substitutions must be single-line literal values" } }
 $expectedSubstitutionKeys = if ($contract.role -eq "fixer") { @("CANDIDATE_LABEL", "CYCLE_NUMBER", "SNAPSHOT_COMMIT", "FINDINGS_PATH", "WALL_CLOCK_DEADLINE_ISO") } elseif ($contract.role -eq "evaluator") { @("PACKAGE_LABEL", "PACKAGE_PATH", "EVALUATION_SEQUENCE", "RUBRIC_PATH", "EVALUATION_SCHEMA_PATH", "HIDDEN_SUITE_PATH", "HIDDEN_SUITE_SHA256", "WALL_CLOCK_DEADLINE_ISO") } else { @("CANDIDATE_LABEL", "CYCLE_NUMBER", "SNAPSHOT_COMMIT", "WALL_CLOCK_DEADLINE_ISO") }
 if ((@($substitutions.Keys | Sort-Object) -join "`0") -ne (@($expectedSubstitutionKeys | Sort-Object) -join "`0") -or $substitutions.WALL_CLOCK_DEADLINE_ISO -notmatch '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$') { throw "Role prompt substitution keys or deadline are invalid" }
+$absoluteDeadline = [System.DateTimeOffset]::MinValue
+$deadlineStyles = [System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal
+if (-not [System.DateTimeOffset]::TryParse($substitutions.WALL_CLOCK_DEADLINE_ISO, [System.Globalization.CultureInfo]::InvariantCulture, $deadlineStyles, [ref]$absoluteDeadline)) { throw "Role prompt absolute deadline is malformed" }
 if ($contract.role -eq "evaluator") {
   if ($substitutions.PACKAGE_LABEL -ne $contract.packageLabel -or -not $physical.packageSubstitution.Equals($workdir, [System.StringComparison]::OrdinalIgnoreCase) -or $substitutions.EVALUATION_SEQUENCE -ne [string]$contract.evaluationSequence -or -not $physical.rubricSubstitution.Equals($physical.rubricPath, [System.StringComparison]::OrdinalIgnoreCase) -or -not $physical.evaluationSchemaSubstitution.Equals($physical.artifactSchema, [System.StringComparison]::OrdinalIgnoreCase) -or -not $physical.hiddenSuiteSubstitution.Equals($physical.hiddenSuitePath, [System.StringComparison]::OrdinalIgnoreCase) -or $substitutions.HIDDEN_SUITE_SHA256 -ne $contract.hiddenSuiteSha256) { throw "Evaluator prompt substitutions diverge from contract inputs" }
 } else {
@@ -181,8 +185,6 @@ if ($contract.role -eq "evaluator") {
 $evidenceRoot = $physical.evidenceRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar)
 [void](Resolve-Beneath $evidenceRoot $physical.tempRoot); [void](Resolve-Beneath $evidenceRoot $physical.cacheRoot); [void](Resolve-Beneath $evidenceRoot $physical.dependencyRoot)
 if (Test-NestedOrEqual $evidenceRoot $workdir) { throw "Evidence root and role input must be separate and nonnested" }
-if ([System.IO.Directory]::Exists($evidenceRoot) -and $null -ne (Get-ChildItem -LiteralPath $evidenceRoot -Force | Select-Object -First 1)) { throw "Evidence root must be fresh and empty" }
-[System.IO.Directory]::CreateDirectory($evidenceRoot) | Out-Null
 $finalPath = Resolve-Beneath $evidenceRoot $physical.finalPath
 $stdoutPath = Resolve-Beneath $evidenceRoot $physical.stdoutPath
 $stderrPath = Resolve-Beneath $evidenceRoot $physical.stderrPath
@@ -190,8 +192,7 @@ $evidencePath = Resolve-Beneath $evidenceRoot $physical.evidencePath
 $runtimePaths = @($finalPath, $stdoutPath, $stderrPath, $evidencePath, $physical.tempRoot, $physical.cacheRoot, $physical.dependencyRoot)
 if (($runtimePaths | ForEach-Object { $_.ToLowerInvariant() } | Select-Object -Unique).Count -ne $runtimePaths.Count) { throw "Role runtime paths must be distinct" }
 for ($left = 4; $left -lt $runtimePaths.Count; $left++) { for ($right = $left + 1; $right -lt $runtimePaths.Count; $right++) { if (Test-NestedOrEqual $runtimePaths[$left] $runtimePaths[$right]) { throw "Role temp, cache, and dependency roots must be nonnested" } } }
-foreach ($output in @($finalPath, $stdoutPath, $stderrPath, $evidencePath)) { [System.IO.Directory]::CreateDirectory((Split-Path -Parent $output)) | Out-Null }
-foreach ($runtimeRoot in @($physical.tempRoot, $physical.cacheRoot, $physical.dependencyRoot)) { [System.IO.Directory]::CreateDirectory($runtimeRoot) | Out-Null }
+if ([System.IO.Directory]::Exists($evidenceRoot) -and $null -ne (Get-ChildItem -LiteralPath $evidenceRoot -Force | Select-Object -First 1)) { throw "Evidence root must be fresh and empty" }
 $argv = @("-a", "never", "-m", "gpt-5.4", "-c", 'model_reasoning_effort="xhigh"', "exec", "--ephemeral", "--ignore-user-config", "--skip-git-repo-check", "--sandbox", $contract.sandboxMode, "--json", "-C", $workdir, "-o", $finalPath, "-")
 $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
 $startInfo.FileName = $contract.cliPath
@@ -201,14 +202,22 @@ $startInfo.RedirectStandardInput = $true; $startInfo.RedirectStandardOutput = $t
 $startInfo.Environment["TEMP"] = $physical.tempRoot; $startInfo.Environment["TMP"] = $physical.tempRoot; $startInfo.Environment["NPM_CONFIG_CACHE"] = $physical.cacheRoot; $startInfo.Environment["CODEX_DEPENDENCY_ROOT"] = $physical.dependencyRoot; $startInfo.Environment["PORT"] = [string]$contract.port
 foreach ($argument in $argv) { [void]$startInfo.ArgumentList.Add($argument) }
 $process = [System.Diagnostics.Process]::new(); $process.StartInfo = $startInfo
-$startedAt = [System.DateTimeOffset]::UtcNow; $started = $false; $startError = $null; $stdinDelivered = $false; $stdinError = $null; $timedOut = $false
+$startedAt = [System.DateTimeOffset]::UtcNow
+if ($absoluteDeadline -le $startedAt) { throw "Role prompt absolute deadline is expired" }
+if ($absoluteDeadline -gt $startedAt.AddSeconds($contract.deadlineSeconds)) { throw "Role prompt absolute deadline exceeds deadlineSeconds from supervisor start" }
+[System.IO.Directory]::CreateDirectory($evidenceRoot) | Out-Null
+foreach ($output in @($finalPath, $stdoutPath, $stderrPath, $evidencePath)) { [System.IO.Directory]::CreateDirectory((Split-Path -Parent $output)) | Out-Null }
+foreach ($runtimeRoot in @($physical.tempRoot, $physical.cacheRoot, $physical.dependencyRoot)) { [System.IO.Directory]::CreateDirectory($runtimeRoot) | Out-Null }
+$started = $false; $startError = $null; $stdinDelivered = $false; $stdinError = $null; $timedOut = $false
 try { $started = $process.Start() } catch { $startError = $_.Exception.ToString() }
 $stdoutTask = if ($started) { $process.StandardOutput.ReadToEndAsync() } else { $null }
 $stderrTask = if ($started) { $process.StandardError.ReadToEndAsync() } else { $null }
 if ($started) {
   try { $process.StandardInput.BaseStream.Write($promptBytes, 0, $promptBytes.Length); $process.StandardInput.Close(); $stdinDelivered = $true } catch { $stdinError = $_.Exception.ToString(); try { $process.StandardInput.Close() } catch {} }
-  if (-not $process.WaitForExit($contract.deadlineSeconds * 1000)) { $timedOut = $true; $process.Kill($true); $process.WaitForExit() }
+  $remainingMilliseconds = [int][System.Math]::Max(0, [System.Math]::Ceiling(($absoluteDeadline - [System.DateTimeOffset]::UtcNow).TotalMilliseconds))
+  if ($remainingMilliseconds -eq 0 -or -not $process.WaitForExit($remainingMilliseconds)) { $timedOut = $true; $process.Kill($true); $process.WaitForExit() }
 }
+$completedAt = [System.DateTimeOffset]::UtcNow
 $stdout = if ($started) { $stdoutTask.GetAwaiter().GetResult() } else { "" }
 $stderr = if ($started) { $stderrTask.GetAwaiter().GetResult() } else { "" }
 [System.IO.File]::WriteAllText($stdoutPath, $stdout, $Utf8NoBom); [System.IO.File]::WriteAllText($stderrPath, $stderr, $Utf8NoBom)
@@ -226,6 +235,13 @@ if ([System.IO.File]::Exists($finalPath) -and $threadIds.Count -eq 1 -and $start
     $artifact | Add-Member -NotePropertyName runtimeInvocationId -NotePropertyValue $contract.invocationId -Force
     $artifact | Add-Member -NotePropertyName runtimeProcessId -NotePropertyValue $process.Id -Force
     $artifact | Add-Member -NotePropertyName runtimeThreadId -NotePropertyValue $threadIds[0] -Force
+    if ($contract.role -eq "evaluator") {
+      $artifact | Add-Member -NotePropertyName evaluatedAt -NotePropertyValue $completedAt.ToString("o") -Force
+      $artifact | Add-Member -NotePropertyName sealedAt -NotePropertyValue $completedAt.ToString("o") -Force
+    } else {
+      $artifact | Add-Member -NotePropertyName startedAt -NotePropertyValue $startedAt.ToString("o") -Force
+      $artifact | Add-Member -NotePropertyName completedAt -NotePropertyValue $completedAt.ToString("o") -Force
+    }
     [System.IO.File]::WriteAllText($finalPath, ($artifact | ConvertTo-Json -Depth 20), $Utf8NoBom)
     $finalSha256 = Get-Sha256 $finalPath
   } catch { $finalSha256 = $null }
@@ -238,6 +254,11 @@ if ($null -ne $finalSha256) {
   if ($finalSchemaValid) {
     $artifact = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $finalPath -Raw)
     $runtimeIdentityValid = $artifact.runtimeInvocationId -eq $contract.invocationId -and $artifact.runtimeProcessId -eq $process.Id -and $artifact.runtimeThreadId -eq $threadIds[0]
+    $artifactStartedAt = if ($contract.role -eq "evaluator") { $artifact.evaluatedAt } else { $artifact.startedAt }
+    $artifactCompletedAt = if ($contract.role -eq "evaluator") { $artifact.sealedAt } else { $artifact.completedAt }
+    $expectedArtifactStart = if ($contract.role -eq "evaluator") { $completedAt.ToString("o") } else { $startedAt.ToString("o") }
+    $runtimeChronologyValid = $artifactStartedAt -eq $expectedArtifactStart -and $artifactCompletedAt -eq $completedAt.ToString("o") -and $completedAt -ge $startedAt -and $completedAt -le $absoluteDeadline.AddSeconds($DeadlineObservationToleranceSeconds)
+    $runtimeIdentityValid = $runtimeIdentityValid -and $runtimeChronologyValid
     if ($contract.role -eq "reviewer") { $artifactBindingValid = $runtimeIdentityValid -and $artifact.snapshotCommit -eq $contract.inputCommit }
     elseif ($contract.role -eq "fixer") { $finalCommit = Invoke-Git $workdir @("rev-parse", "HEAD"); $commitLine = (Invoke-Git $workdir @("rev-list", "--parents", "-n", "1", "HEAD")) -split " "; $artifactBindingValid = $runtimeIdentityValid -and $artifact.startCommit -eq $contract.inputCommit -and $artifact.finalCommit -eq $finalCommit -and $commitLine.Count -eq 2 -and $commitLine[1] -eq $contract.inputCommit }
     elseif ($contract.role -eq "tester") { $artifactBindingValid = $runtimeIdentityValid -and $artifact.snapshotCommit -eq $contract.inputCommit }
@@ -245,7 +266,7 @@ if ($null -ne $finalSha256) {
   }
 }
 $result = [ordered]@{
-  role = $contract.role; invocationId = $contract.invocationId; contractSha256 = Get-Sha256 $contractFullPath; artifactSchemaSha256 = $contract.artifactSchemaSha256; processId = if ($started) { $process.Id } else { $null }; started = $started; startedAt = $startedAt.ToString("o"); startError = $startError
+  role = $contract.role; invocationId = $contract.invocationId; contractSha256 = Get-Sha256 $contractFullPath; artifactSchemaSha256 = $contract.artifactSchemaSha256; processId = if ($started) { $process.Id } else { $null }; started = $started; startedAt = $startedAt.ToString("o"); completedAt = $completedAt.ToString("o"); absoluteDeadline = $absoluteDeadline.ToString("o"); startError = $startError
   stdinDelivered = $stdinDelivered; stdinError = $stdinError; exitCode = if ($started) { $process.ExitCode } else { $null }; timedOut = $timedOut; argv = $argv; argvSha256 = Get-TextSha256 ($argv -join "`0"); promptSha256 = $contract.promptSha256
   stdoutPath = $stdoutPath; stderrPath = $stderrPath; finalPath = $finalPath; finalSha256 = $finalSha256; finalSchemaValid = $finalSchemaValid; artifactBindingValid = $artifactBindingValid; threadIds = $threadIds; turnCompleted = $turnEvents.Count -eq 1; rawJsonlValid = $rawJsonlValid; unauthorizedToolOrWriteDetected = $null; unauthorizedToolOrWriteUnavailableReason = "runner cannot observe every external tool or write; scoped input checks are enforced separately"; sandboxMode = $contract.sandboxMode; inputDisposition = $contract.inputDisposition; isolationEnforcedBy = "audited-procedural-boundary-plus-cli-sandbox"
   usage = $usage; usageUnavailableReason = if ($null -eq $usage) { "turn.completed did not expose usage" } else { $null }
@@ -253,7 +274,7 @@ $result = [ordered]@{
   stdoutSha256 = Get-Sha256 $stdoutPath; stderrSha256 = Get-Sha256 $stderrPath
 }
 [System.IO.File]::WriteAllText($evidencePath, ($result | ConvertTo-Json -Depth 10), $Utf8NoBom)
-$valid = $result.started -and $result.stdinDelivered -and -not $result.timedOut -and $result.exitCode -eq 0 -and $result.threadIds.Count -eq 1 -and $result.turnCompleted -and $result.rawJsonlValid -and $result.finalSchemaValid -and $result.artifactBindingValid
+$valid = $result.started -and $result.stdinDelivered -and -not $result.timedOut -and $result.exitCode -eq 0 -and $result.threadIds.Count -eq 1 -and $result.turnCompleted -and $result.rawJsonlValid -and $result.finalSchemaValid -and $result.artifactBindingValid -and $completedAt -ge $startedAt -and $completedAt -le $absoluteDeadline.AddSeconds($DeadlineObservationToleranceSeconds)
 if ($contract.role -in @("reviewer", "fixer") -and (Invoke-Git $workdir @("status", "--porcelain=v1")).Length -ne 0) { $valid = $false }
 if ($contract.role -eq "reviewer" -and ((Invoke-Git $workdir @("rev-parse", "HEAD")) -ne $contract.inputCommit -or (Invoke-Git $workdir @("rev-parse", "HEAD^{tree}")) -ne $contract.inputTree)) { $valid = $false }
 if ($contract.role -eq "tester" -and ((Invoke-Git $workdir @("status", "--porcelain=v1")).Length -ne 0 -or (Invoke-Git $workdir @("rev-parse", "HEAD")) -ne $contract.inputCommit -or (Invoke-Git $workdir @("rev-parse", "HEAD^{tree}")) -ne $contract.inputTree)) { $valid = $false }
