@@ -222,11 +222,11 @@ $startInfo.RedirectStandardInput = $true; $startInfo.RedirectStandardOutput = $t
 $startInfo.Environment["TEMP"] = $physical.tempRoot; $startInfo.Environment["TMP"] = $physical.tempRoot; $startInfo.Environment["NPM_CONFIG_CACHE"] = $physical.cacheRoot; $startInfo.Environment["CODEX_DEPENDENCY_ROOT"] = $physical.dependencyRoot; $startInfo.Environment["PORT"] = [string]$contract.port
 foreach ($argument in $argv) { [void]$startInfo.ArgumentList.Add($argument) }
 $process = [System.Diagnostics.Process]::new(); $process.StartInfo = $startInfo
+$deadlineBudgetStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 $startedAt = [System.DateTimeOffset]::UtcNow
 if ($absoluteDeadline -le $startedAt) { throw "Role prompt absolute deadline is expired" }
 if ($absoluteDeadline -gt $startedAt.AddSeconds($contract.deadlineSeconds)) { throw "Role prompt absolute deadline exceeds deadlineSeconds from supervisor start" }
 $deadlineBudgetMilliseconds = [System.Math]::Floor(($absoluteDeadline - $startedAt).TotalMilliseconds)
-$deadlineStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 [System.IO.Directory]::CreateDirectory($evidenceRoot) | Out-Null
 foreach ($output in @($finalPath, $stdoutPath, $stderrPath, $evidencePath)) { [System.IO.Directory]::CreateDirectory((Split-Path -Parent $output)) | Out-Null }
 foreach ($runtimeRoot in @($physical.tempRoot, $physical.cacheRoot, $physical.dependencyRoot)) { [System.IO.Directory]::CreateDirectory($runtimeRoot) | Out-Null }
@@ -236,10 +236,10 @@ $stdoutTask = if ($started) { $process.StandardOutput.ReadToEndAsync() } else { 
 $stderrTask = if ($started) { $process.StandardError.ReadToEndAsync() } else { $null }
 if ($started) {
   try { $process.StandardInput.BaseStream.Write($promptBytes, 0, $promptBytes.Length); $process.StandardInput.Close(); $stdinDelivered = $true } catch { $stdinError = $_.Exception.ToString(); try { $process.StandardInput.Close() } catch {} }
-  $remainingMilliseconds = [int][System.Math]::Max(0, [System.Math]::Floor($deadlineBudgetMilliseconds - $deadlineStopwatch.Elapsed.TotalMilliseconds))
+  $remainingMilliseconds = [int][System.Math]::Max(0, [System.Math]::Floor($deadlineBudgetMilliseconds - $deadlineBudgetStopwatch.Elapsed.TotalMilliseconds))
   if ($remainingMilliseconds -eq 0 -or -not $process.WaitForExit($remainingMilliseconds)) { $timedOut = $true; $process.Kill($true); $process.WaitForExit() }
 }
-$deadlineStopwatch.Stop()
+$deadlineBudgetStopwatch.Stop()
 $completionObservedAt = [System.DateTimeOffset]::UtcNow
 $completedAt = if ($started -and $process.HasExited) { [System.DateTimeOffset]::new($process.ExitTime.ToUniversalTime()) } else { $completionObservedAt }
 $stdout = if ($started) { $stdoutTask.GetAwaiter().GetResult() } else { "" }

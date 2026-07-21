@@ -19,6 +19,7 @@ import {
   canonicalHash,
   readJson,
   remainingRoleWaitMilliseconds,
+  roleWaitFromAbsoluteDeadline,
   root,
   validateArtifactMode,
   validateCliRuntimeContract,
@@ -957,10 +958,38 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
     );
   });
 
-  it("floors the monotonic remaining deadline interval and never rounds a sub-millisecond remainder up", () => {
+  it("charges deterministic pre-wait delay to the floored monotonic deadline budget", () => {
+    const withoutDelay = roleWaitFromAbsoluteDeadline(1000.9, 0.1, 0);
+    const afterInjectedDelay = roleWaitFromAbsoluteDeadline(
+      1000.9,
+      0.1,
+      250.25,
+    );
+    assert.equal(withoutDelay, 1000);
+    assert.equal(afterInjectedDelay, 749);
+    assert.ok(afterInjectedDelay < withoutDelay);
     assert.equal(remainingRoleWaitMilliseconds(10, 8.001), 1);
     assert.equal(remainingRoleWaitMilliseconds(10, 9.001), 0);
     assert.equal(remainingRoleWaitMilliseconds(10, 10.001), 0);
+    const runnerSource = readFileSync(
+      path.join(root, "scripts/run-cli-role.ps1"),
+      "utf8",
+    );
+    const clockOrigin = runnerSource.indexOf(
+      "$deadlineBudgetStopwatch = [System.Diagnostics.Stopwatch]::StartNew()",
+    );
+    const wallCapture = runnerSource.indexOf(
+      "$startedAt = [System.DateTimeOffset]::UtcNow",
+    );
+    const budgetCalculation = runnerSource.indexOf(
+      "$deadlineBudgetMilliseconds = [System.Math]::Floor",
+    );
+    const waitCalculation = runnerSource.indexOf(
+      "$deadlineBudgetStopwatch.Elapsed.TotalMilliseconds",
+    );
+    assert.ok(clockOrigin < wallCapture);
+    assert.ok(wallCapture < budgetCalculation);
+    assert.ok(budgetCalculation < waitCalculation);
   });
 
   it("accepts the prospective scaffold and seeded assignment algorithms", () => {

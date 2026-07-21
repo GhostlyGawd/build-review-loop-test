@@ -522,6 +522,15 @@ const overlappingWindowsPaths = (entries) => {
 
 export const remainingRoleWaitMilliseconds = (budgetMs, elapsedMs) =>
   Math.max(0, Math.floor(budgetMs - elapsedMs));
+export const roleWaitFromAbsoluteDeadline = (
+  absoluteDeadlineMs,
+  supervisorStartedAtMs,
+  monotonicElapsedMs,
+) =>
+  remainingRoleWaitMilliseconds(
+    Math.floor(absoluteDeadlineMs - supervisorStartedAtMs),
+    monotonicElapsedMs,
+  );
 
 export function validateCliRuntimeContract(
   contract,
@@ -1342,7 +1351,7 @@ export function validateCanonicalContract(contract) {
     contract.cliRuntime?.roleRuntime?.evidenceSchemaSha256 !==
       lock.supervisionEvidenceSchemaSha256 ||
     contract.cliRuntime?.roleRuntime?.deadlinePolicy !==
-      "before evidence creation, strict-parse WALL_CLOCK_DEADLINE_ISO as UTC, capture supervisor start, require start < absolute deadline <= start + deadlineSeconds with zero scheduling tolerance, compute monotonic elapsed time from a floor-truncated absolute budget, pass floor(remaining) to WaitForExit, treat less than one millisecond as zero, require actual OS exit completedAt <= absoluteDeadline, and allow two seconds solely for completionObservedAt or process-tree termination" ||
+      "before evidence creation, strict-parse WALL_CLOCK_DEADLINE_ISO as UTC, start the monotonic budget clock before capturing supervisor start, require start < absolute deadline <= start + deadlineSeconds with zero scheduling tolerance, floor the wall-clock absolute budget and subtract all monotonic elapsed time including pre-launch scheduling delay, pass floor(remaining) to WaitForExit, treat less than one millisecond as zero, require actual OS exit completedAt <= absoluteDeadline, and allow two seconds solely for completionObservedAt or process-tree termination" ||
     contract.cliRuntime?.roleRuntime?.pathMutationPolicy !==
       "before evidence or runtime directory creation and model launch, canonicalize prospective paths and require evidenceRoot/workdir separation, four pairwise-nonnested authoritative direct-child outputs, external pairwise-nonnested temp/cache/dependency roots, and every private input separate from every mutable root and output; afterward require exactly four evidence files, no subdirectories, and no reparse points" ||
     contract.cliRuntime?.roleRuntime?.outputSchemaPolicy !==

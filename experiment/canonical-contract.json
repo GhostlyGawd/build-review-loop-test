@@ -111,7 +111,7 @@
       "schemaPath": "experiment/schemas/role-runtime-contract.schema.json",
       "schemaSha256": "ac620774663e6ce8dd9917f760f6f53eeb8063e70b88240999ffc6bef6184c5a",
       "runnerPath": "scripts/run-cli-role.ps1",
-      "runnerSha256": "e8d719c42f26caf81c7b95186564bf6437a39dba3be256084e0e19011f35ef40",
+      "runnerSha256": "f78ec27cc30f66a58464be6f5b60a4437808b97ec85186916171ee22e9b6b3b4",
       "evidenceSchemaPath": "experiment/schemas/cli-supervision-evidence.schema.json",
       "evidenceSchemaSha256": "b43690cdb988df31e3a778acf8021052fa0e9dae0767f518d9c8c126a8866556",
       "promptTemplateSha256": {
@@ -127,7 +127,7 @@
         "evaluator": "12a769a0868261e28299b5a7feef71626ea6e1ee51bfb0eb59ce65bbec05e6aa"
       },
       "promptSubstitutionRule": "exact role-specific key set; single-line bounded values; candidate/cycle/snapshot, fixer handoff, and evaluator package/sequence/rubric/schema/hidden-suite values must equal their contract bindings",
-      "deadlinePolicy": "before evidence creation, strict-parse WALL_CLOCK_DEADLINE_ISO as UTC, capture supervisor start, require start < absolute deadline <= start + deadlineSeconds with zero scheduling tolerance, compute monotonic elapsed time from a floor-truncated absolute budget, pass floor(remaining) to WaitForExit, treat less than one millisecond as zero, require actual OS exit completedAt <= absoluteDeadline, and allow two seconds solely for completionObservedAt or process-tree termination",
+      "deadlinePolicy": "before evidence creation, strict-parse WALL_CLOCK_DEADLINE_ISO as UTC, start the monotonic budget clock before capturing supervisor start, require start < absolute deadline <= start + deadlineSeconds with zero scheduling tolerance, floor the wall-clock absolute budget and subtract all monotonic elapsed time including pre-launch scheduling delay, pass floor(remaining) to WaitForExit, treat less than one millisecond as zero, require actual OS exit completedAt <= absoluteDeadline, and allow two seconds solely for completionObservedAt or process-tree termination",
       "pathMutationPolicy": "before evidence or runtime directory creation and model launch, canonicalize prospective paths and require evidenceRoot/workdir separation, four pairwise-nonnested authoritative direct-child outputs, external pairwise-nonnested temp/cache/dependency roots, and every private input separate from every mutable root and output; afterward require exactly four evidence files, no subdirectories, and no reparse points",
       "outputSchemaPolicy": "codex exec supports --output-schema, but authoritative final schemas require supervisor-observed runtime identity and chronology; omit the flag until distinct frozen pre-injection schemas exist, then inject identity, overwrite role artifact chronology with actual OS exit time, record completion observation separately, and validate the authoritative final schema",
       "reviewerPolicy": "read-only snapshot",
