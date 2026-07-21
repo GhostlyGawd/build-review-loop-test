@@ -1,0 +1,33 @@
+{
+  "manifestVersion": "1.0.0",
+  "mappingSeedSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "randomizedOrder": ["X", "Y", "Z"],
+  "frozenGateSetSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "packages": [
+    {
+      "packageLabel": "X",
+      "packageSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "fileCount": 1,
+      "historyFree": true,
+      "lineageScanPassed": true,
+      "timestampsNormalized": true
+    },
+    {
+      "packageLabel": "Y",
+      "packageSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "fileCount": 1,
+      "historyFree": true,
+      "lineageScanPassed": true,
+      "timestampsNormalized": true
+    },
+    {
+      "packageLabel": "Z",
+      "packageSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "fileCount": 1,
+      "historyFree": true,
+      "lineageScanPassed": true,
+      "timestampsNormalized": true
+    }
+  ],
+  "sanitizationPolicySha256": "0000000000000000000000000000000000000000000000000000000000000000"
+}

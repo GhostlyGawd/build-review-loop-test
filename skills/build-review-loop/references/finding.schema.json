@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/finding.schema.json",
+  "title": "Authoritative treatment finding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "severity",
+    "title",
+    "evidence",
+    "expected",
+    "actual",
+    "rubricItems",
+    "verification",
+    "duplicateOf"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^cycle-[1-5]-reviewer-[0-9]{2}$" },
+    "severity": { "enum": ["critical", "high", "medium", "low"] },
+    "title": { "type": "string", "minLength": 1 },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "expected": { "type": "string", "minLength": 1 },
+    "actual": { "type": "string", "minLength": 1 },
+    "rubricItems": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/rubricId" }
+    },
+    "verification": { "type": "string", "minLength": 1 },
+    "duplicateOf": {
+      "type": ["string", "null"],
+      "pattern": "^cycle-[1-5]-reviewer-[0-9]{2}$"
+    }
+  },
+  "$defs": {
+    "rubricId": {
+      "enum": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6",
+        "A7",
+        "B1",
+        "B2",
+        "B3",
+        "C1",
+        "C2",
+        "C3",
+        "D1",
+        "D2",
+        "D3",
+        "E1",
+        "E2",
+        "E3",
+        "E4"
+      ]
+    }
+  }
+}

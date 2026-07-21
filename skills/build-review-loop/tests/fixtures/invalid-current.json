@@ -1,0 +1,55 @@
+{
+  "fixtureVersion": "1.0.0",
+  "fixtureKind": "prospective-invalid-current",
+  "protocolVersion": "2.4.0",
+  "status": "invalid",
+  "activeInvalidation": {
+    "invalidationId": "invalidation-001",
+    "scope": "experiment",
+    "code": "FREEZE_MISMATCH",
+    "reason": "Synthetic current-run invalidation fixture",
+    "detectedAt": "2026-07-20T02:00:00Z",
+    "evidenceSha256": "84e43d9fe2575fc1113d4d9b7633b74e8f23452de136a45f3bce68b9008bc15f",
+    "preservedArtifactSha256": "b39a8c77f94df14b1df27fb64693f2bb37e5975746b14a73389df719899a2744"
+  },
+  "invalidAttempts": [
+    {
+      "attemptId": "collaboration-dispatch-cap",
+      "scope": "pre-work-runtime",
+      "code": "COLLABORATION_THREAD_CAP",
+      "reason": "Collaboration dispatch exceeded the thread cap before builder work began; no outcome was scored",
+      "invalidatedAt": "2026-07-20T00:10:00Z",
+      "evidenceSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "preservedArtifactSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+      "attemptId": "cli-v1",
+      "scope": "pre-work-runtime",
+      "code": "CLI_REHEARSAL_INVALID",
+      "reason": "CLI v1 rehearsal invalidated and preserved as runtime evidence only; no outcome was scored",
+      "invalidatedAt": "2026-07-20T00:20:00Z",
+      "evidenceSha256": "e026b75676f33023347a8718434f296ad97f137a784828d0defc9e2b6f1cd977",
+      "preservedArtifactSha256": "ed6b3550ec0f74d1cf963dfb1c2d3b50703aef5b115b03a1c4b17e7ac3a10cf8"
+    },
+    {
+      "attemptId": "cli-v2",
+      "scope": "pre-work-runtime",
+      "code": "CLI_REHEARSAL_INVALID",
+      "reason": "CLI v2 rehearsal invalidated and preserved as runtime evidence only; no outcome was scored",
+      "invalidatedAt": "2026-07-20T00:30:00Z",
+      "evidenceSha256": "116b0d9057a487a8f3375c9b86161733d29dc8c84d25ee69b998b877469135a6",
+      "preservedArtifactSha256": "7da39fd8971906d9ac19f34d4200e6c8766361b35be2492fe36e4ea668b9cb80"
+    },
+    {
+      "attemptId": "cli-v3",
+      "scope": "pre-work-runtime",
+      "code": "CLI_REHEARSAL_INVALID",
+      "reason": "CLI v3 rehearsal was superseded by v4 global-before-exec proof and preserved without scoring",
+      "invalidatedAt": "2026-07-20T00:40:00Z",
+      "evidenceSha256": "347c822115e6f37da632d0704c62028ee86166361dac14a22a377b2a5df85597",
+      "preservedArtifactSha256": "2ed73c4129d9f816ffe22ffe6de413d40c2cba7ed4c68b7c5e822d1c28b66abe"
+    }
+  ],
+  "evaluations": null,
+  "outcome": null
+}

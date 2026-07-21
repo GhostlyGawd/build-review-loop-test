@@ -1,0 +1,1424 @@
+{
+  "fixtureVersion": "1.0.0",
+  "fixtureKind": "prospective-conformance",
+  "protocolVersion": "2.4.0",
+  "canonicalContractSha256": "604741c82d917d2cb5901ba4b1c046d29e2091ce4c91a68a514b713a24348b01",
+  "status": "valid",
+  "activeInvalidation": null,
+  "invalidAttempts": [
+    {
+      "attemptId": "rehearsal-001",
+      "scope": "dry-run",
+      "code": "REHEARSAL_ONLY",
+      "reason": "Synthetic invalid rehearsal preserved without candidate contents",
+      "invalidatedAt": "2026-07-19T23:50:00Z",
+      "evidenceSha256": "4ed9e9cbdba7becab220ed3f802c03b7bb86648a242b55c63b6793718cd2a320",
+      "preservedArtifactSha256": "cc8e04b3d8629a04500b91e9e4db2ce52ef71137f803787f974430017213384d"
+    },
+    {
+      "attemptId": "collaboration-dispatch-cap",
+      "scope": "pre-work-runtime",
+      "code": "COLLABORATION_THREAD_CAP",
+      "reason": "Collaboration dispatch exceeded the thread cap before builder work began; no outcome was scored",
+      "invalidatedAt": "2026-07-20T00:10:00Z",
+      "evidenceSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "preservedArtifactSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+      "attemptId": "cli-v1",
+      "scope": "pre-work-runtime",
+      "code": "CLI_REHEARSAL_INVALID",
+      "reason": "CLI v1 rehearsal invalidated and preserved as runtime evidence only; no outcome was scored",
+      "invalidatedAt": "2026-07-20T00:20:00Z",
+      "evidenceSha256": "e026b75676f33023347a8718434f296ad97f137a784828d0defc9e2b6f1cd977",
+      "preservedArtifactSha256": "ed6b3550ec0f74d1cf963dfb1c2d3b50703aef5b115b03a1c4b17e7ac3a10cf8"
+    },
+    {
+      "attemptId": "cli-v2",
+      "scope": "pre-work-runtime",
+      "code": "CLI_REHEARSAL_INVALID",
+      "reason": "CLI v2 rehearsal invalidated and preserved as runtime evidence only; no outcome was scored",
+      "invalidatedAt": "2026-07-20T00:30:00Z",
+      "evidenceSha256": "116b0d9057a487a8f3375c9b86161733d29dc8c84d25ee69b998b877469135a6",
+      "preservedArtifactSha256": "7da39fd8971906d9ac19f34d4200e6c8766361b35be2492fe36e4ea668b9cb80"
+    },
+    {
+      "attemptId": "cli-v3",
+      "scope": "pre-work-runtime",
+      "code": "CLI_REHEARSAL_INVALID",
+      "reason": "CLI v3 rehearsal was superseded by v4 global-before-exec proof and preserved without scoring",
+      "invalidatedAt": "2026-07-20T00:40:00Z",
+      "evidenceSha256": "347c822115e6f37da632d0704c62028ee86166361dac14a22a377b2a5df85597",
+      "preservedArtifactSha256": "2ed73c4129d9f816ffe22ffe6de413d40c2cba7ed4c68b7c5e822d1c28b66abe"
+    }
+  ],
+  "bindings": {
+    "commonStartCommit": "79454a133f990982253744a85ccb8516d62f5a19",
+    "preregistrationLockCommit": "7443e27c48488e269e9fb7ad28b308a1313e5703",
+    "lockFileSha256": "7f403c9f8f208135bb8f0089458ea8eaac7bdd3341237e5a8c4b31ab39c8d71a",
+    "hiddenSuiteId": "permissions-playground-sealed-v2",
+    "hiddenSuiteSha256": "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
+    "publicGates": [
+      "npm run format:check",
+      "npm run lint",
+      "npm run typecheck",
+      "npm run validate:scaffold",
+      "npm run test:protocol",
+      "npm run test:public:if-implemented",
+      "npm run build"
+    ],
+    "testerCommand": "npm run check",
+    "evaluatorPublicCommand": "npm run test:public",
+    "evaluatorHiddenCommand": "node sealed-hidden-suite/run.mjs"
+  },
+  "environment": {
+    "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+    "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+    "node": "22.x",
+    "npm": "11.11.0"
+  },
+  "cliRuntimeContract": {
+    "contractVersion": "1.0.0",
+    "cliPath": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe",
+    "cliVersion": "codex-cli 0.145.0-alpha.18",
+    "cliSha256": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
+    "authStatus": "Logged in using ChatGPT",
+    "lockPath": "C:\\synthetic\\protocol\\experiment\\lock.json",
+    "lockSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "contractSchemaPath": "C:\\synthetic\\protocol\\experiment\\schemas\\cli-runtime-contract.schema.json",
+    "contractSchemaSha256": "665016233b950a2f39f0bbee1f5f75b530980d3bcd979e543943cf976b0a2689",
+    "canonicalPathHelperPath": "C:\\synthetic\\protocol\\scripts\\canonicalize-paths.mjs",
+    "canonicalPathHelperSha256": "194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e",
+    "sourceCommonStartCommit": "29454a133f990982253744a85ccb8516d62f5a19",
+    "sourceCommonStartTree": "2234567890abcdef1234567890abcdef12345678",
+    "commonStartCommit": "79454a133f990982253744a85ccb8516d62f5a19",
+    "commonStartTree": "1234567890abcdef1234567890abcdef12345678",
+    "builderInputManifestPath": "C:\\synthetic\\private\\builder-input-manifest.json",
+    "builderInputManifestSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "builderInputManifestSchemaPath": "C:\\synthetic\\protocol\\experiment\\schemas\\builder-input-manifest.schema.json",
+    "builderInputManifestSchemaSha256": "b044646ede4fef4543a4950e5842f51997dc3b65e6bfabad7eeb1ff84caf0bb5",
+    "builderInputAllowlistPath": "C:\\synthetic\\protocol\\experiment\\builder-input-allowlist.json",
+    "builderInputAllowlistSha256": "37af679c4f3f71cbd9e28b810897d4ff82c7c47cf4421a9d661b8b90947aef5b",
+    "builderInputPreparationScriptPath": "C:\\synthetic\\protocol\\scripts\\prepare-builder-input.mjs",
+    "builderInputPreparationScriptSha256": "68e186914a0dd99e0b91f0851d45f8081086fffadae8d2949050e29ea1b832b3",
+    "builderInputProjectionSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "promptPath": "C:\\synthetic\\neutral-builder.md",
+    "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
+    "evidenceRoot": "C:\\synthetic\\evidence",
+    "deadlineSeconds": 2400,
+    "invariantArgv": [
+      "-a",
+      "never",
+      "-m",
+      "gpt-5.4",
+      "-c",
+      "model_reasoning_effort=\"xhigh\"",
+      "exec",
+      "--ephemeral",
+      "--ignore-user-config",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "workspace-write",
+      "--json"
+    ],
+    "smokeMode": false,
+    "invocations": [
+      {
+        "invocationId": "3fa8a63edab948c496d7e1028dfbeabf",
+        "workdir": "C:\\synthetic\\work-a",
+        "finalPath": "C:\\synthetic\\evidence\\a\\final.json",
+        "stdoutPath": "C:\\synthetic\\evidence\\a\\stdout.jsonl",
+        "stderrPath": "C:\\synthetic\\evidence\\a\\stderr.txt",
+        "evidencePath": "C:\\synthetic\\evidence\\a\\evidence.json",
+        "postStatePath": "C:\\synthetic\\evidence\\a\\post-state.json",
+        "tempRoot": "C:\\synthetic\\runtime\\a\\temp",
+        "cacheRoot": "C:\\synthetic\\runtime\\a\\cache",
+        "dependencyRoot": "C:\\synthetic\\runtime\\a\\deps",
+        "port": 41001
+      },
+      {
+        "invocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
+        "workdir": "C:\\synthetic\\work-b",
+        "finalPath": "C:\\synthetic\\evidence\\b\\final.json",
+        "stdoutPath": "C:\\synthetic\\evidence\\b\\stdout.jsonl",
+        "stderrPath": "C:\\synthetic\\evidence\\b\\stderr.txt",
+        "evidencePath": "C:\\synthetic\\evidence\\b\\evidence.json",
+        "postStatePath": "C:\\synthetic\\evidence\\b\\post-state.json",
+        "tempRoot": "C:\\synthetic\\runtime\\b\\temp",
+        "cacheRoot": "C:\\synthetic\\runtime\\b\\cache",
+        "dependencyRoot": "C:\\synthetic\\runtime\\b\\deps",
+        "port": 41002
+      }
+    ]
+  },
+  "cliRuntimeEvidence": {
+    "valid": true,
+    "results": [
+      {
+        "role": "builder",
+        "invocationId": "3fa8a63edab948c496d7e1028dfbeabf",
+        "contractSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "artifactSchemaSha256": null,
+        "processId": 12001,
+        "started": true,
+        "startedAt": "2026-07-20T01:00:00Z",
+        "startError": null,
+        "stdinDelivered": true,
+        "stdinError": null,
+        "exitCode": 0,
+        "timedOut": false,
+        "argv": [
+          "-a",
+          "never",
+          "-m",
+          "gpt-5.4",
+          "-c",
+          "model_reasoning_effort=\"xhigh\"",
+          "exec",
+          "--ephemeral",
+          "--ignore-user-config",
+          "--skip-git-repo-check",
+          "--sandbox",
+          "workspace-write",
+          "--json",
+          "-C",
+          "C:\\synthetic\\work-a",
+          "-o",
+          "C:\\synthetic\\evidence\\a\\final.json",
+          "-"
+        ],
+        "argvSha256": "25128d39e4e7c032cf4abc6e508b05b67ff605c2572d36dddd405a55c9fc63cc",
+        "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
+        "stdoutPath": "C:\\synthetic\\evidence\\a\\stdout.jsonl",
+        "stdoutSha256": "3db78fe24b68efe647e0762d16db05774781bfe0a905dc3876ce0048a66899b6",
+        "stderrPath": "C:\\synthetic\\evidence\\a\\stderr.txt",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "finalPath": "C:\\synthetic\\evidence\\a\\final.json",
+        "finalSha256": "1212121212121212121212121212121212121212121212121212121212121212",
+        "postStatePath": "C:\\synthetic\\evidence\\a\\post-state.json",
+        "postStateSha256": "3131313131313131313131313131313131313131313131313131313131313131",
+        "finalSchemaValid": null,
+        "artifactBindingValid": null,
+        "threadIds": ["019f827b-221c-7021-b650-a948e9dd4298"],
+        "turnCompleted": true,
+        "rawJsonlValid": true,
+        "unauthorizedToolOrWriteDetected": null,
+        "sandboxMode": "workspace-write",
+        "inputDisposition": "authorized-worktree-write",
+        "isolationEnforcedBy": "audited-procedural-boundary-plus-cli-sandbox",
+        "usage": {
+          "input_tokens": 100,
+          "cached_input_tokens": 10,
+          "output_tokens": 20
+        },
+        "usageUnavailableReason": null,
+        "runtimeModel": null,
+        "runtimeModelUnavailableReason": "not present in trusted JSONL lifecycle metadata",
+        "runtimeProvider": null,
+        "runtimeProviderUnavailableReason": "not present in trusted JSONL lifecycle metadata",
+        "reasoningSetting": null,
+        "reasoningSettingUnavailableReason": "not present in trusted JSONL lifecycle metadata",
+        "metadataSource": "unavailable",
+        "unauthorizedToolOrWriteUnavailableReason": "runner cannot observe every external tool or write; scoped candidate checks are enforced separately"
+      },
+      {
+        "role": "builder",
+        "invocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
+        "contractSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "artifactSchemaSha256": null,
+        "processId": 12002,
+        "started": true,
+        "startedAt": "2026-07-20T01:00:00Z",
+        "startError": null,
+        "stdinDelivered": true,
+        "stdinError": null,
+        "exitCode": 0,
+        "timedOut": false,
+        "argv": [
+          "-a",
+          "never",
+          "-m",
+          "gpt-5.4",
+          "-c",
+          "model_reasoning_effort=\"xhigh\"",
+          "exec",
+          "--ephemeral",
+          "--ignore-user-config",
+          "--skip-git-repo-check",
+          "--sandbox",
+          "workspace-write",
+          "--json",
+          "-C",
+          "C:\\synthetic\\work-b",
+          "-o",
+          "C:\\synthetic\\evidence\\b\\final.json",
+          "-"
+        ],
+        "argvSha256": "77b4ec17d695ed516ab31865ef0c19ad368b0c1ab0ce3432b4724cf13f682b7a",
+        "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
+        "stdoutPath": "C:\\synthetic\\evidence\\b\\stdout.jsonl",
+        "stdoutSha256": "3becf7950cf2eb22eed98485f48cd6f0aae726de7067fa07e9630428c67a41e2",
+        "stderrPath": "C:\\synthetic\\evidence\\b\\stderr.txt",
+        "stderrSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "finalPath": "C:\\synthetic\\evidence\\b\\final.json",
+        "finalSha256": "2323232323232323232323232323232323232323232323232323232323232323",
+        "postStatePath": "C:\\synthetic\\evidence\\b\\post-state.json",
+        "postStateSha256": "3232323232323232323232323232323232323232323232323232323232323232",
+        "finalSchemaValid": null,
+        "artifactBindingValid": null,
+        "threadIds": ["019f827b-221c-7363-a23f-0f40b4ec017d"],
+        "turnCompleted": true,
+        "rawJsonlValid": true,
+        "unauthorizedToolOrWriteDetected": null,
+        "sandboxMode": "workspace-write",
+        "inputDisposition": "authorized-worktree-write",
+        "isolationEnforcedBy": "audited-procedural-boundary-plus-cli-sandbox",
+        "usage": {
+          "input_tokens": 110,
+          "cached_input_tokens": 11,
+          "output_tokens": 22
+        },
+        "usageUnavailableReason": null,
+        "runtimeModel": null,
+        "runtimeModelUnavailableReason": "not present in trusted JSONL lifecycle metadata",
+        "runtimeProvider": null,
+        "runtimeProviderUnavailableReason": "not present in trusted JSONL lifecycle metadata",
+        "reasoningSetting": null,
+        "reasoningSettingUnavailableReason": "not present in trusted JSONL lifecycle metadata",
+        "metadataSource": "unavailable",
+        "unauthorizedToolOrWriteUnavailableReason": "runner cannot observe every external tool or write; scoped candidate checks are enforced separately"
+      }
+    ]
+  },
+  "cliRuntimeStdoutByInvocation": {
+    "3fa8a63edab948c496d7e1028dfbeabf": "{\"type\":\"thread.started\",\"thread_id\":\"019f827b-221c-7021-b650-a948e9dd4298\"}\n{\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":100,\"cached_input_tokens\":10,\"output_tokens\":20}}\n",
+    "b3132c32d2fb40e2b65fa1a23cd6fe2d": "{\"type\":\"thread.started\",\"thread_id\":\"019f827b-221c-7363-a23f-0f40b4ec017d\"}\n{\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":110,\"cached_input_tokens\":11,\"output_tokens\":22}}\n"
+  },
+  "roleRuntimeEvidence": [
+    {
+      "role": "reviewer",
+      "invocationId": "44444444444444444444444444444444",
+      "processId": 12003,
+      "threadId": "019f827b-221c-7000-8000-000000000003",
+      "startedAt": "2026-07-20T01:02:00Z",
+      "completedAt": "2026-07-20T01:10:00Z",
+      "lifecycleComplete": true,
+      "evidenceSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "usage": {
+        "input_tokens": 80,
+        "cached_input_tokens": 8,
+        "output_tokens": 16
+      }
+    },
+    {
+      "role": "evaluator",
+      "invocationId": "66666666666666666666666666666666",
+      "processId": 12006,
+      "threadId": "019f827b-221c-7000-8000-000000000006",
+      "startedAt": "2026-07-20T01:20:00Z",
+      "completedAt": "2026-07-20T01:30:00Z",
+      "lifecycleComplete": true,
+      "evidenceSha256": "6666666666666666666666666666666666666666666666666666666666666666",
+      "usage": {
+        "input_tokens": 120,
+        "cached_input_tokens": 12,
+        "output_tokens": 24
+      }
+    },
+    {
+      "role": "evaluator",
+      "invocationId": "77777777777777777777777777777777",
+      "processId": 12007,
+      "threadId": "019f827b-221c-7000-8000-000000000007",
+      "startedAt": "2026-07-20T01:31:00Z",
+      "completedAt": "2026-07-20T01:40:00Z",
+      "lifecycleComplete": true,
+      "evidenceSha256": "7777777777777777777777777777777777777777777777777777777777777777",
+      "usage": {
+        "input_tokens": 121,
+        "cached_input_tokens": 12,
+        "output_tokens": 25
+      }
+    },
+    {
+      "role": "evaluator",
+      "invocationId": "88888888888888888888888888888888",
+      "processId": 12008,
+      "threadId": "019f827b-221c-7000-8000-000000000008",
+      "startedAt": "2026-07-20T01:41:00Z",
+      "completedAt": "2026-07-20T01:50:00Z",
+      "lifecycleComplete": true,
+      "evidenceSha256": "8888888888888888888888888888888888888888888888888888888888888888",
+      "usage": {
+        "input_tokens": 122,
+        "cached_input_tokens": 12,
+        "output_tokens": 26
+      }
+    }
+  ],
+  "workers": [
+    {
+      "workerId": "worker-01-builder-a-7b4c",
+      "role": "builder",
+      "invoked": true
+    },
+    {
+      "workerId": "worker-02-builder-b-91e2",
+      "role": "builder",
+      "invoked": true
+    },
+    {
+      "workerId": "worker-03-reviewer-6f8d",
+      "role": "reviewer",
+      "invoked": true
+    },
+    {
+      "workerId": "worker-04-fixer-31a9",
+      "role": "fixer",
+      "invoked": false
+    },
+    {
+      "workerId": "worker-05-tester-c472",
+      "role": "tester",
+      "invoked": false
+    },
+    {
+      "workerId": "worker-06-evaluator-2d5b",
+      "role": "evaluator",
+      "invoked": true
+    },
+    {
+      "workerId": "worker-09-evaluator-7d6c",
+      "role": "evaluator",
+      "invoked": true
+    },
+    {
+      "workerId": "worker-10-evaluator-8e7d",
+      "role": "evaluator",
+      "invoked": true
+    },
+    {
+      "workerId": "worker-07-unblinder-8aa1",
+      "role": "unblinder",
+      "invoked": true
+    },
+    {
+      "workerId": "worker-08-git-worker-5c03",
+      "role": "git_worker",
+      "invoked": true
+    }
+  ],
+  "builderFreezes": {
+    "candidate-a": {
+      "candidateLabel": "candidate-a",
+      "workerId": "worker-01-builder-a-7b4c",
+      "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
+      "configSha256": "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4",
+      "runtimeInvocationId": "3fa8a63edab948c496d7e1028dfbeabf",
+      "runtimeEvidenceSha256": "2135934c6f6a226564a1630b9656c520baed6ff0171134da9ac57f5d2bdddc82",
+      "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
+      "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
+      "sealedAt": "2026-07-20T01:00:00Z"
+    },
+    "candidate-b": {
+      "candidateLabel": "candidate-b",
+      "workerId": "worker-02-builder-b-91e2",
+      "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
+      "configSha256": "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4",
+      "runtimeInvocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
+      "runtimeEvidenceSha256": "15b231d096380dcd3b209f6659ec3ed6713160aaf82eb414d8f2254c1df49ccd",
+      "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
+      "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
+      "sealedAt": "2026-07-20T01:00:00Z"
+    }
+  },
+  "assignment": {
+    "frozenInitialEvidenceHashes": {
+      "candidate-a": "feb5a0116b64c0e26195d835b6bb999500e5329343bef7fa36e1967a195da40c",
+      "candidate-b": "2a97f4f6ec34345427389bea487a15d00290fc3fcd22ec7a80dc2a32f5457a02"
+    },
+    "seedHex": "4f8c49a049cdb2bef7fed4950c9bbe8127160599d5b72c549b6d2878e4706b02",
+    "digestSha256": "aec4dcdcdefeae6fdda5dccb89d0cf2203e4d9ae200cb7f48650b8cea64f748e",
+    "draw": 0,
+    "generatedAt": "2026-07-20T01:01:00Z",
+    "generator": "node:crypto.randomBytes-compatible synthetic conformance source",
+    "mapping": {
+      "candidate-a": "baseline",
+      "candidate-b": "treatment"
+    }
+  },
+  "evaluationRandomization": {
+    "seedHex": "f0f09f423ebce85f0535a0dd95faa92891fdc19bd817b2a5c99e5238fe59056b",
+    "digestSha256": "69cf99a370b35420718c4721755405d5c942e5b13a48984fcc9a9e3aac7acf0c",
+    "rankDigests": {
+      "B0": "50498035a0d077023e1701eb756ddc61164d342147673693d9f19ac5955c781c",
+      "T0": "a7213a33cdb5a7c268a77f025e538ce4a5340365f63ed0917366f3e3446b8fe1",
+      "Tfinal": "cee406dc354796bc4f26adff1b40928de09887bb1ac459474bbdc7e25d4de1bf"
+    },
+    "order": ["X", "Y", "Z"],
+    "mapping": {
+      "X": "B0",
+      "Y": "T0",
+      "Z": "Tfinal"
+    }
+  },
+  "runs": {
+    "candidate-a": {
+      "candidateLabel": "candidate-a",
+      "assignedArm": "baseline",
+      "builderWorkerId": "worker-01-builder-a-7b4c",
+      "runtimeInvocationId": "3fa8a63edab948c496d7e1028dfbeabf",
+      "runtimeEvidenceSha256": "2135934c6f6a226564a1630b9656c520baed6ff0171134da9ac57f5d2bdddc82",
+      "initialSnapshot": {
+        "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
+        "sealedAt": "2026-07-20T01:00:00Z",
+        "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
+        "packageProcedure": "canonical source package v1"
+      },
+      "finalSnapshot": {
+        "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
+        "sealedAt": "2026-07-20T01:00:00Z",
+        "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
+        "packageProcedure": "canonical source package v1"
+      },
+      "cycles": [],
+      "stopReason": "baseline-zero-cycles",
+      "convergence": null,
+      "status": "valid"
+    },
+    "candidate-b": {
+      "candidateLabel": "candidate-b",
+      "assignedArm": "treatment",
+      "builderWorkerId": "worker-02-builder-b-91e2",
+      "runtimeInvocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
+      "runtimeEvidenceSha256": "15b231d096380dcd3b209f6659ec3ed6713160aaf82eb414d8f2254c1df49ccd",
+      "initialSnapshot": {
+        "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
+        "sealedAt": "2026-07-20T01:00:00Z",
+        "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
+        "packageProcedure": "canonical source package v1"
+      },
+      "finalSnapshot": {
+        "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
+        "sealedAt": "2026-07-20T01:00:00Z",
+        "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
+        "packageProcedure": "canonical source package v1"
+      },
+      "cycles": [
+        {
+          "number": 1,
+          "reviewerWorkerId": "worker-03-reviewer-6f8d",
+          "fixerWorkerId": null,
+          "testerWorkerId": null,
+          "reviewFindingCount": 0,
+          "decision": "zero-findings"
+        }
+      ],
+      "stopReason": "zero-findings",
+      "convergence": true,
+      "status": "valid"
+    }
+  },
+  "reviews": [
+    {
+      "candidateLabel": "candidate-b",
+      "cycle": 1,
+      "snapshotCommit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
+      "roleInstanceId": "cycle-1-reviewer",
+      "workerId": "worker-03-reviewer-6f8d",
+      "runtimeInvocationId": "44444444444444444444444444444444",
+      "runtimeProcessId": 12003,
+      "runtimeThreadId": "019f827b-221c-7000-8000-000000000003",
+      "startedAt": "2026-07-20T01:02:00Z",
+      "completedAt": "2026-07-20T01:10:00Z",
+      "checksRun": [],
+      "evidenceExamined": ["synthetic source inspection conformance evidence"],
+      "coverageGaps": [],
+      "findings": []
+    }
+  ],
+  "fixes": [],
+  "tests": [],
+  "packages": [
+    {
+      "packageLabel": "X",
+      "snapshotRole": "B0",
+      "sourceCommit": "0d977cbeeb1df357e500f254108535ba025577d7",
+      "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
+      "historyFree": true
+    },
+    {
+      "packageLabel": "Y",
+      "snapshotRole": "T0",
+      "sourceCommit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
+      "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
+      "historyFree": true
+    },
+    {
+      "packageLabel": "Z",
+      "snapshotRole": "Tfinal",
+      "sourceCommit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
+      "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
+      "historyFree": true
+    }
+  ],
+  "blindedPackageManifest": {
+    "manifestVersion": "1.0.0",
+    "mappingSeedSha256": "84e09f0fb1fddf4d5a0f58bb5e459f9e8e83e266f4b9567192ab42012376ce2f",
+    "randomizedOrder": ["X", "Y", "Z"],
+    "frozenGateSetSha256": "af8a2d6f7a29ff3dcbc1ca4240361e6bdbba520078a0cd39dbd0f4e4ba0f7930",
+    "packages": [
+      {
+        "packageLabel": "X",
+        "packageSha256": "2ead643fcb670f73e7a189e566f463a42df44db4ecec83905d7fa8928495ec4d",
+        "fileCount": 12,
+        "historyFree": true,
+        "lineageScanPassed": true,
+        "timestampsNormalized": true
+      },
+      {
+        "packageLabel": "Y",
+        "packageSha256": "76b3ec7289368fc1a26b7e82f4d22807dfea6435318ba637c6216f80cc28fd31",
+        "fileCount": 12,
+        "historyFree": true,
+        "lineageScanPassed": true,
+        "timestampsNormalized": true
+      },
+      {
+        "packageLabel": "Z",
+        "packageSha256": "02827ac286660fbf195489e92fbb3b5fd9b38f4bd4d6090002d07c885e111239",
+        "fileCount": 12,
+        "historyFree": true,
+        "lineageScanPassed": true,
+        "timestampsNormalized": true
+      }
+    ],
+    "sanitizationPolicySha256": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+  },
+  "evaluations": [
+    {
+      "packageLabel": "X",
+      "packageSha256": "2ead643fcb670f73e7a189e566f463a42df44db4ecec83905d7fa8928495ec4d",
+      "evaluatorWorkerId": "worker-06-evaluator-2d5b",
+      "runtimeInvocationId": "66666666666666666666666666666666",
+      "runtimeProcessId": 12006,
+      "runtimeThreadId": "019f827b-221c-7000-8000-000000000006",
+      "evaluationSequence": 1,
+      "revisionAllowed": false,
+      "mappingGuess": "unknown",
+      "mappingGuessConfidence": 0,
+      "mappingGuessEvidence": "No diagnostic basis observed.",
+      "evaluatedAt": "2026-07-20T01:30:00Z",
+      "sealedAt": "2026-07-20T01:30:00Z",
+      "publicTests": {
+        "passed": 20,
+        "failed": 0,
+        "command": "npm run test:public",
+        "exitCode": 0,
+        "rawOutputSha256": "5a9d223ff5fb17e7a4d61e157bb3fcdbb8572a687b3c61a0a88b74bfcf8fd7b5"
+      },
+      "hiddenTests": {
+        "passed": 20,
+        "failed": 0,
+        "command": "node sealed-hidden-suite/run.mjs",
+        "exitCode": 0,
+        "rawOutputSha256": "b223e1dfcbd2cd69282c3bc1d82cd7cbb2259a8d61383d96b19d4956f4e906a6"
+      },
+      "items": [
+        {
+          "id": "A1",
+          "score": 6,
+          "maximum": 6,
+          "evidence": ["synthetic A1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A2",
+          "score": 8,
+          "maximum": 8,
+          "evidence": ["synthetic A2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A3",
+          "score": 10,
+          "maximum": 10,
+          "evidence": ["synthetic A3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A4",
+          "score": 10,
+          "maximum": 10,
+          "evidence": ["synthetic A4"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A5",
+          "score": 7,
+          "maximum": 7,
+          "evidence": ["synthetic A5"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A6",
+          "score": 7,
+          "maximum": 7,
+          "evidence": ["synthetic A6"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A7",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic A7"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B1",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B2",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B3",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C1",
+          "score": 6,
+          "maximum": 6,
+          "evidence": ["synthetic C1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C2",
+          "score": 4,
+          "maximum": 4,
+          "evidence": ["synthetic C2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C3",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic C3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D1",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic D1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D2",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic D2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D3",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic D3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E1",
+          "score": 3,
+          "maximum": 3,
+          "evidence": ["synthetic E1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E2",
+          "score": 2,
+          "maximum": 3,
+          "evidence": ["synthetic E2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E3",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic E3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E4",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic E4"],
+          "rationale": "conformance"
+        }
+      ],
+      "sectionTotals": {
+        "functional": 50,
+        "robustnessSecurity": 15,
+        "accessibilityUsability": 15,
+        "testEffectiveness": 6,
+        "maintainabilityDocs": 9
+      },
+      "uncappedTotal": 95,
+      "capConditions": {
+        "buildFailedOrCannotRender": false,
+        "defaultAllow": false,
+        "executableInjectionOrUnexpectedNetwork": false
+      },
+      "capsApplied": [],
+      "finalTotal": 95,
+      "uncertainties": [],
+      "evidenceHash": "8e82a96f19ee870a104c850ac061799539672200318386133321ea8c148e90b9"
+    },
+    {
+      "packageLabel": "Y",
+      "packageSha256": "76b3ec7289368fc1a26b7e82f4d22807dfea6435318ba637c6216f80cc28fd31",
+      "evaluatorWorkerId": "worker-09-evaluator-7d6c",
+      "runtimeInvocationId": "77777777777777777777777777777777",
+      "runtimeProcessId": 12007,
+      "runtimeThreadId": "019f827b-221c-7000-8000-000000000007",
+      "evaluationSequence": 2,
+      "revisionAllowed": false,
+      "mappingGuess": "T0",
+      "mappingGuessConfidence": 40,
+      "mappingGuessEvidence": "Synthetic fixture guess based only on observable implementation structure.",
+      "evaluatedAt": "2026-07-20T01:40:00Z",
+      "sealedAt": "2026-07-20T01:40:00Z",
+      "publicTests": {
+        "passed": 18,
+        "failed": 2,
+        "command": "npm run test:public",
+        "exitCode": 1,
+        "rawOutputSha256": "49f58ccca98b452d459ab54ec869b28582ce55ad414aa192c9fb00be4b68d1cb"
+      },
+      "hiddenTests": {
+        "passed": 18,
+        "failed": 2,
+        "command": "node sealed-hidden-suite/run.mjs",
+        "exitCode": 1,
+        "rawOutputSha256": "984f87fbfb9c1793a22f315ff21c38d3f53d5b5d5c2df169d71524bc3ab91fc8"
+      },
+      "items": [
+        {
+          "id": "A1",
+          "score": 6,
+          "maximum": 6,
+          "evidence": ["synthetic A1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A2",
+          "score": 8,
+          "maximum": 8,
+          "evidence": ["synthetic A2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A3",
+          "score": 7,
+          "maximum": 10,
+          "evidence": ["synthetic A3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A4",
+          "score": 7,
+          "maximum": 10,
+          "evidence": ["synthetic A4"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A5",
+          "score": 7,
+          "maximum": 7,
+          "evidence": ["synthetic A5"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A6",
+          "score": 7,
+          "maximum": 7,
+          "evidence": ["synthetic A6"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A7",
+          "score": 1,
+          "maximum": 2,
+          "evidence": ["synthetic A7"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B1",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B2",
+          "score": 3,
+          "maximum": 5,
+          "evidence": ["synthetic B2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B3",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C1",
+          "score": 6,
+          "maximum": 6,
+          "evidence": ["synthetic C1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C2",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic C2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C3",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic C3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D1",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic D1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D2",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic D2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D3",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic D3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E1",
+          "score": 3,
+          "maximum": 3,
+          "evidence": ["synthetic E1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E2",
+          "score": 2,
+          "maximum": 3,
+          "evidence": ["synthetic E2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E3",
+          "score": 1,
+          "maximum": 2,
+          "evidence": ["synthetic E3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E4",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic E4"],
+          "rationale": "conformance"
+        }
+      ],
+      "sectionTotals": {
+        "functional": 43,
+        "robustnessSecurity": 13,
+        "accessibilityUsability": 13,
+        "testEffectiveness": 6,
+        "maintainabilityDocs": 8
+      },
+      "uncappedTotal": 83,
+      "capConditions": {
+        "buildFailedOrCannotRender": false,
+        "defaultAllow": false,
+        "executableInjectionOrUnexpectedNetwork": false
+      },
+      "capsApplied": [],
+      "finalTotal": 83,
+      "uncertainties": [],
+      "evidenceHash": "515e7e5ee820b909c20cbdbab2cb173beb0e998f28ae848f811bde5cefc3f0c7"
+    },
+    {
+      "packageLabel": "Z",
+      "packageSha256": "02827ac286660fbf195489e92fbb3b5fd9b38f4bd4d6090002d07c885e111239",
+      "evaluatorWorkerId": "worker-10-evaluator-8e7d",
+      "runtimeInvocationId": "88888888888888888888888888888888",
+      "runtimeProcessId": 12008,
+      "runtimeThreadId": "019f827b-221c-7000-8000-000000000008",
+      "evaluationSequence": 3,
+      "revisionAllowed": false,
+      "mappingGuess": "Tfinal",
+      "mappingGuessConfidence": 40,
+      "mappingGuessEvidence": "Synthetic fixture guess based only on observable implementation structure.",
+      "evaluatedAt": "2026-07-20T01:50:00Z",
+      "sealedAt": "2026-07-20T01:50:00Z",
+      "publicTests": {
+        "passed": 18,
+        "failed": 2,
+        "command": "npm run test:public",
+        "exitCode": 1,
+        "rawOutputSha256": "6f8d182e9ba84789a283e135ad1bac0a0c91255af454900662bb453a26db8a06"
+      },
+      "hiddenTests": {
+        "passed": 18,
+        "failed": 2,
+        "command": "node sealed-hidden-suite/run.mjs",
+        "exitCode": 1,
+        "rawOutputSha256": "57e7470b892546acd11645e16bbba2f6cef1633d6094ae7ff9edce59264b9aad"
+      },
+      "items": [
+        {
+          "id": "A1",
+          "score": 6,
+          "maximum": 6,
+          "evidence": ["synthetic A1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A2",
+          "score": 8,
+          "maximum": 8,
+          "evidence": ["synthetic A2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A3",
+          "score": 7,
+          "maximum": 10,
+          "evidence": ["synthetic A3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A4",
+          "score": 7,
+          "maximum": 10,
+          "evidence": ["synthetic A4"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A5",
+          "score": 7,
+          "maximum": 7,
+          "evidence": ["synthetic A5"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A6",
+          "score": 7,
+          "maximum": 7,
+          "evidence": ["synthetic A6"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "A7",
+          "score": 1,
+          "maximum": 2,
+          "evidence": ["synthetic A7"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B1",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B2",
+          "score": 3,
+          "maximum": 5,
+          "evidence": ["synthetic B2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "B3",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic B3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C1",
+          "score": 6,
+          "maximum": 6,
+          "evidence": ["synthetic C1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C2",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic C2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "C3",
+          "score": 5,
+          "maximum": 5,
+          "evidence": ["synthetic C3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D1",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic D1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D2",
+          "score": 2,
+          "maximum": 4,
+          "evidence": ["synthetic D2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "D3",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic D3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E1",
+          "score": 3,
+          "maximum": 3,
+          "evidence": ["synthetic E1"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E2",
+          "score": 2,
+          "maximum": 3,
+          "evidence": ["synthetic E2"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E3",
+          "score": 1,
+          "maximum": 2,
+          "evidence": ["synthetic E3"],
+          "rationale": "conformance"
+        },
+        {
+          "id": "E4",
+          "score": 2,
+          "maximum": 2,
+          "evidence": ["synthetic E4"],
+          "rationale": "conformance"
+        }
+      ],
+      "sectionTotals": {
+        "functional": 43,
+        "robustnessSecurity": 13,
+        "accessibilityUsability": 13,
+        "testEffectiveness": 6,
+        "maintainabilityDocs": 8
+      },
+      "uncappedTotal": 83,
+      "capConditions": {
+        "buildFailedOrCannotRender": false,
+        "defaultAllow": false,
+        "executableInjectionOrUnexpectedNetwork": false
+      },
+      "capsApplied": [],
+      "finalTotal": 83,
+      "uncertainties": [],
+      "evidenceHash": "a9e2f8379d3f95c1c4cc25bf0cf4e66bb729e4cf8c4d1bb1fae7bbf3ad4c8a18"
+    }
+  ],
+  "outcome": {
+    "packageMapping": {
+      "X": "B0",
+      "Y": "T0",
+      "Z": "Tfinal"
+    },
+    "scores": {
+      "B0": 95,
+      "T0": 83,
+      "Tfinal": 83
+    },
+    "primaryTfinalMinusB0": -12,
+    "secondaryTfinalMinusT0": 0,
+    "mainSelection": "baseline",
+    "tiePolicy": "baseline",
+    "evaluationArtifactHashes": {
+      "X": "476be5085c0aacbbacd972e84f8ba83870f9e712f7b5c877b1a9de75d4438306",
+      "Y": "be1357b13d285da474c3a09320db3fa01b9014f90413f3a7b6b6f374d0f716dd",
+      "Z": "8b91b99fef52e3b70c8fa32e95f713de0466d32609aac66c171d65f083fe3eda"
+    },
+    "evidenceHash": "c32db5e73d59ee2230927b039599848ae48413174361a3dd1af84a4ec74fce1e",
+    "unblinderWorkerId": "worker-07-unblinder-8aa1",
+    "gitWorkerId": "worker-08-git-worker-5c03"
+  },
+  "costs": [
+    {
+      "workerId": "worker-01-builder-a-7b4c",
+      "role": "builder",
+      "candidateLabel": "candidate-a",
+      "packageLabel": "X",
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 2400,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "provider does not expose an enforceable per-role ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+      "modelConfigUnavailableReason": null,
+      "startedAt": "2026-07-20T00:20:00Z",
+      "completedAt": "2026-07-20T01:00:00Z",
+      "wallSeconds": 2400,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-02-builder-b-91e2",
+      "role": "builder",
+      "candidateLabel": "candidate-b",
+      "packageLabel": null,
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 2400,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "provider does not expose an enforceable per-role ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+      "modelConfigUnavailableReason": null,
+      "startedAt": "2026-07-20T00:20:00Z",
+      "completedAt": "2026-07-20T01:00:00Z",
+      "wallSeconds": 2400,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-03-reviewer-6f8d",
+      "role": "reviewer",
+      "candidateLabel": "candidate-b",
+      "packageLabel": null,
+      "cycle": 1,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 900,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "provider does not expose an enforceable per-role ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+      "modelConfigUnavailableReason": null,
+      "startedAt": "2026-07-20T01:02:00Z",
+      "completedAt": "2026-07-20T01:10:00Z",
+      "wallSeconds": 480,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-06-evaluator-2d5b",
+      "role": "evaluator",
+      "candidateLabel": null,
+      "packageLabel": "X",
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 1800,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "provider does not expose an enforceable per-role ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+      "modelConfigUnavailableReason": null,
+      "startedAt": "2026-07-20T01:20:00Z",
+      "completedAt": "2026-07-20T01:30:00Z",
+      "wallSeconds": 600,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-09-evaluator-7d6c",
+      "role": "evaluator",
+      "candidateLabel": null,
+      "packageLabel": "Y",
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 1800,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "provider does not expose an enforceable per-role ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+      "modelConfigUnavailableReason": null,
+      "startedAt": "2026-07-20T01:31:00Z",
+      "completedAt": "2026-07-20T01:40:00Z",
+      "wallSeconds": 540,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-10-evaluator-8e7d",
+      "role": "evaluator",
+      "candidateLabel": null,
+      "packageLabel": "Z",
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 1800,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "provider does not expose an enforceable per-role ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": "9648e9fc2b3869e5759b9775f246fb3685f7c55ca07b4623408700bfe809d03d",
+      "modelConfigUnavailableReason": null,
+      "startedAt": "2026-07-20T01:41:00Z",
+      "completedAt": "2026-07-20T01:50:00Z",
+      "wallSeconds": 540,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-07-unblinder-8aa1",
+      "role": "unblinder",
+      "candidateLabel": null,
+      "packageLabel": null,
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 300,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "role is deterministic and has no model token ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": null,
+      "modelConfigUnavailableReason": "deterministic unblinding role does not use a model",
+      "startedAt": "2026-07-20T01:51:00Z",
+      "completedAt": "2026-07-20T01:53:00Z",
+      "wallSeconds": 120,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    },
+    {
+      "workerId": "worker-08-git-worker-5c03",
+      "role": "git_worker",
+      "candidateLabel": null,
+      "packageLabel": null,
+      "cycle": null,
+      "turnLimit": 1,
+      "wallSecondsMaximum": 600,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "role is deterministic and has no model token ceiling",
+      "environmentSha256": "e54a844f261c8c8d28b3fe07c5df16cd695cf2c299bac4c55775a80d3a772d1c",
+      "modelConfigSha256": null,
+      "modelConfigUnavailableReason": "deterministic git role does not use a model",
+      "startedAt": "2026-07-20T01:54:00Z",
+      "completedAt": "2026-07-20T01:58:00Z",
+      "wallSeconds": 240,
+      "totalTokens": null,
+      "usd": null,
+      "source": "unavailable"
+    }
+  ],
+  "evidenceChain": [
+    {
+      "sequence": 0,
+      "artifactKey": "builderFreezes.candidate-a",
+      "artifactSha256": "fbe71d215ccf030fa9ad52f996ed7480e29578df2a09eb3c45cb8d710fdcd253",
+      "previousSha256": null
+    },
+    {
+      "sequence": 1,
+      "artifactKey": "builderFreezes.candidate-b",
+      "artifactSha256": "729faef2fc820cd62007be3274540fb57b423ee7974e564015cf3414baa88c30",
+      "previousSha256": "fbe71d215ccf030fa9ad52f996ed7480e29578df2a09eb3c45cb8d710fdcd253"
+    },
+    {
+      "sequence": 2,
+      "artifactKey": "assignment",
+      "artifactSha256": "c499551590308f2d59114d041dcef51e1841035c8f21be614a8ad5a7d049f5d4",
+      "previousSha256": "729faef2fc820cd62007be3274540fb57b423ee7974e564015cf3414baa88c30"
+    },
+    {
+      "sequence": 3,
+      "artifactKey": "reviews.0",
+      "artifactSha256": "92912f617038291cedc763e5476beae0f27179b78783d6f7e57a20f97ea4e5f9",
+      "previousSha256": "c499551590308f2d59114d041dcef51e1841035c8f21be614a8ad5a7d049f5d4"
+    },
+    {
+      "sequence": 4,
+      "artifactKey": "packages.0",
+      "artifactSha256": "2ead643fcb670f73e7a189e566f463a42df44db4ecec83905d7fa8928495ec4d",
+      "previousSha256": "92912f617038291cedc763e5476beae0f27179b78783d6f7e57a20f97ea4e5f9"
+    },
+    {
+      "sequence": 5,
+      "artifactKey": "packages.1",
+      "artifactSha256": "76b3ec7289368fc1a26b7e82f4d22807dfea6435318ba637c6216f80cc28fd31",
+      "previousSha256": "2ead643fcb670f73e7a189e566f463a42df44db4ecec83905d7fa8928495ec4d"
+    },
+    {
+      "sequence": 6,
+      "artifactKey": "packages.2",
+      "artifactSha256": "02827ac286660fbf195489e92fbb3b5fd9b38f4bd4d6090002d07c885e111239",
+      "previousSha256": "76b3ec7289368fc1a26b7e82f4d22807dfea6435318ba637c6216f80cc28fd31"
+    },
+    {
+      "sequence": 7,
+      "artifactKey": "evaluations.0",
+      "artifactSha256": "476be5085c0aacbbacd972e84f8ba83870f9e712f7b5c877b1a9de75d4438306",
+      "previousSha256": "02827ac286660fbf195489e92fbb3b5fd9b38f4bd4d6090002d07c885e111239"
+    },
+    {
+      "sequence": 8,
+      "artifactKey": "evaluations.1",
+      "artifactSha256": "be1357b13d285da474c3a09320db3fa01b9014f90413f3a7b6b6f374d0f716dd",
+      "previousSha256": "476be5085c0aacbbacd972e84f8ba83870f9e712f7b5c877b1a9de75d4438306"
+    },
+    {
+      "sequence": 9,
+      "artifactKey": "evaluations.2",
+      "artifactSha256": "8b91b99fef52e3b70c8fa32e95f713de0466d32609aac66c171d65f083fe3eda",
+      "previousSha256": "be1357b13d285da474c3a09320db3fa01b9014f90413f3a7b6b6f374d0f716dd"
+    },
+    {
+      "sequence": 10,
+      "artifactKey": "outcome",
+      "artifactSha256": "0cc04f206431553ad9be57ea0bacc81356d1e5339168425f605bd681c9b2fd4a",
+      "previousSha256": "8b91b99fef52e3b70c8fa32e95f713de0466d32609aac66c171d65f083fe3eda"
+    },
+    {
+      "sequence": 11,
+      "artifactKey": "costs",
+      "artifactSha256": "9fb0252efa27fcfaf7aa6842d21ef6ba1b75e2d9b4dcf67b51cd42eff9ea8343",
+      "previousSha256": "0cc04f206431553ad9be57ea0bacc81356d1e5339168425f605bd681c9b2fd4a"
+    }
+  ]
+}

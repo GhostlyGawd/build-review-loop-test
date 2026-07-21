@@ -1,0 +1,44 @@
+{
+  "version": "1.0.0",
+  "files": [
+    { "source": ".gitattributes", "destination": ".gitattributes" },
+    { "source": ".gitignore", "destination": ".gitignore" },
+    { "source": ".nvmrc", "destination": ".nvmrc" },
+    { "source": ".prettierignore", "destination": ".prettierignore" },
+    {
+      "source": "docs/permissions-playground-spec.md",
+      "destination": "docs/permissions-playground-spec.md"
+    },
+    {
+      "source": "docs/public-test-contract.md",
+      "destination": "docs/public-test-contract.md"
+    },
+    { "source": "eslint.config.js", "destination": "eslint.config.js" },
+    {
+      "source": "experiment/builder-package.json",
+      "destination": "package.json"
+    },
+    { "source": "index.html", "destination": "index.html" },
+    { "source": "package-lock.json", "destination": "package-lock.json" },
+    {
+      "source": "scripts/run-public-tests.mjs",
+      "destination": "scripts/run-public-tests.mjs"
+    },
+    { "source": "src/main.tsx", "destination": "src/main.tsx" },
+    { "source": "src/scaffold.css", "destination": "src/scaffold.css" },
+    { "source": "src/vite-env.d.ts", "destination": "src/vite-env.d.ts" },
+    {
+      "source": "tests/public/evaluate.test.ts",
+      "destination": "tests/public/evaluate.test.ts"
+    },
+    {
+      "source": "tests/public/ui.test.tsx",
+      "destination": "tests/public/ui.test.tsx"
+    },
+    { "source": "tests/setup.ts", "destination": "tests/setup.ts" },
+    { "source": "tsconfig.app.json", "destination": "tsconfig.app.json" },
+    { "source": "tsconfig.json", "destination": "tsconfig.json" },
+    { "source": "tsconfig.node.json", "destination": "tsconfig.node.json" },
+    { "source": "vite.config.ts", "destination": "vite.config.ts" }
+  ]
+}
