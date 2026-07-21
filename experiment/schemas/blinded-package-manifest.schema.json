@@ -51,40 +51,18 @@
             "properties": { "packageLabel": { "const": "Z" } },
             "required": ["packageLabel"]
           }
-        },
-        {
-          "contains": {
-            "properties": { "sourceRole": { "const": "B0" } },
-            "required": ["sourceRole"]
-          }
-        },
-        {
-          "contains": {
-            "properties": { "sourceRole": { "const": "T0" } },
-            "required": ["sourceRole"]
-          }
-        },
-        {
-          "contains": {
-            "properties": { "sourceRole": { "const": "Tfinal" } },
-            "required": ["sourceRole"]
-          }
         }
       ]
     },
     "sanitizationPolicySha256": { "$ref": "#/$defs/sha256" }
   },
   "$defs": {
-    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
     "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "package": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "packageLabel",
-        "sourceRole",
-        "sourceCommit",
-        "sourceTree",
         "packageSha256",
         "fileCount",
         "historyFree",
@@ -93,9 +71,6 @@
       ],
       "properties": {
         "packageLabel": { "enum": ["X", "Y", "Z"] },
-        "sourceRole": { "enum": ["B0", "T0", "Tfinal"] },
-        "sourceCommit": { "$ref": "#/$defs/sha1" },
-        "sourceTree": { "$ref": "#/$defs/sha1" },
         "packageSha256": { "$ref": "#/$defs/sha256" },
         "fileCount": { "type": "integer", "minimum": 1 },
         "historyFree": { "const": true },

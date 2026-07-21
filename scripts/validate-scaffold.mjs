@@ -522,7 +522,10 @@ export function validateCliRuntimeContract(
     contract.cliSha256 !== lock.cliBinarySha256
   )
     failures.push("CLI binary path/version/hash commitment mismatch");
-  if (contract.promptSha256 !== lock.neutralBuilderPromptSha256)
+  const expectedPromptSha256 = contract.smokeMode
+    ? lock.runnerSmokePromptSha256
+    : lock.neutralBuilderPromptSha256;
+  if (contract.promptSha256 !== expectedPromptSha256)
     failures.push("CLI raw stdin prompt commitment mismatch");
   if (contract.authStatus !== "Logged in using ChatGPT")
     failures.push("CLI ChatGPT auth attestation mismatch");
@@ -1069,6 +1072,10 @@ export function validateCanonicalContract(contract) {
   if (
     contract.builderFreeze?.promptSha256 !==
       "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0" ||
+    contract.builderFreeze?.smokePromptSha256 !==
+      fileSha256("experiment/prompts/runner-smoke.md") ||
+    contract.builderFreeze?.smokePromptSha256 !==
+      lock.runnerSmokePromptSha256 ||
     contract.builderFreeze?.configSha256 !==
       "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4" ||
     contract.builderFreeze?.rule !==
@@ -1076,6 +1083,10 @@ export function validateCanonicalContract(contract) {
   )
     failures.push("canonical builder prompt/config commitments diverge");
   if (
+    contract.cliRuntime?.launchCommand !== "pwsh -NoProfile -File" ||
+    contract.cliRuntime?.powerShellHost?.path !== lock.powerShellHostPath ||
+    contract.cliRuntime?.powerShellHost?.version !== lock.powerShellVersion ||
+    contract.cliRuntime?.powerShellHost?.sha256 !== lock.powerShellHostSha256 ||
     contract.cliRuntime?.schemaSha256 !==
       fileSha256("experiment/schemas/cli-runtime-contract.schema.json") ||
     contract.cliRuntime?.schemaSha256 !== lock.cliRuntimeSchemaSha256 ||
@@ -1111,7 +1122,11 @@ export function validateCanonicalContract(contract) {
     contract.evaluation?.packageManifestSchemaSha256 !==
       fileSha256("experiment/schemas/blinded-package-manifest.schema.json") ||
     contract.evaluation?.packageManifestSchemaSha256 !==
-      lock.blindedPackageSchemaSha256
+      lock.blindedPackageSchemaSha256 ||
+    contract.evaluation?.packageMappingSchemaSha256 !==
+      fileSha256("experiment/schemas/blinded-package-mapping.schema.json") ||
+    contract.evaluation?.packageMappingSchemaSha256 !==
+      lock.blindedPackageMappingSchemaSha256
   )
     failures.push(
       "canonical role runtime or blinded packaging contract diverges",
@@ -1404,11 +1419,12 @@ export function validateGoldenRun(
     T0: treatment.initialSnapshot.commit,
     Tfinal: treatment.finalSnapshot.commit,
   };
-  for (const entry of fixture.blindedPackageManifest?.packages ?? []) {
+  for (const entry of fixture.packages ?? []) {
+    const expectedRole =
+      fixture.evaluationRandomization.mapping?.[entry.packageLabel];
     if (
-      fixture.evaluationRandomization.mapping?.[entry.packageLabel] !==
-        entry.sourceRole ||
-      snapshotCommits[entry.sourceRole] !== entry.sourceCommit
+      expectedRole !== entry.snapshotRole ||
+      snapshotCommits[entry.snapshotRole] !== entry.sourceCommit
     )
       failures.push(
         `golden blinded package ${entry.packageLabel} is not bound to its registered snapshot`,
@@ -1533,6 +1549,7 @@ export function validateScaffold() {
     "experiment/builder-config.json",
     "experiment/treatment-loop-algorithm.md",
     "experiment/prompts/neutral-builder.md",
+    "experiment/prompts/runner-smoke.md",
     "experiment/prompts/blinded-reviewer.md",
     "experiment/prompts/fixer.md",
     "experiment/prompts/tester.md",
@@ -1545,6 +1562,7 @@ export function validateScaffold() {
     "experiment/schemas/role-runtime-contract.schema.json",
     "experiment/schemas/cli-supervision-evidence.schema.json",
     "experiment/schemas/blinded-package-manifest.schema.json",
+    "experiment/schemas/blinded-package-mapping.schema.json",
     "experiment/templates/test.json",
     "experiment/templates/outcome.json",
     "experiment/templates/experiment-status.json",
@@ -1552,6 +1570,7 @@ export function validateScaffold() {
     "experiment/templates/role-runtime-contract.json",
     "experiment/templates/cli-supervision-evidence.json",
     "experiment/templates/blinded-package-manifest.json",
+    "experiment/templates/blinded-package-mapping.json",
     "scripts/run-cli-builders.ps1",
     "scripts/run-cli-role.ps1",
     "scripts/package-blinded-snapshots.mjs",
@@ -1635,6 +1654,10 @@ export function validateScaffold() {
       "experiment/schemas/blinded-package-manifest.schema.json",
       "experiment/templates/blinded-package-manifest.json",
     ],
+    [
+      "experiment/schemas/blinded-package-mapping.schema.json",
+      "experiment/templates/blinded-package-mapping.json",
+    ],
   ];
   const ajv = new Ajv2020({
     allErrors: true,
@@ -1668,6 +1691,9 @@ export function validateScaffold() {
       path.join(root, "experiment/prompts/neutral-builder.md"),
       "utf8",
     ),
+  );
+  const actualSmokePromptHash = sha256(
+    readFileSync(path.join(root, "experiment/prompts/runner-smoke.md"), "utf8"),
   );
   const actualConfigHash = sha256(
     readFileSync(path.join(root, "experiment/builder-config.json"), "utf8"),
@@ -1706,6 +1732,12 @@ export function validateScaffold() {
         root,
         "experiment/schemas/blinded-package-manifest.schema.json",
       ),
+      "utf8",
+    ),
+  );
+  const actualPackageMappingSchemaHash = sha256(
+    readFileSync(
+      path.join(root, "experiment/schemas/blinded-package-mapping.schema.json"),
       "utf8",
     ),
   );
@@ -1759,7 +1791,12 @@ export function validateScaffold() {
     treatmentSkillManifestSha256: null,
     treatmentAlgorithmSha256: actualAlgorithmHash,
     neutralBuilderPromptSha256: actualPromptHash,
+    runnerSmokePromptSha256: actualSmokePromptHash,
     neutralBuilderConfigSha256: actualConfigHash,
+    powerShellHostPath: String.raw`C:\Users\rhenm\AppData\Local\pwsh7\pwsh.exe`,
+    powerShellVersion: "7.6.2",
+    powerShellHostSha256:
+      "99ec38d8c4910fd5f2feeeec4dedb5076ff39a08ca21e12642822bc8d989e316",
     cliBinaryPath: String.raw`C:\Users\rhenm\.codex\plugins\.plugin-appserver\codex.exe`,
     cliVersion: "codex-cli 0.145.0-alpha.18",
     cliBinarySha256:
@@ -1781,6 +1818,7 @@ export function validateScaffold() {
     rubricSha256: actualRubricHash,
     frozenGateSetSha256: actualFrozenGateSetHash,
     blindedPackageSchemaSha256: actualPackageSchemaHash,
+    blindedPackageMappingSchemaSha256: actualPackageMappingSchemaHash,
     blindedPackageScriptSha256: actualPackageScriptHash,
     v4SmokeContractSha256:
       "d1a47087dc0bfcf85638e6c9faef4c7399c98626556747f1fda31e0a67e0645d",

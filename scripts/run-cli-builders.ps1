@@ -17,6 +17,38 @@ function Get-TextSha256([string]$Value) {
   return [System.Convert]::ToHexString($hash).ToLowerInvariant()
 }
 
+function ConvertFrom-JsonLiteral([string]$Json) {
+  return $Json | ConvertFrom-Json -DateKind String
+}
+
+function Invoke-NativeCapture([string]$FilePath, [string[]]$Arguments) {
+  $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+  $startInfo.FileName = $FilePath
+  $startInfo.UseShellExecute = $false
+  $startInfo.CreateNoWindow = $true
+  $startInfo.RedirectStandardOutput = $true
+  $startInfo.RedirectStandardError = $true
+  foreach ($argument in $Arguments) { [void]$startInfo.ArgumentList.Add($argument) }
+  $process = [System.Diagnostics.Process]::new()
+  $process.StartInfo = $startInfo
+  if (-not $process.Start()) { throw "Native process did not start: $FilePath" }
+  $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+  $stderrTask = $process.StandardError.ReadToEndAsync()
+  $process.WaitForExit()
+  return [pscustomobject]@{
+    ExitCode = $process.ExitCode
+    Stdout = $stdoutTask.GetAwaiter().GetResult()
+    Stderr = $stderrTask.GetAwaiter().GetResult()
+  }
+}
+
+function Assert-PowerShellHost($Lock) {
+  $hostPath = [System.IO.Path]::GetFullPath([System.Environment]::ProcessPath)
+  if (-not $hostPath.Equals([System.IO.Path]::GetFullPath($Lock.powerShellHostPath), [System.StringComparison]::OrdinalIgnoreCase) -or $PSVersionTable.PSVersion.ToString() -ne $Lock.powerShellVersion -or (Get-Sha256 $hostPath) -ne $Lock.powerShellHostSha256) {
+    throw "PowerShell host path/version/hash mismatch"
+  }
+}
+
 function Invoke-Git([string]$Workdir, [string[]]$Arguments) {
   $output = (& git -C $Workdir @Arguments 2>&1 | Out-String).Trim()
   if ($LASTEXITCODE -ne 0) { throw "git $($Arguments -join ' ') failed in $Workdir`: $output" }
@@ -35,20 +67,24 @@ function Test-PathsNestedOrEqual([string]$Left, [string]$Right) {
 }
 
 $contractFullPath = [System.IO.Path]::GetFullPath($ContractPath)
-$contract = Get-Content -LiteralPath $contractFullPath -Raw | ConvertFrom-Json
+$contract = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $contractFullPath -Raw)
 $lockPath = [System.IO.Path]::GetFullPath($contract.lockPath)
 $schemaPath = [System.IO.Path]::GetFullPath($contract.contractSchemaPath)
 if ((Get-Sha256 $lockPath) -ne $contract.lockSha256) { throw "Frozen lock hash mismatch" }
 if ((Get-Sha256 $schemaPath) -ne $contract.contractSchemaSha256) { throw "Runtime contract schema hash mismatch" }
-$lock = Get-Content -LiteralPath $lockPath -Raw | ConvertFrom-Json
-if ($lock.cliBinarySha256 -ne $contract.cliSha256 -or $lock.cliRuntimeSchemaSha256 -ne $contract.contractSchemaSha256 -or $lock.cliRunnerSha256 -ne (Get-Sha256 $PSCommandPath) -or $lock.neutralBuilderPromptSha256 -ne $contract.promptSha256) { throw "Contract does not match frozen lock runtime bindings" }
+$lock = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $lockPath -Raw)
+Assert-PowerShellHost $lock
+$expectedPromptSha256 = if ($contract.smokeMode) { $lock.runnerSmokePromptSha256 } else { $lock.neutralBuilderPromptSha256 }
+if ($lock.cliBinarySha256 -ne $contract.cliSha256 -or $lock.cliRuntimeSchemaSha256 -ne $contract.contractSchemaSha256 -or $lock.cliRunnerSha256 -ne (Get-Sha256 $PSCommandPath) -or $expectedPromptSha256 -ne $contract.promptSha256) { throw "Contract does not match frozen lock runtime bindings" }
 if (($contract.invariantArgv -join "`0") -ne ($ExpectedInvariant -join "`0")) { throw "Invariant argv or ordering mismatch" }
 if ($contract.deadlineSeconds -lt 1 -or $contract.deadlineSeconds -gt 2400) { throw "Invalid external deadline" }
 if ($contract.invocations.Count -ne 2) { throw "Exactly two invocations are required" }
 if ((Get-Sha256 $contract.cliPath) -ne $contract.cliSha256) { throw "CLI binary hash mismatch" }
-$version = (& $contract.cliPath --version 2>&1 | Out-String).Trim()
-if ($version -ne $contract.cliVersion) { throw "CLI version mismatch" }
-$authStatus = (& $contract.cliPath login status 2>&1 | Out-String).Trim()
+$versionResult = Invoke-NativeCapture $contract.cliPath @("--version")
+if ($versionResult.ExitCode -ne 0 -or $versionResult.Stdout.Trim() -ne $contract.cliVersion) { throw "CLI version mismatch" }
+$authResult = Invoke-NativeCapture $contract.cliPath @("login", "status")
+if ($authResult.ExitCode -ne 0) { throw "ChatGPT auth status command failed" }
+$authStatus = "$($authResult.Stdout)`n$($authResult.Stderr)".Trim()
 if ($authStatus -notlike "*$($contract.authStatus)*") { throw "ChatGPT auth status mismatch" }
 $promptBytes = [System.IO.File]::ReadAllBytes([System.IO.Path]::GetFullPath($contract.promptPath))
 if ((Get-Sha256 $contract.promptPath) -ne $contract.promptSha256) { throw "Raw stdin prompt hash mismatch" }
@@ -143,7 +179,7 @@ foreach ($run in $runs) {
   [System.IO.File]::WriteAllText($stderrPath, $stderr, $Utf8NoBom)
   $events = @(); $rawJsonlValid = $true
   foreach ($line in ($stdout -split "`r?`n" | Where-Object { $_.Trim().Length -gt 0 })) {
-    try { $events += ($line | ConvertFrom-Json) } catch { $rawJsonlValid = $false }
+    try { $events += (ConvertFrom-JsonLiteral $line) } catch { $rawJsonlValid = $false }
   }
   $threadIds = @($events | Where-Object { $_.type -eq "thread.started" } | ForEach-Object { $_.thread_id })
   $turnEvents = @($events | Where-Object { $_.type -eq "turn.completed" })

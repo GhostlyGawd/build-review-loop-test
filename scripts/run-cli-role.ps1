@@ -14,6 +14,19 @@ $RolePolicy = @{
 
 function Get-Sha256([string]$Path) { return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant() }
 function Get-TextSha256([string]$Value) { return [System.Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData([System.Text.Encoding]::UTF8.GetBytes($Value))).ToLowerInvariant() }
+function ConvertFrom-JsonLiteral([string]$Json) { return $Json | ConvertFrom-Json -DateKind String }
+function Invoke-NativeCapture([string]$FilePath, [string[]]$Arguments) {
+  $startInfo = [System.Diagnostics.ProcessStartInfo]::new(); $startInfo.FileName = $FilePath; $startInfo.UseShellExecute = $false; $startInfo.CreateNoWindow = $true; $startInfo.RedirectStandardOutput = $true; $startInfo.RedirectStandardError = $true
+  foreach ($argument in $Arguments) { [void]$startInfo.ArgumentList.Add($argument) }
+  $process = [System.Diagnostics.Process]::new(); $process.StartInfo = $startInfo
+  if (-not $process.Start()) { throw "Native process did not start: $FilePath" }
+  $stdoutTask = $process.StandardOutput.ReadToEndAsync(); $stderrTask = $process.StandardError.ReadToEndAsync(); $process.WaitForExit()
+  return [pscustomobject]@{ ExitCode = $process.ExitCode; Stdout = $stdoutTask.GetAwaiter().GetResult(); Stderr = $stderrTask.GetAwaiter().GetResult() }
+}
+function Assert-PowerShellHost($Lock) {
+  $hostPath = [System.IO.Path]::GetFullPath([System.Environment]::ProcessPath)
+  if (-not $hostPath.Equals([System.IO.Path]::GetFullPath($Lock.powerShellHostPath), [System.StringComparison]::OrdinalIgnoreCase) -or $PSVersionTable.PSVersion.ToString() -ne $Lock.powerShellVersion -or (Get-Sha256 $hostPath) -ne $Lock.powerShellHostSha256) { throw "PowerShell host path/version/hash mismatch" }
+}
 function Invoke-Git([string]$Workdir, [string[]]$Arguments) { $output = (& git -C $Workdir @Arguments 2>&1 | Out-String).Trim(); if ($LASTEXITCODE -ne 0) { throw "git failed in $Workdir`: $output" }; return $output }
 function Resolve-Beneath([string]$Root, [string]$Candidate) {
   $resolved = [System.IO.Path]::GetFullPath($Candidate)
@@ -43,20 +56,23 @@ function Get-PackageSha256([string]$Directory) {
 }
 
 $contractFullPath = [System.IO.Path]::GetFullPath($ContractPath)
-$contract = Get-Content -LiteralPath $contractFullPath -Raw | ConvertFrom-Json
+$contract = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $contractFullPath -Raw)
 $lockPath = [System.IO.Path]::GetFullPath($contract.lockPath); $schemaPath = [System.IO.Path]::GetFullPath($contract.contractSchemaPath)
 $runnerPath = [System.IO.Path]::GetFullPath($contract.runnerPath); $evidenceSchemaPath = [System.IO.Path]::GetFullPath($contract.evidenceSchemaPath)
 $promptTemplatePath = [System.IO.Path]::GetFullPath($contract.promptTemplatePath); $artifactSchemaPath = [System.IO.Path]::GetFullPath($contract.artifactSchemaPath)
 if ((Get-Sha256 $lockPath) -ne $contract.lockSha256 -or (Get-Sha256 $schemaPath) -ne $contract.contractSchemaSha256 -or (Get-Sha256 $runnerPath) -ne $contract.runnerSha256 -or (Get-Sha256 $evidenceSchemaPath) -ne $contract.evidenceSchemaSha256 -or (Get-Sha256 $promptTemplatePath) -ne $contract.promptTemplateSha256 -or (Get-Sha256 $artifactSchemaPath) -ne $contract.artifactSchemaSha256) { throw "Frozen lock, runner, prompt, or schema hash mismatch" }
-$lock = Get-Content -LiteralPath $lockPath -Raw | ConvertFrom-Json
+$lock = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $lockPath -Raw)
+Assert-PowerShellHost $lock
 $policy = $RolePolicy[$contract.role]
 if ($null -eq $policy) { throw "Unsupported model role" }
 if (-not $runnerPath.Equals([System.IO.Path]::GetFullPath($PSCommandPath), [System.StringComparison]::OrdinalIgnoreCase) -or $lock.cliBinarySha256 -ne $contract.cliSha256 -or $lock.roleRuntimeSchemaSha256 -ne $contract.contractSchemaSha256 -or $lock.roleRunnerSha256 -ne $contract.runnerSha256 -or $lock.supervisionEvidenceSchemaSha256 -ne $contract.evidenceSchemaSha256 -or $lock.($policy.PromptLock) -ne $contract.promptTemplateSha256 -or $lock.($policy.ArtifactLock) -ne $contract.artifactSchemaSha256) { throw "Role contract does not match frozen lock bindings" }
 if ($contract.deadlineSeconds -lt 1 -or $contract.deadlineSeconds -gt $policy.Max) { throw "Invalid role deadline" }
 if ($contract.sandboxMode -ne $policy.Sandbox -or $contract.inputDisposition -ne $policy.Disposition) { throw "Role isolation policy mismatch" }
 if ((Get-Sha256 $contract.cliPath) -ne $contract.cliSha256) { throw "CLI binary hash mismatch" }
-if ((& $contract.cliPath --version 2>&1 | Out-String).Trim() -ne $contract.cliVersion) { throw "CLI version mismatch" }
-if ((& $contract.cliPath login status 2>&1 | Out-String).Trim() -notlike "*$($contract.authStatus)*") { throw "ChatGPT auth status mismatch" }
+$versionResult = Invoke-NativeCapture $contract.cliPath @("--version")
+if ($versionResult.ExitCode -ne 0 -or $versionResult.Stdout.Trim() -ne $contract.cliVersion) { throw "CLI version mismatch" }
+$authResult = Invoke-NativeCapture $contract.cliPath @("login", "status")
+if ($authResult.ExitCode -ne 0 -or "$($authResult.Stdout)`n$($authResult.Stderr)".Trim() -notlike "*$($contract.authStatus)*") { throw "ChatGPT auth status mismatch" }
 $promptBytes = [System.IO.File]::ReadAllBytes([System.IO.Path]::GetFullPath($contract.promptPath))
 if ((Get-Sha256 $contract.promptPath) -ne $contract.promptSha256) { throw "Raw stdin prompt hash mismatch" }
 $renderedPrompt = [System.IO.File]::ReadAllText($promptTemplatePath)
@@ -94,7 +110,7 @@ if ($contract.role -eq "evaluator") {
   Push-Location $protocolRoot
   try { & node -e $manifestCheck $packageManifestSchemaPath $packageManifestPath 2>$null; $manifestValid = $LASTEXITCODE -eq 0 } finally { Pop-Location }
   if (-not $manifestValid) { throw "Evaluator package manifest schema invalid" }
-  $packageManifest = Get-Content -LiteralPath $packageManifestPath -Raw | ConvertFrom-Json
+  $packageManifest = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $packageManifestPath -Raw)
   $packageEntry = @($packageManifest.packages | Where-Object { $_.packageLabel -eq $contract.packageLabel })
   if ($packageManifest.frozenGateSetSha256 -ne $lock.frozenGateSetSha256 -or $packageEntry.Count -ne 1 -or $packageEntry[0].packageSha256 -ne $contract.packageSha256 -or (Get-PackageSha256 $workdir) -ne $contract.packageSha256) { throw "Evaluator workdir does not match its blinded package commitment" }
 } else {
@@ -137,7 +153,7 @@ if ($started) {
 $stdout = if ($started) { $stdoutTask.GetAwaiter().GetResult() } else { "" }
 $stderr = if ($started) { $stderrTask.GetAwaiter().GetResult() } else { "" }
 [System.IO.File]::WriteAllText($stdoutPath, $stdout, $Utf8NoBom); [System.IO.File]::WriteAllText($stderrPath, $stderr, $Utf8NoBom)
-$events = @(); $rawJsonlValid = $true; foreach ($line in ($stdout -split "`r?`n" | Where-Object { $_.Trim().Length -gt 0 })) { try { $events += ($line | ConvertFrom-Json) } catch { $rawJsonlValid = $false } }
+$events = @(); $rawJsonlValid = $true; foreach ($line in ($stdout -split "`r?`n" | Where-Object { $_.Trim().Length -gt 0 })) { try { $events += (ConvertFrom-JsonLiteral $line) } catch { $rawJsonlValid = $false } }
 $threadIds = @($events | Where-Object { $_.type -eq "thread.started" } | ForEach-Object { $_.thread_id })
 $turnEvents = @($events | Where-Object { $_.type -eq "turn.completed" })
 $usage = if ($turnEvents.Count -eq 1 -and $null -ne $turnEvents[0].usage) { $turnEvents[0].usage } else { $null }
@@ -146,7 +162,7 @@ $finalSchemaValid = $false
 $artifactBindingValid = $false
 if ([System.IO.File]::Exists($finalPath) -and $threadIds.Count -eq 1 -and $started) {
   try {
-    $artifact = Get-Content -LiteralPath $finalPath -Raw | ConvertFrom-Json
+    $artifact = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $finalPath -Raw)
     $artifact.PSObject.Properties.Remove("runtimeEvidenceSha256")
     $artifact | Add-Member -NotePropertyName runtimeInvocationId -NotePropertyValue $contract.invocationId -Force
     $artifact | Add-Member -NotePropertyName runtimeProcessId -NotePropertyValue $process.Id -Force
@@ -161,7 +177,7 @@ if ($null -ne $finalSha256) {
   Push-Location $protocolRoot
   try { & node -e $schemaCheck $artifactSchemaPath $finalPath 2>$null; $finalSchemaValid = $LASTEXITCODE -eq 0 } finally { Pop-Location }
   if ($finalSchemaValid) {
-    $artifact = Get-Content -LiteralPath $finalPath -Raw | ConvertFrom-Json
+    $artifact = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $finalPath -Raw)
     $runtimeIdentityValid = $artifact.runtimeInvocationId -eq $contract.invocationId -and $artifact.runtimeProcessId -eq $process.Id -and $artifact.runtimeThreadId -eq $threadIds[0]
     if ($contract.role -eq "reviewer") { $artifactBindingValid = $runtimeIdentityValid -and $artifact.snapshotCommit -eq $contract.inputCommit }
     elseif ($contract.role -eq "fixer") { $finalCommit = Invoke-Git $workdir @("rev-parse", "HEAD"); $commitLine = (Invoke-Git $workdir @("rev-list", "--parents", "-n", "1", "HEAD")) -split " "; $artifactBindingValid = $runtimeIdentityValid -and $artifact.startCommit -eq $contract.inputCommit -and $artifact.finalCommit -eq $finalCommit -and $commitLine.Count -eq 2 -and $commitLine[1] -eq $contract.inputCommit }

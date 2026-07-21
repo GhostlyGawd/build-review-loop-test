@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -182,11 +183,11 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
     assert.equal(golden.canonicalContractSha256, canonicalHash(contract));
   });
 
-  it("cross-binds blinded package roles and source commits to registered snapshots", () => {
+  it("cross-binds private package provenance without leaking it into the manifest", () => {
     const contract = readJson("experiment/canonical-contract.json");
     const golden = readJson("experiment/golden-run/golden-run.json");
-    golden.blindedPackageManifest.packages[0].sourceRole = "Tfinal";
-    golden.blindedPackageManifest.packages[2].sourceRole = "B0";
+    golden.packages[0].snapshotRole = "Tfinal";
+    golden.packages[2].snapshotRole = "B0";
     golden.blindedPackageManifest.mappingSeedSha256 = hash("f");
     assert.match(
       validateGoldenRun(golden, contract).join("\n"),
@@ -298,6 +299,90 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       ),
       [],
     );
+  });
+
+  it("binds smoke prompts separately and freezes PowerShell 7 string-safe execution", () => {
+    const lock = readJson("experiment/lock.json");
+    const normal = clone(
+      readJson("experiment/golden-run/golden-run.json").cliRuntimeContract,
+    );
+    const smoke = clone(normal);
+    smoke.smokeMode = true;
+    smoke.promptSha256 = lock.runnerSmokePromptSha256;
+    assert.deepEqual(validateCliRuntimeContract(normal, lock), []);
+    assert.deepEqual(validateCliRuntimeContract(smoke, lock), []);
+    smoke.promptSha256 = lock.neutralBuilderPromptSha256;
+    assert.match(
+      validateCliRuntimeContract(smoke, lock).join("\n"),
+      /prompt commitment mismatch/,
+    );
+    normal.promptSha256 = lock.runnerSmokePromptSha256;
+    assert.match(
+      validateCliRuntimeContract(normal, lock).join("\n"),
+      /prompt commitment mismatch/,
+    );
+
+    const runnerSources = [
+      "scripts/run-cli-builders.ps1",
+      "scripts/run-cli-role.ps1",
+    ].map((relative) => readFileSync(path.join(root, relative), "utf8"));
+    for (const source of runnerSources) {
+      assert.match(source, /ConvertFrom-Json -DateKind String/);
+      assert.match(source, /\[System\.Environment\]::ProcessPath/);
+      assert.match(source, /RedirectStandardError = \$true/);
+      assert.match(source, /Invoke-NativeCapture \$contract\.cliPath/);
+    }
+    const hostBytes = readFileSync(lock.powerShellHostPath);
+    assert.equal(sha256(hostBytes), lock.powerShellHostSha256);
+    assert.equal(
+      spawnSync(
+        lock.powerShellHostPath,
+        ["-NoProfile", "-Command", "$PSVersionTable.PSVersion.ToString()"],
+        {
+          encoding: "utf8",
+        },
+      ).stdout.trim(),
+      lock.powerShellVersion,
+    );
+    const isoCheck = spawnSync(
+      lock.powerShellHostPath,
+      [
+        "-NoProfile",
+        "-Command",
+        '$value = \'{"deadline":"2026-07-21T00:00:00Z"}\' | ConvertFrom-Json -DateKind String; if ($value.deadline -isnot [string]) { exit 9 }; [Console]::Write($value.deadline)',
+      ],
+      { encoding: "utf8" },
+    );
+    assert.equal(isoCheck.status, 0, isoCheck.stderr);
+    assert.equal(isoCheck.stdout, "2026-07-21T00:00:00Z");
+    const stderrAuthCheck = spawnSync(
+      lock.powerShellHostPath,
+      [
+        "-NoProfile",
+        "-Command",
+        [
+          '$ErrorActionPreference = "Stop"',
+          "$psi = [System.Diagnostics.ProcessStartInfo]::new()",
+          "$psi.FileName = [System.Environment]::ProcessPath",
+          "$psi.UseShellExecute = $false",
+          "$psi.RedirectStandardOutput = $true",
+          "$psi.RedirectStandardError = $true",
+          '[void]$psi.ArgumentList.Add("-NoProfile")',
+          '[void]$psi.ArgumentList.Add("-Command")',
+          "[void]$psi.ArgumentList.Add('[Console]::Error.Write(\"Logged in using ChatGPT\")')",
+          "$process = [System.Diagnostics.Process]::new()",
+          "$process.StartInfo = $psi",
+          "[void]$process.Start()",
+          "$stdout = $process.StandardOutput.ReadToEndAsync()",
+          "$stderr = $process.StandardError.ReadToEndAsync()",
+          "$process.WaitForExit()",
+          '$combined = "$($stdout.GetAwaiter().GetResult())`n$($stderr.GetAwaiter().GetResult())"',
+          'if ($process.ExitCode -ne 0 -or $combined -notlike "*Logged in using ChatGPT*") { exit 10 }',
+        ].join("; "),
+      ],
+      { encoding: "utf8" },
+    );
+    assert.equal(stderrAuthCheck.status, 0, stderrAuthCheck.stderr);
   });
 
   it("rejects binary, argv-order, resume, and config drift", () => {
@@ -457,12 +542,16 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
         ["tests/public/example.test.ts", "export {};\n"],
         ["scripts/run-public-tests.mjs", "export {};\n"],
         ["package.json", "{}\n"],
-        ["package-lock.json", "{}\n"],
+        [
+          "package-lock.json",
+          '{"packages":{"node_modules/baseline-browser-mapping":{}}}\n',
+        ],
         ["src.txt", "neutral source\n"],
       ])
         writeFileSync(path.join(source, relative), contents);
       for (const args of [
-        ["init"],
+        ["init", "-b", "main"],
+        ["config", "core.autocrlf", "false"],
         ["add", "."],
         [
           "-c",
@@ -486,7 +575,20 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       const clones = ["one", "two", "three"].map((name) => {
         const destination = path.join(temp, name);
         assert.equal(
-          spawnSync("git", ["clone", "--quiet", source, destination]).status,
+          spawnSync("git", [
+            "-c",
+            "core.autocrlf=false",
+            "clone",
+            "--quiet",
+            source,
+            destination,
+          ]).status,
+          0,
+        );
+        assert.equal(
+          spawnSync("git", ["config", "core.autocrlf", "false"], {
+            cwd: destination,
+          }).status,
           0,
         );
         return destination;
@@ -512,12 +614,19 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
         mappingSeedSha256: hash("a"),
         randomizedOrder: ["X", "Y", "Z"],
         frozenGateSetSha256,
+        provenance: {
+          candidateIds: ["candidate-synthetic-one", "candidate-synthetic-two"],
+          runIds: ["run-synthetic-one", "run-synthetic-two"],
+          evidencePaths: [path.join(temp, "private-evidence")],
+          roleArtifactNames: ["review-artifact.json", "fix-artifact.json"],
+        },
         packages: ["X", "Y", "Z"].map((packageLabel, index) => ({
           packageLabel,
           sourceRole: ["B0", "T0", "Tfinal"][index],
           sourcePath: clones[index],
           sourceCommit: commit,
           sourceTree: tree,
+          sourceRef: "refs/heads/main",
         })),
       };
       const mappingPath = path.join(temp, "mapping.json");
@@ -548,6 +657,19 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
           ({ packageSha256 }) => packageSha256,
         ),
       );
+      const firstManifest = JSON.parse(first.stdout);
+      assert.equal(
+        Object.hasOwn(firstManifest.packages[0], "sourceRole"),
+        false,
+      );
+      assert.equal(
+        Object.hasOwn(firstManifest.packages[0], "sourceCommit"),
+        false,
+      );
+      assert.equal(
+        existsSync(path.join(temp, "output-one", "X", ".git")),
+        false,
+      );
       assert.equal(
         readdirSync(path.join(temp, "output-one")).sort().join(""),
         "XYZ",
@@ -575,39 +697,70 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
         { cwd: root },
       );
       assert.notEqual(nested.status, 0);
-      writeFileSync(path.join(clones[0], "Treatment-notes.md"), "neutral\n");
-      assert.equal(
-        spawnSync("git", ["add", "."], { cwd: clones[0] }).status,
-        0,
-      );
-      assert.equal(
-        spawnSync(
+      const exactLeakCases = [
+        ["source-path", clones[1]],
+        ["source-ref", "refs/heads/main"],
+        ["source-commit", commit],
+        ["source-tree", tree],
+        ["run-id", "run-synthetic-one"],
+        ["candidate-id", "candidate-synthetic-one"],
+        ["artifact-name", "review-artifact.json"],
+        ["source-role", "B0"],
+      ];
+      for (const [name, marker] of exactLeakCases) {
+        const leakSource = path.join(temp, `leak-${name}`);
+        assert.equal(
+          spawnSync("git", [
+            "-c",
+            "core.autocrlf=false",
+            "clone",
+            "--quiet",
+            source,
+            leakSource,
+          ]).status,
+          0,
+        );
+        assert.equal(
+          spawnSync("git", ["config", "core.autocrlf", "false"], {
+            cwd: leakSource,
+          }).status,
+          0,
+        );
+        writeFileSync(path.join(leakSource, "leak.txt"), `${marker}\n`);
+        assert.equal(
+          spawnSync("git", ["add", "."], { cwd: leakSource }).status,
+          0,
+        );
+        assert.equal(
+          spawnSync(
+            "git",
+            [
+              "-c",
+              "user.name=Protocol Test",
+              "-c",
+              "user.email=protocol@example.invalid",
+              "commit",
+              "-m",
+              `exact ${name} leak`,
+            ],
+            { cwd: leakSource },
+          ).status,
+          0,
+        );
+        mapping.packages[0].sourcePath = leakSource;
+        mapping.packages[0].sourceCommit = spawnSync(
           "git",
-          [
-            "-c",
-            "user.name=Protocol Test",
-            "-c",
-            "user.email=protocol@example.invalid",
-            "commit",
-            "-m",
-            "lineage filename",
-          ],
-          { cwd: clones[0] },
-        ).status,
-        0,
-      );
-      mapping.packages[0].sourceCommit = spawnSync(
-        "git",
-        ["rev-parse", "HEAD"],
-        { cwd: clones[0], encoding: "utf8" },
-      ).stdout.trim();
-      mapping.packages[0].sourceTree = spawnSync(
-        "git",
-        ["rev-parse", "HEAD^{tree}"],
-        { cwd: clones[0], encoding: "utf8" },
-      ).stdout.trim();
-      writeFileSync(mappingPath, JSON.stringify(mapping));
-      assert.notEqual(run("lineage-name").status, 0);
+          ["rev-parse", "HEAD"],
+          { cwd: leakSource, encoding: "utf8" },
+        ).stdout.trim();
+        mapping.packages[0].sourceTree = spawnSync(
+          "git",
+          ["rev-parse", "HEAD^{tree}"],
+          { cwd: leakSource, encoding: "utf8" },
+        ).stdout.trim();
+        writeFileSync(mappingPath, JSON.stringify(mapping));
+        assert.notEqual(run(`lineage-${name}`).status, 0, name);
+      }
     } finally {
       rmSync(temp, { recursive: true, force: true });
     }

@@ -2,7 +2,7 @@
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-conformance",
   "protocolVersion": "2.4.0",
-  "canonicalContractSha256": "fdf8608984b5ed1c0bd7fc2ad485ece4d23b3173dbcd38dfc9a99e8f43199c4c",
+  "canonicalContractSha256": "32d8a954523d0ad4048a8ea113e5d21262ee6dff73cc4390082a300d688a9b74",
   "status": "valid",
   "activeInvalidation": null,
   "invalidAttempts": [
@@ -543,9 +543,6 @@
     "packages": [
       {
         "packageLabel": "X",
-        "sourceRole": "B0",
-        "sourceCommit": "0d977cbeeb1df357e500f254108535ba025577d7",
-        "sourceTree": "0d977cbeeb1df357e500f254108535ba025577d7",
         "packageSha256": "2ead643fcb670f73e7a189e566f463a42df44db4ecec83905d7fa8928495ec4d",
         "fileCount": 12,
         "historyFree": true,
@@ -554,9 +551,6 @@
       },
       {
         "packageLabel": "Y",
-        "sourceRole": "T0",
-        "sourceCommit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
-        "sourceTree": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
         "packageSha256": "76b3ec7289368fc1a26b7e82f4d22807dfea6435318ba637c6216f80cc28fd31",
         "fileCount": 12,
         "historyFree": true,
@@ -565,9 +559,6 @@
       },
       {
         "packageLabel": "Z",
-        "sourceRole": "Tfinal",
-        "sourceCommit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
-        "sourceTree": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
         "packageSha256": "02827ac286660fbf195489e92fbb3b5fd9b38f4bd4d6090002d07c885e111239",
         "fileCount": 12,
         "historyFree": true,
