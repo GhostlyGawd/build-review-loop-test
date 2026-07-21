@@ -1907,6 +1907,7 @@ export function validateScaffold() {
   const failures = [];
   const requiredFiles = [
     "README.md",
+    "MANIFEST.sha256",
     "docs/permissions-playground-spec.md",
     "docs/public-test-contract.md",
     "experiment/protocol.md",
@@ -2155,6 +2156,16 @@ export function validateScaffold() {
       path.join(root, "experiment/preflight/operational-parent-inventory.json"),
     ),
   );
+  const actualAttributesHash = sha256Bytes(
+    readFileSync(path.join(root, ".gitattributes")),
+  );
+  const manifestAttributesHash = readFileSync(
+    path.join(root, "MANIFEST.sha256"),
+    "utf8",
+  )
+    .split(/\r?\n/u)
+    .find((line) => line.endsWith("  .gitattributes"))
+    ?.split("  ", 1)[0];
   const actualPreflightEvidenceHash = sha256Bytes(
     readFileSync(
       path.join(root, "experiment/preflight/final-lock-evidence.json"),
@@ -2225,8 +2236,7 @@ export function validateScaffold() {
     treatmentSkillManifestToolPath: "validation/manifest_tool.py",
     treatmentSkillManifestToolSha256:
       "3245978fa26e49a0f1542126ac1c1b3934a245c84d7f34374fcd247c52c23bcf",
-    treatmentSkillAttributesSha256:
-      "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c",
+    treatmentSkillAttributesSha256: actualAttributesHash,
     treatmentSkillSourceParitySha256:
       "a737c74136b1394fd52f8c13065cf4836b3bfdafb74c0350c53934f6211f0dee",
     treatmentSkillSourceParityFileCount: 42,
@@ -2289,13 +2299,13 @@ export function validateScaffold() {
       "a737c74136b1394fd52f8c13065cf4836b3bfdafb74c0350c53934f6211f0dee",
     preflightEvidencePath: "experiment/preflight/final-lock-evidence.json",
     preflightEvidenceSha256:
-      "9b92cc82ceb15a2269bdaaad7719f561309b9b8e998e1f2a69ecf541b07d16f1",
+      "ffec990e1ba5ad79960704126a6d3a5c5ba226a81598a47d60a2977f465ae7bb",
     preflightEvidenceSchemaPath:
       "experiment/schemas/final-lock-evidence.schema.json",
     preflightEvidenceSchemaSha256:
       "1807fe09799ad49e701c19497da37f44f5d77112f1e965c4f4141487fdf074ff",
     gateAggregateSha256:
-      "709b82e31a2d4e36d3de26274ead76fc3c32e5dde1b42dbac2a1647f5cac644a",
+      "f5b8877a0e3f23e66746d50062a0b88481a30e8ead6d5a7e0423330916119388",
     abortedPrelaunchRecordPath: "experiment/preflight/aborted-lock-2.4.0.json",
     abortedPrelaunchRecordSha256:
       "9e44db3f8d900d71e8ca7363fd627dc7976d6397976cef00af84a07626183c79",
@@ -2311,6 +2321,8 @@ export function validateScaffold() {
     lock.operationalParentInventorySha256
   )
     failures.push("operational parent inventory byte hash mismatch");
+  if (manifestAttributesHash !== lock.treatmentSkillAttributesSha256)
+    failures.push("treatment skill attributes manifest binding mismatch");
   if (actualPreflightEvidenceHash !== lock.preflightEvidenceSha256)
     failures.push("preflight evidence byte hash mismatch");
   if (actualPreflightEvidenceSchemaHash !== lock.preflightEvidenceSchemaSha256)
