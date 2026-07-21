@@ -2,7 +2,7 @@
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-conformance",
   "protocolVersion": "2.4.0",
-  "canonicalContractSha256": "541985e02a49b79910282a6e7f26e43fbde3ae500ebfcdf9cef6d031f1a74b49",
+  "canonicalContractSha256": "604741c82d917d2cb5901ba4b1c046d29e2091ce4c91a68a514b713a24348b01",
   "status": "valid",
   "activeInvalidation": null,
   "invalidAttempts": [
@@ -86,11 +86,24 @@
     "lockPath": "C:\\synthetic\\protocol\\experiment\\lock.json",
     "lockSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "contractSchemaPath": "C:\\synthetic\\protocol\\experiment\\schemas\\cli-runtime-contract.schema.json",
-    "contractSchemaSha256": "c18db758a6b40194e64c88d3842522ade28ff831806c6315e3c5348e92934c33",
+    "contractSchemaSha256": "665016233b950a2f39f0bbee1f5f75b530980d3bcd979e543943cf976b0a2689",
+    "canonicalPathHelperPath": "C:\\synthetic\\protocol\\scripts\\canonicalize-paths.mjs",
+    "canonicalPathHelperSha256": "194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e",
+    "sourceCommonStartCommit": "29454a133f990982253744a85ccb8516d62f5a19",
+    "sourceCommonStartTree": "2234567890abcdef1234567890abcdef12345678",
     "commonStartCommit": "79454a133f990982253744a85ccb8516d62f5a19",
     "commonStartTree": "1234567890abcdef1234567890abcdef12345678",
+    "builderInputManifestPath": "C:\\synthetic\\private\\builder-input-manifest.json",
+    "builderInputManifestSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "builderInputManifestSchemaPath": "C:\\synthetic\\protocol\\experiment\\schemas\\builder-input-manifest.schema.json",
+    "builderInputManifestSchemaSha256": "b044646ede4fef4543a4950e5842f51997dc3b65e6bfabad7eeb1ff84caf0bb5",
+    "builderInputAllowlistPath": "C:\\synthetic\\protocol\\experiment\\builder-input-allowlist.json",
+    "builderInputAllowlistSha256": "37af679c4f3f71cbd9e28b810897d4ff82c7c47cf4421a9d661b8b90947aef5b",
+    "builderInputPreparationScriptPath": "C:\\synthetic\\protocol\\scripts\\prepare-builder-input.mjs",
+    "builderInputPreparationScriptSha256": "68e186914a0dd99e0b91f0851d45f8081086fffadae8d2949050e29ea1b832b3",
+    "builderInputProjectionSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
     "promptPath": "C:\\synthetic\\neutral-builder.md",
-    "promptSha256": "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0",
+    "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
     "evidenceRoot": "C:\\synthetic\\evidence",
     "deadlineSeconds": 2400,
     "invariantArgv": [
@@ -117,9 +130,10 @@
         "stdoutPath": "C:\\synthetic\\evidence\\a\\stdout.jsonl",
         "stderrPath": "C:\\synthetic\\evidence\\a\\stderr.txt",
         "evidencePath": "C:\\synthetic\\evidence\\a\\evidence.json",
-        "tempRoot": "C:\\synthetic\\evidence\\a\\temp",
-        "cacheRoot": "C:\\synthetic\\evidence\\a\\cache",
-        "dependencyRoot": "C:\\synthetic\\evidence\\a\\deps",
+        "postStatePath": "C:\\synthetic\\evidence\\a\\post-state.json",
+        "tempRoot": "C:\\synthetic\\runtime\\a\\temp",
+        "cacheRoot": "C:\\synthetic\\runtime\\a\\cache",
+        "dependencyRoot": "C:\\synthetic\\runtime\\a\\deps",
         "port": 41001
       },
       {
@@ -129,9 +143,10 @@
         "stdoutPath": "C:\\synthetic\\evidence\\b\\stdout.jsonl",
         "stderrPath": "C:\\synthetic\\evidence\\b\\stderr.txt",
         "evidencePath": "C:\\synthetic\\evidence\\b\\evidence.json",
-        "tempRoot": "C:\\synthetic\\evidence\\b\\temp",
-        "cacheRoot": "C:\\synthetic\\evidence\\b\\cache",
-        "dependencyRoot": "C:\\synthetic\\evidence\\b\\deps",
+        "postStatePath": "C:\\synthetic\\evidence\\b\\post-state.json",
+        "tempRoot": "C:\\synthetic\\runtime\\b\\temp",
+        "cacheRoot": "C:\\synthetic\\runtime\\b\\cache",
+        "dependencyRoot": "C:\\synthetic\\runtime\\b\\deps",
         "port": 41002
       }
     ]
@@ -173,13 +188,15 @@
           "-"
         ],
         "argvSha256": "25128d39e4e7c032cf4abc6e508b05b67ff605c2572d36dddd405a55c9fc63cc",
-        "promptSha256": "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0",
+        "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
         "stdoutPath": "C:\\synthetic\\evidence\\a\\stdout.jsonl",
         "stdoutSha256": "3db78fe24b68efe647e0762d16db05774781bfe0a905dc3876ce0048a66899b6",
         "stderrPath": "C:\\synthetic\\evidence\\a\\stderr.txt",
         "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
         "finalPath": "C:\\synthetic\\evidence\\a\\final.json",
         "finalSha256": "1212121212121212121212121212121212121212121212121212121212121212",
+        "postStatePath": "C:\\synthetic\\evidence\\a\\post-state.json",
+        "postStateSha256": "3131313131313131313131313131313131313131313131313131313131313131",
         "finalSchemaValid": null,
         "artifactBindingValid": null,
         "threadIds": ["019f827b-221c-7021-b650-a948e9dd4298"],
@@ -238,13 +255,15 @@
           "-"
         ],
         "argvSha256": "77b4ec17d695ed516ab31865ef0c19ad368b0c1ab0ce3432b4724cf13f682b7a",
-        "promptSha256": "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0",
+        "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
         "stdoutPath": "C:\\synthetic\\evidence\\b\\stdout.jsonl",
         "stdoutSha256": "3becf7950cf2eb22eed98485f48cd6f0aae726de7067fa07e9630428c67a41e2",
         "stderrPath": "C:\\synthetic\\evidence\\b\\stderr.txt",
         "stderrSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
         "finalPath": "C:\\synthetic\\evidence\\b\\final.json",
         "finalSha256": "2323232323232323232323232323232323232323232323232323232323232323",
+        "postStatePath": "C:\\synthetic\\evidence\\b\\post-state.json",
+        "postStateSha256": "3232323232323232323232323232323232323232323232323232323232323232",
         "finalSchemaValid": null,
         "artifactBindingValid": null,
         "threadIds": ["019f827b-221c-7363-a23f-0f40b4ec017d"],
@@ -281,6 +300,8 @@
       "invocationId": "44444444444444444444444444444444",
       "processId": 12003,
       "threadId": "019f827b-221c-7000-8000-000000000003",
+      "startedAt": "2026-07-20T01:02:00Z",
+      "completedAt": "2026-07-20T01:10:00Z",
       "lifecycleComplete": true,
       "evidenceSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "usage": {
@@ -294,6 +315,8 @@
       "invocationId": "66666666666666666666666666666666",
       "processId": 12006,
       "threadId": "019f827b-221c-7000-8000-000000000006",
+      "startedAt": "2026-07-20T01:20:00Z",
+      "completedAt": "2026-07-20T01:30:00Z",
       "lifecycleComplete": true,
       "evidenceSha256": "6666666666666666666666666666666666666666666666666666666666666666",
       "usage": {
@@ -307,6 +330,8 @@
       "invocationId": "77777777777777777777777777777777",
       "processId": 12007,
       "threadId": "019f827b-221c-7000-8000-000000000007",
+      "startedAt": "2026-07-20T01:31:00Z",
+      "completedAt": "2026-07-20T01:40:00Z",
       "lifecycleComplete": true,
       "evidenceSha256": "7777777777777777777777777777777777777777777777777777777777777777",
       "usage": {
@@ -320,6 +345,8 @@
       "invocationId": "88888888888888888888888888888888",
       "processId": 12008,
       "threadId": "019f827b-221c-7000-8000-000000000008",
+      "startedAt": "2026-07-20T01:41:00Z",
+      "completedAt": "2026-07-20T01:50:00Z",
       "lifecycleComplete": true,
       "evidenceSha256": "8888888888888888888888888888888888888888888888888888888888888888",
       "usage": {
@@ -385,10 +412,10 @@
     "candidate-a": {
       "candidateLabel": "candidate-a",
       "workerId": "worker-01-builder-a-7b4c",
-      "promptSha256": "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0",
+      "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
       "configSha256": "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4",
       "runtimeInvocationId": "3fa8a63edab948c496d7e1028dfbeabf",
-      "runtimeEvidenceSha256": "67dca93773c73ae71d0b60f446dbcfe13349d9a130d0ba29208f755bb0da12e6",
+      "runtimeEvidenceSha256": "2135934c6f6a226564a1630b9656c520baed6ff0171134da9ac57f5d2bdddc82",
       "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
       "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
       "sealedAt": "2026-07-20T01:00:00Z"
@@ -396,10 +423,10 @@
     "candidate-b": {
       "candidateLabel": "candidate-b",
       "workerId": "worker-02-builder-b-91e2",
-      "promptSha256": "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0",
+      "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
       "configSha256": "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4",
       "runtimeInvocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
-      "runtimeEvidenceSha256": "616e620a498814fe7f8c620181afdfefcad9f01ae8e1964ba90771ab4266ca9d",
+      "runtimeEvidenceSha256": "15b231d096380dcd3b209f6659ec3ed6713160aaf82eb414d8f2254c1df49ccd",
       "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
       "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
       "sealedAt": "2026-07-20T01:00:00Z"
@@ -441,7 +468,7 @@
       "assignedArm": "baseline",
       "builderWorkerId": "worker-01-builder-a-7b4c",
       "runtimeInvocationId": "3fa8a63edab948c496d7e1028dfbeabf",
-      "runtimeEvidenceSha256": "67dca93773c73ae71d0b60f446dbcfe13349d9a130d0ba29208f755bb0da12e6",
+      "runtimeEvidenceSha256": "2135934c6f6a226564a1630b9656c520baed6ff0171134da9ac57f5d2bdddc82",
       "initialSnapshot": {
         "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
         "sealedAt": "2026-07-20T01:00:00Z",
@@ -464,7 +491,7 @@
       "assignedArm": "treatment",
       "builderWorkerId": "worker-02-builder-b-91e2",
       "runtimeInvocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
-      "runtimeEvidenceSha256": "616e620a498814fe7f8c620181afdfefcad9f01ae8e1964ba90771ab4266ca9d",
+      "runtimeEvidenceSha256": "15b231d096380dcd3b209f6659ec3ed6713160aaf82eb414d8f2254c1df49ccd",
       "initialSnapshot": {
         "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
         "sealedAt": "2026-07-20T01:00:00Z",
@@ -539,7 +566,7 @@
     "manifestVersion": "1.0.0",
     "mappingSeedSha256": "84e09f0fb1fddf4d5a0f58bb5e459f9e8e83e266f4b9567192ab42012376ce2f",
     "randomizedOrder": ["X", "Y", "Z"],
-    "frozenGateSetSha256": "ac6ad587fc42e4bf423134fddb1ab5704a9924cff968523c5e61cccba8b4a70e",
+    "frozenGateSetSha256": "af8a2d6f7a29ff3dcbc1ca4240361e6bdbba520078a0cd39dbd0f4e4ba0f7930",
     "packages": [
       {
         "packageLabel": "X",
@@ -1324,20 +1351,20 @@
     {
       "sequence": 0,
       "artifactKey": "builderFreezes.candidate-a",
-      "artifactSha256": "83f46c5c8b36afee0f607e05b35732476418cda19025f47063f2a64c9d578a81",
+      "artifactSha256": "fbe71d215ccf030fa9ad52f996ed7480e29578df2a09eb3c45cb8d710fdcd253",
       "previousSha256": null
     },
     {
       "sequence": 1,
       "artifactKey": "builderFreezes.candidate-b",
-      "artifactSha256": "3bddcf01a090ea015aa08c27cbbce7c721c4593f873f85ea8dd1595686d5e5db",
-      "previousSha256": "83f46c5c8b36afee0f607e05b35732476418cda19025f47063f2a64c9d578a81"
+      "artifactSha256": "729faef2fc820cd62007be3274540fb57b423ee7974e564015cf3414baa88c30",
+      "previousSha256": "fbe71d215ccf030fa9ad52f996ed7480e29578df2a09eb3c45cb8d710fdcd253"
     },
     {
       "sequence": 2,
       "artifactKey": "assignment",
       "artifactSha256": "c499551590308f2d59114d041dcef51e1841035c8f21be614a8ad5a7d049f5d4",
-      "previousSha256": "3bddcf01a090ea015aa08c27cbbce7c721c4593f873f85ea8dd1595686d5e5db"
+      "previousSha256": "729faef2fc820cd62007be3274540fb57b423ee7974e564015cf3414baa88c30"
     },
     {
       "sequence": 3,

@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
-  cpSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -31,8 +30,8 @@ if (!args["--mapping"] || !args["--output-root"] || !args["--manifest"])
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const normalizedPath = (candidate) => {
   const absolute = path.resolve(candidate);
-  if (existsSync(absolute)) return realpathSync(absolute);
-  const parent = realpathSync(path.dirname(absolute));
+  if (existsSync(absolute)) return realpathSync.native(absolute);
+  const parent = realpathSync.native(path.dirname(absolute));
   return path.join(parent, path.basename(absolute));
 };
 const nestedOrEqual = (left, right) => {
@@ -55,6 +54,15 @@ const runGit = (directory, gitArgs) => {
   if (result.status !== 0)
     throw new Error(`git ${gitArgs.join(" ")} failed for ${directory}`);
   return result.stdout.trim();
+};
+const runGitBytes = (directory, gitArgs) => {
+  const result = spawnSync("git", ["-C", directory, ...gitArgs], {
+    encoding: null,
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  if (result.status !== 0)
+    throw new Error(`git ${gitArgs.join(" ")} failed for ${directory}`);
+  return result.stdout;
 };
 const walkFiles = (rootDirectory, relativeRoot = "") => {
   const files = [];
@@ -255,13 +263,33 @@ for (const [index, spec] of mapping.packages.entries()) {
   if (runGit(source, ["status", "--porcelain=v1"]) !== "")
     throw new Error("source snapshot must be clean");
   const destination = path.join(outputRoot, spec.packageLabel);
-  cpSync(source, destination, {
-    recursive: true,
-    filter: (entry) => {
-      const relative = path.relative(source, entry).replaceAll("\\", "/");
-      return relative === "" || !forbiddenPath.test(relative);
-    },
-  });
+  mkdirSync(destination, { recursive: true });
+  const treeEntries = runGitBytes(source, ["ls-tree", "-r", "-z", "HEAD"])
+    .toString("utf8")
+    .split("\0")
+    .filter(Boolean);
+  for (const entry of treeEntries) {
+    const tab = entry.indexOf("\t");
+    if (tab < 0) throw new Error("invalid git tree entry");
+    const [mode, type, object] = entry.slice(0, tab).split(" ");
+    const relative = entry.slice(tab + 1);
+    if (
+      type !== "blob" ||
+      !["100644", "100755"].includes(mode) ||
+      path.isAbsolute(relative) ||
+      relative.includes("..") ||
+      relative.includes("\\")
+    )
+      throw new Error(
+        `non-regular or unsafe tracked entry forbidden: ${relative}`,
+      );
+    if (forbiddenPath.test(relative)) continue;
+    const output = path.join(destination, ...relative.split("/"));
+    mkdirSync(path.dirname(output), { recursive: true });
+    writeFileSync(output, runGitBytes(source, ["cat-file", "blob", object]), {
+      flag: "wx",
+    });
+  }
   const files = [];
   const walk = (directory) => {
     for (const name of readdirSync(directory).sort()) {

@@ -56,6 +56,9 @@
     "processId": { "type": ["integer", "null"], "minimum": 1 },
     "started": { "type": "boolean" },
     "startedAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": "string", "format": "date-time" },
+    "completionObservedAt": { "type": "string", "format": "date-time" },
+    "absoluteDeadline": { "type": "string", "format": "date-time" },
     "startError": { "type": ["string", "null"] },
     "stdinDelivered": { "type": "boolean" },
     "stdinError": { "type": ["string", "null"] },
@@ -72,6 +75,8 @@
     "finalSha256": {
       "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
     },
+    "postStatePath": { "type": "string", "minLength": 3 },
+    "postStateSha256": { "$ref": "#/$defs/sha256" },
     "finalSchemaValid": { "type": ["boolean", "null"] },
     "artifactBindingValid": { "type": ["boolean", "null"] },
     "threadIds": {
@@ -103,5 +108,34 @@
     "reasoningSettingUnavailableReason": { "type": ["string", "null"] },
     "metadataSource": { "enum": ["trusted-jsonl", "unavailable"] }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "role": { "const": "builder" } },
+        "required": ["role"]
+      },
+      "then": {
+        "properties": {
+          "postStatePath": true,
+          "postStateSha256": true
+        },
+        "required": ["postStatePath", "postStateSha256"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "role": { "not": { "const": "builder" } } },
+        "required": ["role"]
+      },
+      "then": {
+        "properties": {
+          "completedAt": true,
+          "completionObservedAt": true,
+          "absoluteDeadline": true
+        },
+        "required": ["completedAt", "completionObservedAt", "absoluteDeadline"]
+      }
+    }
+  ],
   "$defs": { "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
 }

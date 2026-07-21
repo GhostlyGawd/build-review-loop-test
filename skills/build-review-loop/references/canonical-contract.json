@@ -31,10 +31,20 @@
     "idPattern": "^cycle-[1-5]-reviewer-[0-9]{2}$"
   },
   "builderFreeze": {
-    "promptSha256": "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0",
+    "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
     "smokePromptSha256": "135c5fc59fe72b4b37d924cd6f1a14e4f2a3b7b59711cc12294e81f52cbfd6a2",
     "configSha256": "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4",
-    "rule": "each builder receives the exact raw prompt bytes on stdin under an otherwise identical frozen external CLI execution; only opaque invocation ID and runtime coordinate paths differ"
+    "rule": "each builder receives the exact raw prompt bytes and a byte-identical source-history-free neutral product projection; only opaque invocation ID and runtime coordinate paths differ",
+    "inputProjection": {
+      "allowlistPath": "experiment/builder-input-allowlist.json",
+      "allowlistSha256": "37af679c4f3f71cbd9e28b810897d4ff82c7c47cf4421a9d661b8b90947aef5b",
+      "manifestSchemaPath": "experiment/schemas/builder-input-manifest.schema.json",
+      "manifestSchemaSha256": "b044646ede4fef4543a4950e5842f51997dc3b65e6bfabad7eeb1ff84caf0bb5",
+      "preparationScriptPath": "scripts/prepare-builder-input.mjs",
+      "preparationScriptSha256": "68e186914a0dd99e0b91f0851d45f8081086fffadae8d2949050e29ea1b832b3",
+      "sourceRule": "private manifest binds the clean protocol source commit/tree; neither source nor manifest is builder input",
+      "outputRule": "two fresh nonnested git-init repositories with identical one-root commit/tree, core.autocrlf=false, no remotes, and exact allowlisted bytes only"
+    }
   },
   "cliRuntime": {
     "launchCommand": "pwsh -NoProfile -File",
@@ -52,9 +62,11 @@
     ],
     "roleLaunchRule": "every model-bearing role invocation is a fresh external Codex CLI subprocess using the frozen binary/auth/invariant argv, role-specific exact raw prompt bytes on stdin, --ephemeral, no resume, and distinct process and thread.started IDs; the bundled two-invocation contract and supervisor instantiate this rule for builders",
     "schemaPath": "experiment/schemas/cli-runtime-contract.schema.json",
-    "schemaSha256": "c18db758a6b40194e64c88d3842522ade28ff831806c6315e3c5348e92934c33",
+    "schemaSha256": "665016233b950a2f39f0bbee1f5f75b530980d3bcd979e543943cf976b0a2689",
     "runnerPath": "scripts/run-cli-builders.ps1",
-    "runnerSha256": "24653c35386be28f09aa5719617ca5ab612a67c1fb8700bd7503abe72569ff25",
+    "runnerSha256": "b2e848a193c28d93893829a3dceeba323999193a0d96acee8848d0eff06e70b7",
+    "canonicalPathHelperPath": "scripts/canonicalize-paths.mjs",
+    "canonicalPathHelperSha256": "194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e",
     "binaryPath": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe",
     "binaryVersion": "codex-cli 0.145.0-alpha.18",
     "binarySha256": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
@@ -92,15 +104,16 @@
     "freshnessRule": "builders launch concurrently in two separate OS processes with distinct thread.started IDs, --ephemeral, and no resume",
     "metadataRule": "model and reasoning are authoritatively pinned in argv after a harmless support check; provider is pinned by ChatGPT auth plus no OSS/local-provider option; trusted JSONL observations are recorded when present and conflicts invalidate; agent self-report is never evidence",
     "estimandRule": "descriptive randomized pilot under the pinned CLI deployment configuration; no strong causal or provider-wide generalization is claimed",
-    "isolationRule": "audited procedural boundary, not kernel-enforced proof: independent full clones with remotes disabled, nonnested non-reparse opaque paths, clean bound input commit/tree, separate temp/cache/dependency/port/evidence roots, workspace-write CLI sandbox, strict JSONL reconciliation, and invalidation on missing or out-of-scope evidence",
-    "successRule": "each process starts, receives stdin, exits zero before the external deadline, emits exactly one thread.started and turn.completed, exposes or explains absent usage, uses a distinct thread ID, reconciles raw JSONL and hashes, and finishes with a clean committed clone",
+    "isolationRule": "audited procedural boundary, not kernel-enforced proof: builders receive only independently initialized one-root neutral projections whose explicit path/byte manifest, aggregate content hash, projection commit/tree, allowlist, schema, and preparation script are verified before model launch; source history/context and every private input remain outside every mutable path; remotes are disabled; workdirs, authoritative outputs, evidence, external temp/cache/dependency roots, and cross-invocation paths are physically distinct and nonnested; workspace-write CLI sandbox and strict JSONL reconciliation apply",
+    "containmentGraphPolicy": "before evidence or runtime directory creation and before model launch, canonicalize existing and prospective paths through their nearest existing physical parents; require independent nonnested workdirs, authoritative outputs contained only by evidenceRoot and pairwise nonnested, temp/cache/dependency roots external to and nonnested with evidenceRoot/workdirs/outputs/each other across invocations, and every private input external to every mutable root and output; after execution evidenceRoot contains exactly the authoritative outputs and their necessary parent directories with no reparse points",
+    "successRule": "each process starts, receives stdin, exits zero before the external deadline, emits exactly one thread.started and turn.completed, exposes or explains absent usage, uses a distinct thread ID, reconciles raw JSONL and hashes, leaves an exact closed evidence tree, and finishes with a clean committed clone",
     "roleRuntime": {
       "schemaPath": "experiment/schemas/role-runtime-contract.schema.json",
-      "schemaSha256": "25a30d43ceb77e7bd4b908f8e577dc6ea0c7f9eb41c61f7c8c77af83f528632f",
+      "schemaSha256": "ac620774663e6ce8dd9917f760f6f53eeb8063e70b88240999ffc6bef6184c5a",
       "runnerPath": "scripts/run-cli-role.ps1",
-      "runnerSha256": "385830cc00bebca1541040dababf9496610064d94eb252a02c8de7d77cf6cea3",
+      "runnerSha256": "f78ec27cc30f66a58464be6f5b60a4437808b97ec85186916171ee22e9b6b3b4",
       "evidenceSchemaPath": "experiment/schemas/cli-supervision-evidence.schema.json",
-      "evidenceSchemaSha256": "f6c18acea89f5cfac3b2fe6ad84871f563e217d884b14ecb29e6606bb99dcd89",
+      "evidenceSchemaSha256": "b43690cdb988df31e3a778acf8021052fa0e9dae0767f518d9c8c126a8866556",
       "promptTemplateSha256": {
         "reviewer": "5bd94cc7c44165acae23675f82d74ece6bab0b4dab31f387d338d1c9a5e7dcae",
         "fixer": "ac4c0a40dbcee8b1ffe11b6eb7e81c5458849859a1ab38d09b78431aa390c9cf",
@@ -114,7 +127,9 @@
         "evaluator": "12a769a0868261e28299b5a7feef71626ea6e1ee51bfb0eb59ce65bbec05e6aa"
       },
       "promptSubstitutionRule": "exact role-specific key set; single-line bounded values; candidate/cycle/snapshot, fixer handoff, and evaluator package/sequence/rubric/schema/hidden-suite values must equal their contract bindings",
-      "outputSchemaPolicy": "codex exec supports --output-schema, but authoritative final schemas require supervisor-observed runtime identity; omit the flag until distinct frozen pre-injection schemas exist, then inject observed identity and validate the authoritative final schema",
+      "deadlinePolicy": "before evidence creation, strict-parse WALL_CLOCK_DEADLINE_ISO as UTC, start the monotonic budget clock before capturing supervisor start, require start < absolute deadline <= start + deadlineSeconds with zero scheduling tolerance, floor the wall-clock absolute budget and subtract all monotonic elapsed time including pre-launch scheduling delay, pass floor(remaining) to WaitForExit, treat less than one millisecond as zero, require actual OS exit completedAt <= absoluteDeadline, and allow two seconds solely for completionObservedAt or process-tree termination",
+      "pathMutationPolicy": "before evidence or runtime directory creation and model launch, canonicalize prospective paths and require evidenceRoot/workdir separation, four pairwise-nonnested authoritative direct-child outputs, external pairwise-nonnested temp/cache/dependency roots, and every private input separate from every mutable root and output; afterward require exactly four evidence files, no subdirectories, and no reparse points",
+      "outputSchemaPolicy": "codex exec supports --output-schema, but authoritative final schemas require supervisor-observed runtime identity and chronology; omit the flag until distinct frozen pre-injection schemas exist, then inject identity, overwrite role artifact chronology with actual OS exit time, record completion observation separately, and validate the authoritative final schema",
       "reviewerPolicy": "read-only snapshot",
       "fixerPolicy": "authorized isolated full-clone write followed by clean commit",
       "testerPolicy": "workspace-write disposable copy; no mutation transfer",
@@ -181,14 +196,14 @@
     "blindingClaim": "mapping-blinded single-package evaluation, not lineage-blinded inference",
     "sequenceRule": "randomize X/Y/Z order; use a fresh evaluator subprocess for one package; record mapping guess and integer confidence percentage from 0 through 100; score and seal before launching the next; prohibit revisions",
     "packageScriptPath": "scripts/package-blinded-snapshots.mjs",
-    "packageScriptSha256": "98cf033b59916e36a871034ba23a1bcfb06c0783f9e5b9fd04596caca6a216ec",
+    "packageScriptSha256": "98ef96dd16f37a14fa4a56b324a0274dd3aa29010d296244e695fe42663478d7",
     "packageManifestSchemaPath": "experiment/schemas/blinded-package-manifest.schema.json",
     "packageManifestSchemaSha256": "4d9d8397fc068cdf511e99bae6980ed2d2ef5410e5128385043f1c426cdb8bd5",
     "packageMappingSchemaPath": "experiment/schemas/blinded-package-mapping.schema.json",
     "packageMappingSchemaSha256": "2d0a96f27d43f511c26b57a49dfef5c05acfe0f5dfb1f8419f724d524513fb74",
     "packageInputRule": "exact X/Y/Z randomized order and B0/T0/Tfinal set; core.autocrlf=false clean full-clone sources must match exact refs, committed Git commit/tree, one frozen public-gate-set hash, and schema-bound private provenance markers; source, output, mapping, and private manifest paths remain separate and nonnested; evaluator-facing manifests omit source role/ref/commit/tree",
     "rubricSha256": "f0f4b5b918a9a50183455bf237a90706dcac58ce3cf708996bdc9ceb3b0978ef",
-    "frozenGateSetSha256": "ac6ad587fc42e4bf423134fddb1ab5704a9924cff968523c5e61cccba8b4a70e",
+    "frozenGateSetSha256": "af8a2d6f7a29ff3dcbc1ca4240361e6bdbba520078a0cd39dbd0f4e4ba0f7930",
     "rubricItems": [
       {
         "id": "A1",

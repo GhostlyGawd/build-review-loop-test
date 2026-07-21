@@ -4,7 +4,9 @@
 
 Use the pinned PowerShell 7 host at `C:\Users\rhenm\AppData\Local\pwsh7\pwsh.exe` (version `7.6.2`, SHA-256 `99ec38d8c4910fd5f2feeeec4dedb5076ff39a08ca21e12642822bc8d989e316`) with `-NoProfile -File`. The runner in turn launches the pinned Codex CLI binary at `C:\Users\rhenm\.codex\plugins\.plugin-appserver\codex.exe` (version `codex-cli 0.145.0-alpha.18`, SHA-256 `20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4`) under attested ChatGPT authentication.
 
-Create two independent full clones at the same bound commit/tree. Disable remotes, require clean status, and keep their canonical paths distinct, nonnested, and free of reparse points. Keep each clone separate from a fresh evidence root. Give every invocation distinct final/stdout/stderr/evidence paths, temp/cache/dependency roots, port, opaque invocation ID, process ID, and thread ID.
+Project the frozen source through the hash-bound allowlist and preparer into two byte-identical, source-history-free repositories. Each has one deterministic root commit, `core.autocrlf=false`, no remotes, only allowlisted visible bytes, and no ignored or untracked extras. The private source and projection manifest remain outside both workdirs.
+
+Use the frozen canonical-path helper before directory creation and launch. It rejects reparse ancestors and Windows long/short-name aliases. Enforce the containment graph: independent workdirs; outputs only below evidence root; runtime roots external to evidence, workdirs, outputs, and one another; private inputs external to every mutable root. Require the exact post-run evidence closure and a visible-filesystem snapshot per builder.
 
 Freeze the exact global argv order:
 
@@ -25,7 +27,7 @@ Use one fresh external CLI subprocess for each reviewer, fixer, tester, and eval
 - Tester: disposable workspace-write clone; HEAD/tree/status and package transfer remain unchanged after discarding the copy.
 - Evaluator: disposable workspace-write history-free package outside every Git worktree; package content hash must remain unchanged.
 
-Render role prompts only by replacing the exact role-specific token set with bounded single-line literal values. Bind the lock, runner, evidence schema, prompt template, rendered prompt, artifact schema, input commit/tree or package seal, handoff, rubric, and hidden-suite commitment before launch. The runner injects observed runtime identity into the final artifact, validates the authoritative final schema, and writes a separate supervision record.
+Render role prompts only by replacing the exact role-specific token set with bounded single-line literal values. Bind the lock, canonical helper, runner, evidence schema, prompt template, rendered prompt, artifact schema, input commit/tree or package seal, handoff, rubric, and hidden-suite commitment before launch. Strict-parse the wall deadline as UTC, start the monotonic budget before evidence creation, charge pre-launch delay, and bind actual OS exit separately from completion observation. The runner injects observed runtime identity into the final artifact, validates the authoritative final schema, and writes a separate supervision record.
 
 ## Audited procedural claim
 

@@ -1,58 +1,59 @@
 build-review-loop skill v1 / protocol 2.4.0-draft validation evidence
 validated: 2026-07-21 America/New_York
-skill base commit: 33355b97041070e1dec4b7c9beca4ce96faa50bb
+skill base commit: 0faaee9169d1f8fb07f5bbe59d07782216e418a1
+skill base tree: 33355b97041070e1dec4b7c9beca4ce96faa50bb
 skill branch: experiment/skill-v1
-protocol source commit: cb198b3b2985643c9984d1ff40b9a7cf70db8bd6
-protocol source tree: fb7e392f0697ca0c9376cde664682f7708288c9a
+protocol source commit: f957cdf3054b8055a3d4b90d7cae0fbb8c79394c
+protocol source tree: 23c9c1005efa704d42e79fe8b80f3dc33aa5ab17
 candidate access: none
 push/PR/publication: none
 
 Source-byte parity
-- validation/source-parity.json records 28 protocol-derived source mappings.
+- validation/source-parity.json records 41 protocol-derived source mappings.
 - Each bundled Git blob equals the named protocol commit's Git blob.
-- allMatch: true; fileCount: 28.
-- Sources cover canonical/config/fixtures; builder+smoke+four role prompts; builder/role/supervision/mapping/manifest schemas and templates; four role artifact schemas plus finding; both PowerShell runners; blinded packager.
+- allMatch: true; fileCount: 41.
+- Sources include canonical/config/golden/invalid fixtures and golden note; builder/smoke/four role prompts; builder projection allowlist/package/manifest schema/preparer; CLI/role/supervision/mapping/manifest schemas and templates; artifact schemas; protocol lock/schema/prose; canonical path helper; both PowerShell runners; exact-HEAD packager; and frozen public projection surfaces.
 
-Frozen runtime coverage
-- PowerShell host: C:\Users\rhenm\AppData\Local\pwsh7\pwsh.exe
-- PowerShell version/hash: 7.6.2 / 99ec38d8c4910fd5f2feeeec4dedb5076ff39a08ca21e12642822bc8d989e316
-- CLI version/hash: codex-cli 0.145.0-alpha.18 / 20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4
-- Model/reasoning/auth: gpt-5.4 / xhigh / Logged in using ChatGPT
-- Both exact runners parse under the pinned PowerShell host.
-- Template builder and role contracts fail closed in preflight before any Codex launch.
-- The separate smoke prompt is accepted only in smoke mode; builder mode binds the neutral prompt.
+Hardened runtime coverage
+- canonical helper binds prospective physical paths, nearest existing parents, reparse/junction rejection, and Windows long/short-name alias rejection.
+- builder projection binds source commit/tree privately and gives builders only identical one-root, core.autocrlf=false, remotes-disabled, allowlisted bytes.
+- builder preflight rejects ignored or untracked visible contamination, private inputs inside mutable roots, containment-graph overlap, and non-exact projected state.
+- builder supervision binds deterministic post-model visible-filesystem snapshots and the exact evidence-root parent closure.
+- role supervision charges pre-launch delay, uses a strict UTC absolute deadline, binds actual OS exit separately from completion observation, and preserves the two-second observation/termination tolerance only.
+- packager requires exact HEAD/ref/commit/tree and rejects traversal, physical aliases, reparse points, lineage leakage, and source drift.
 - No live model runner or candidate execution was performed by this skill validation.
 
 Skill validator
+command: python -m unittest -v skills/build-review-loop/scripts/test_validate_artifacts.py
+result: PASS, 33 tests, 0 failures, 0 errors
+
 command: python skills/build-review-loop/scripts/validate_artifacts.py skills/build-review-loop/tests/fixtures/golden-run.json --mode execution --expect-golden
 result: PASS
 
 command: python skills/build-review-loop/scripts/validate_artifacts.py skills/build-review-loop/tests/fixtures/invalid-current.json --mode execution
 result: PASS
 
-command: python -m unittest skills/build-review-loop/scripts/test_validate_artifacts.py -v
-result: PASS, 29 tests, 0 failures, 0 errors
-
-Adversarial coverage
-- builder contract: binary/schema/common-start/prompt/deadline/argv/model/reasoning/resume drift
-- coordinates: duplicate invocation/port/path, nested workdirs, evidence-root escape
-- supervision: start/stdin/timeout/exit/turn/JSONL failure, raw hash mismatch, usage spoofing, duplicate process/thread, unequal prompt bytes, unauthorized write/tool evidence
-- metadata: missing absence reasons and trusted model/provider/reasoning conflicts
-- role isolation: runner/prompt/evidence/artifact binding drift, sandbox drift, extra history substitution, multiline/inherited prompt injection, final artifact binding failure
-- assignment/evaluation: registered byte recomputation, active-invalidation score rejection, revision prohibition, runtime identity reuse
-- blinding: mapping permutation/provenance omission, traversal label, history-free/lineage/timestamp seal drift, provenance leak into evaluator-facing manifest, package hash mismatch
+Adversarial additions
+- unsafe/duplicate projection allowlist entries and aggregate projection-manifest hash/order drift
+- source/projection common-start collapse and frozen helper/allowlist/preparer commitment drift
+- private input under a builder and runtime root under evidence
+- missing or zero post-state evidence seal
+- stale completion after the absolute deadline and late completion observation
+- bundled exact path helper, projection, lock, protocol, schemas/templates, runners, and packager bytes
 
 Exact protocol-source suite
 command: npm run test:protocol
-working directory: build-review-loop-protocol-v2 at cb198b3b2985643c9984d1ff40b9a7cf70db8bd6
-result: PASS, 38 tests, 0 failures
-coverage includes builder/role preflight, pinned PowerShell smoke behavior, raw JSONL/usage/bindings, private provenance without manifest leakage, deterministic synthetic packaging, traversal/nesting/source drift, and malicious execution fixtures.
-candidate access: none; packager tests use temporary synthetic repositories.
+working directory: build-review-loop-protocol-v2 at f957cdf3054b8055a3d4b90d7cae0fbb8c79394c
+result: PASS, 52 tests, 0 failures
+coverage includes projected-input contamination, ignored files, every schema-valid builder/role containment overlap, junction and Windows 8.3 aliases, deadline parsing and pre-wait charging, exact runtime/prompt/evidence bindings, deterministic blinded packaging, and all integrated contract mutations.
+host note: two earlier complete attempts encountered transient PowerShell CLR TaskbarJumpList startup failures in different subprocesses. Each affected case passed in isolation, and the final complete 52-test run passed with POWERSHELL_TELEMETRY_OPTOUT=1 and POWERSHELL_UPDATECHECK=Off.
+candidate access: none; packaging/projection tests use temporary synthetic repositories.
 
 Static validation
-- python -m py_compile: PASS
-- node --check scripts/package-blinded-snapshots.mjs: PASS
+- python -m py_compile validator and tests: PASS
+- node --check canonical helper, builder preparer, and packager: PASS
 - pinned PowerShell ScriptBlock parse for both runners: PASS
+- template builder and role runner preflights fail closed before Codex launch: PASS
 - skill-creator quick_validate.py: PASS (Skill is valid!)
 - git diff --check: PASS
 
@@ -61,5 +62,5 @@ Limitations preserved
 - Isolation is an audited procedural boundary plus CLI sandbox, not proof of kernel-enforced containment.
 - Trusted JSONL may omit model/provider/reasoning metadata; null plus a specific reason is required and self-report is not evidence.
 - Blinding is mapping blinding, not proof that implementation lineage is intrinsically unknowable.
-- Authoritative role schemas require supervisor-observed runtime identity, so --output-schema remains omitted until distinct frozen pre-injection schemas exist.
+- Authoritative role schemas require supervisor-observed identity and chronology, so --output-schema remains omitted until distinct frozen pre-injection schemas exist.
 - The exact packager resolves its schema/Ajv dependency from the frozen protocol repository layout; the skill copy is a byte-exact commitment.

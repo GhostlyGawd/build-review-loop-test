@@ -2,9 +2,11 @@
 
 Use the byte-exact bundled prompt templates. Replace only their declared `{{UPPERCASE_TOKEN}}` values with bounded single-line literals, hash the rendered bytes, and place those exact bytes on stdin. Do not add wrappers, history, guidance, or runtime overrides.
 
+For every model role, strict-parse `WALL_CLOCK_DEADLINE_ISO` as UTC. Start the monotonic budget before evidence creation, charge all pre-launch scheduling time, bind `completedAt` to actual OS exit, and reserve the two-second tolerance only for `completionObservedAt` or process-tree termination.
+
 ## Builder
 
-Use [neutral-builder.md](neutral-builder.md) twice without any substitution. Use [runner-smoke.md](runner-smoke.md) only for the separately declared harmless smoke mode. Builder runtime: concurrent fresh external CLI subprocesses, 2400 seconds maximum, workspace-write clones, `gpt-5.4`/`xhigh`.
+Use [neutral-builder.md](neutral-builder.md) twice without substitution, each against one byte-identical source-history-free neutral projection. Source history and the private projection manifest are never model context. Use [runner-smoke.md](runner-smoke.md) only for harmless smoke mode. Builder runtime: concurrent fresh external CLI subprocesses, 2400 seconds maximum, workspace-write projections, `gpt-5.4`/`xhigh`.
 
 ## Reviewer
 

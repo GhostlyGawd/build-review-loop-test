@@ -39,6 +39,7 @@ class ValidatorTests(unittest.TestCase):
         value.update({
             "lockSha256": "a" * 64,
             "contractSchemaSha256": validator.ROLE_SCHEMA_SHA256,
+            "canonicalPathHelperSha256": validator.CANONICAL_PATH_HELPER_SHA256,
             "runnerSha256": validator.ROLE_RUNNER_SHA256,
             "evidenceSchemaSha256": validator.EVIDENCE_SCHEMA_SHA256,
             "promptTemplateSha256": validator.MODEL_ROLE_PROMPT_SHA256["reviewer"],
@@ -59,6 +60,21 @@ class ValidatorTests(unittest.TestCase):
             package["sourceTree"] = f"{index + 4}" * 40
         return value
 
+    def valid_builder_manifest(self) -> dict:
+        records = [
+            {"path": "index.html", "sha256": "a" * 64, "bytes": 12},
+            {"path": "src/main.tsx", "sha256": "b" * 64, "bytes": 34},
+        ]
+        material = "".join(
+            f"{item['path']}\0{item['sha256']}\0{item['bytes']}\n" for item in records
+        )
+        return {
+            "version": "1.0.0", "sourceCommit": "1" * 40, "sourceTree": "2" * 40,
+            "allowlistSha256": validator.BUILDER_ALLOWLIST_SHA256,
+            "projectionSha256": validator.sha256_text(material),
+            "projectionCommit": "3" * 40, "projectionTree": "4" * 40, "files": records,
+        }
+
     def valid_role_evidence(self, contract: dict) -> tuple[dict, str]:
         raw = (
             '{"type":"thread.started","thread_id":"role-thread-1"}\n'
@@ -77,6 +93,10 @@ class ValidatorTests(unittest.TestCase):
             "stdinError": None,
             "exitCode": 0,
             "timedOut": False,
+            "startedAt": "2026-07-20T00:00:00Z",
+            "completedAt": "2026-07-20T00:10:00Z",
+            "completionObservedAt": "2026-07-20T00:10:01Z",
+            "absoluteDeadline": "2026-07-20T00:15:00Z",
             "argv": [
                 *validator.CLI_INVARIANT_ARGV[:-3], "--sandbox", "read-only", "--json",
                 "-C", contract["workdir"], "-o", contract["finalPath"], "-",
@@ -166,6 +186,9 @@ class ValidatorTests(unittest.TestCase):
             ("cliSha256", "f" * 64, "binary"),
             ("promptSha256", "f" * 64, "prompt"),
             ("contractSchemaSha256", "f" * 64, "schema"),
+            ("canonicalPathHelperSha256", "f" * 64, "schema"),
+            ("builderInputPreparationScriptSha256", "f" * 64, "projection"),
+            ("builderInputAllowlistSha256", "f" * 64, "projection"),
             ("commonStartCommit", "0" * 40, "common-start"),
             ("invariantArgv", ["resume"], "argv"),
             ("deadlineSeconds", 2401, "deadline"),
@@ -176,6 +199,37 @@ class ValidatorTests(unittest.TestCase):
                 value[field] = replacement
                 errors = validator.validate_cli_runtime_contract(value)
                 self.assertTrue(any(fragment in error.casefold() for error in errors), errors)
+
+    def test_builder_projection_allowlist_and_manifest_are_fail_closed(self) -> None:
+        allowlist = validator.load_json(validator.BUILDER_ALLOWLIST_PATH)
+        self.assertEqual([], validator.validate_builder_allowlist(allowlist))
+        malicious = copy.deepcopy(allowlist)
+        malicious["files"][0]["destination"] = "experiment/secret.md"
+        self.assertTrue(any("unsafe destination" in error.casefold()
+                            for error in validator.validate_builder_allowlist(malicious)))
+        manifest = self.valid_builder_manifest()
+        self.assertEqual([], validator.validate_builder_input_manifest(manifest))
+        manifest["files"].reverse()
+        self.assertTrue(any("sorted" in error.casefold()
+                            for error in validator.validate_builder_input_manifest(manifest)))
+        manifest = self.valid_builder_manifest()
+        manifest["projectionSha256"] = "f" * 64
+        self.assertTrue(any("aggregate" in error.casefold()
+                            for error in validator.validate_builder_input_manifest(manifest)))
+
+    def test_cli_runtime_rejects_source_projection_and_private_path_aliases(self) -> None:
+        value = copy.deepcopy(self.golden["cliRuntimeContract"])
+        value["sourceCommonStartCommit"] = value["commonStartCommit"]
+        self.assertTrue(any("distinct" in error.casefold()
+                            for error in validator.validate_cli_runtime_contract(value)))
+        value = copy.deepcopy(self.golden["cliRuntimeContract"])
+        value["builderInputManifestPath"] = value["invocations"][0]["workdir"] + "\\private.json"
+        self.assertTrue(any("private" in error.casefold()
+                            for error in validator.validate_cli_runtime_contract(value)))
+        value = copy.deepcopy(self.golden["cliRuntimeContract"])
+        value["invocations"][0]["tempRoot"] = value["evidenceRoot"] + "\\runtime"
+        self.assertTrue(any("external" in error.casefold()
+                            for error in validator.validate_cli_runtime_contract(value)))
 
     def test_cli_runtime_rejects_duplicate_or_nested_coordinates(self) -> None:
         value = copy.deepcopy(self.golden["cliRuntimeContract"])
@@ -222,6 +276,15 @@ class ValidatorTests(unittest.TestCase):
                     self.golden["cliRuntimeStdoutByInvocation"],
                 )
                 self.assertTrue(any(fragment in e.casefold() for e in errors), errors)
+
+    def test_builder_supervision_requires_bound_post_state_evidence(self) -> None:
+        evidence = copy.deepcopy(self.golden["cliRuntimeEvidence"])
+        evidence["results"][0]["postStateSha256"] = "0" * 64
+        errors = validator.validate_builder_supervision(
+            evidence, self.golden["cliRuntimeContract"],
+            self.golden["cliRuntimeStdoutByInvocation"],
+        )
+        self.assertTrue(any("hash" in error.casefold() for error in errors), errors)
 
     def test_builder_supervision_rejects_process_thread_prompt_reuse(self) -> None:
         evidence = copy.deepcopy(self.golden["cliRuntimeEvidence"])
@@ -299,6 +362,17 @@ class ValidatorTests(unittest.TestCase):
         self.assertEqual([], validator.validate_role_supervision_evidence(result, contract, raw))
         result["artifactBindingValid"] = False
         self.assertTrue(any("artifact" in e.casefold() for e in
+                            validator.validate_role_supervision_evidence(result, contract, raw)))
+
+    def test_role_supervision_rejects_deadline_and_observation_drift(self) -> None:
+        contract = self.valid_role_contract()
+        result, raw = self.valid_role_evidence(contract)
+        result["completedAt"] = "2026-07-20T00:16:00Z"
+        self.assertTrue(any("deadline" in error.casefold() for error in
+                            validator.validate_role_supervision_evidence(result, contract, raw)))
+        result, raw = self.valid_role_evidence(contract)
+        result["completionObservedAt"] = "2026-07-20T00:15:03Z"
+        self.assertTrue(any("chronology" in error.casefold() for error in
                             validator.validate_role_supervision_evidence(result, contract, raw)))
 
     def test_blinded_mapping_accepts_private_provenance(self) -> None:

@@ -20,6 +20,7 @@ INVALID_PATH = SKILL_ROOT / "tests" / "fixtures" / "invalid-current.json"
 CLI_SCHEMA_PATH = SKILL_ROOT / "references" / "cli-runtime-contract.schema.json"
 CLI_TEMPLATE_PATH = SKILL_ROOT / "references" / "cli-runtime-contract.template.json"
 CLI_RUNNER_PATH = SKILL_ROOT / "scripts" / "run-cli-builders.ps1"
+CANONICAL_PATH_HELPER_PATH = SKILL_ROOT / "scripts" / "canonicalize-paths.mjs"
 ROLE_SCHEMA_PATH = SKILL_ROOT / "references" / "role-runtime-contract.schema.json"
 ROLE_TEMPLATE_PATH = SKILL_ROOT / "references" / "role-runtime-contract.template.json"
 ROLE_RUNNER_PATH = SKILL_ROOT / "scripts" / "run-cli-role.ps1"
@@ -33,34 +34,63 @@ PACKAGER_PATH = SKILL_ROOT / "scripts" / "package-blinded-snapshots.mjs"
 NEUTRAL_PROMPT_PATH = SKILL_ROOT / "references" / "neutral-builder.md"
 SMOKE_PROMPT_PATH = SKILL_ROOT / "references" / "runner-smoke.md"
 BUILDER_CONFIG_PATH = SKILL_ROOT / "references" / "builder-config.json"
+BUILDER_ALLOWLIST_PATH = SKILL_ROOT / "references" / "builder-input-allowlist.json"
+BUILDER_MANIFEST_SCHEMA_PATH = SKILL_ROOT / "references" / "builder-input-manifest.schema.json"
+BUILDER_PREPARER_PATH = SKILL_ROOT / "scripts" / "prepare-builder-input.mjs"
+BUILDER_PACKAGE_PATH = SKILL_ROOT / "references" / "builder-package.json"
+PROTOCOL_LOCK_PATH = SKILL_ROOT / "references" / "protocol-lock.json"
+EXPERIMENT_LOCK_SCHEMA_PATH = SKILL_ROOT / "references" / "experiment-lock.schema.json"
+PROTOCOL_PATH = SKILL_ROOT / "references" / "protocol.md"
+GOLDEN_README_PATH = SKILL_ROOT / "references" / "golden-run.README.md"
+PROJECTION_PATHS = (
+    SKILL_ROOT / "references" / "projection" / "index.html",
+    SKILL_ROOT / "references" / "projection" / "src" / "main.tsx",
+    SKILL_ROOT / "references" / "projection" / "docs" / "public-test-contract.md",
+    SKILL_ROOT / "references" / "projection" / "package-lock.json",
+)
 ROLE_PROMPT_PATHS = {
     "reviewer": SKILL_ROOT / "references" / "blinded-reviewer.md",
     "fixer": SKILL_ROOT / "references" / "fixer.md",
     "tester": SKILL_ROOT / "references" / "tester.md",
     "evaluator": SKILL_ROOT / "references" / "blinded-evaluator.md",
 }
-CONTRACT_CANONICAL_SHA256 = "541985e02a49b79910282a6e7f26e43fbde3ae500ebfcdf9cef6d031f1a74b49"
-GOLDEN_CANONICAL_SHA256 = "ae96dc2d0f34635ebe979745c5055404943f5ba7578f8bfa325925bebc6070d1"
+CONTRACT_CANONICAL_SHA256 = "604741c82d917d2cb5901ba4b1c046d29e2091ce4c91a68a514b713a24348b01"
+GOLDEN_CANONICAL_SHA256 = "27d1f5ae5338926e5b51641d1fe08199fe3f1d84037d6cc94fe25412fe66a4d5"
 INVALID_CANONICAL_SHA256 = "67ff46e219d7dcacfe083db59c31785ca7ce496837f0b0c7ff602267af3b01e0"
-CONTRACT_RAW_SHA256 = "664ce4c05aef01760e02706f152dcea3a26307df60691ad67938bac03e021636"
-GOLDEN_RAW_SHA256 = "20fc476ed2e98056590f36b26d79516f89c6dd878c01b6ec55cb782d7c8be655"
+CONTRACT_RAW_SHA256 = "52f8be0515758293014a27745a70c14a6c6020b28a5a4300fadc8fa578f376fa"
+GOLDEN_RAW_SHA256 = "39f6b6401bb404b0f1654cde25c50418fe3f0a2d9bc7e387de311101b926b39f"
 INVALID_RAW_SHA256 = "7abd35f57da85143a955c6497b83e9f7b81acf3b21fe5c16080911983fdc1415"
-CLI_SCHEMA_SHA256 = "c18db758a6b40194e64c88d3842522ade28ff831806c6315e3c5348e92934c33"
-CLI_TEMPLATE_RAW_SHA256 = "59e5ca33ca97e049a2871330732d6998d0ef4f1077a032d19f79574a78510f87"
-CLI_RUNNER_SHA256 = "24653c35386be28f09aa5719617ca5ab612a67c1fb8700bd7503abe72569ff25"
-ROLE_SCHEMA_SHA256 = "25a30d43ceb77e7bd4b908f8e577dc6ea0c7f9eb41c61f7c8c77af83f528632f"
-ROLE_TEMPLATE_RAW_SHA256 = "9c0e59757ebe2511b122f08233a91c56a91decca7feaee83bd56dc18be101be8"
-ROLE_RUNNER_SHA256 = "385830cc00bebca1541040dababf9496610064d94eb252a02c8de7d77cf6cea3"
-EVIDENCE_SCHEMA_SHA256 = "f6c18acea89f5cfac3b2fe6ad84871f563e217d884b14ecb29e6606bb99dcd89"
-EVIDENCE_TEMPLATE_RAW_SHA256 = "bcdc6a82eb4b7c2f31a2964b8f38ca8c3017eff68c0857991ac3d91166d90532"
+CLI_SCHEMA_SHA256 = "665016233b950a2f39f0bbee1f5f75b530980d3bcd979e543943cf976b0a2689"
+CLI_TEMPLATE_RAW_SHA256 = "d0ac2fab6db1be3625c00d26bd165513adecb89dd04d04f048068c9cf7148fc5"
+CLI_RUNNER_SHA256 = "b2e848a193c28d93893829a3dceeba323999193a0d96acee8848d0eff06e70b7"
+CANONICAL_PATH_HELPER_SHA256 = "194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e"
+ROLE_SCHEMA_SHA256 = "ac620774663e6ce8dd9917f760f6f53eeb8063e70b88240999ffc6bef6184c5a"
+ROLE_TEMPLATE_RAW_SHA256 = "2218c2edbe53d793a7874e7adcc28cde63386b13219dce5455a88d1a30d5f6f3"
+ROLE_RUNNER_SHA256 = "f78ec27cc30f66a58464be6f5b60a4437808b97ec85186916171ee22e9b6b3b4"
+EVIDENCE_SCHEMA_SHA256 = "b43690cdb988df31e3a778acf8021052fa0e9dae0767f518d9c8c126a8866556"
+EVIDENCE_TEMPLATE_RAW_SHA256 = "ae5d0074c36067983e583fff943cebae528aadb11810cce66ae36229ef2b9863"
 PACKAGE_SCHEMA_SHA256 = "4d9d8397fc068cdf511e99bae6980ed2d2ef5410e5128385043f1c426cdb8bd5"
 PACKAGE_TEMPLATE_RAW_SHA256 = "c35470675fadf7157d954216bba53f88b226786c204ab2d6ce575b31450acadf"
 MAPPING_SCHEMA_SHA256 = "2d0a96f27d43f511c26b57a49dfef5c05acfe0f5dfb1f8419f724d524513fb74"
 MAPPING_TEMPLATE_RAW_SHA256 = "680da1c7b4bfe0e9eb1f056b712e9cc796e9be536097a36dbe244686795d1d43"
-PACKAGER_SHA256 = "98cf033b59916e36a871034ba23a1bcfb06c0783f9e5b9fd04596caca6a216ec"
-BUILDER_PROMPT_SHA256 = "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0"
+PACKAGER_SHA256 = "98ef96dd16f37a14fa4a56b324a0274dd3aa29010d296244e695fe42663478d7"
+BUILDER_PROMPT_SHA256 = "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd"
 SMOKE_PROMPT_SHA256 = "135c5fc59fe72b4b37d924cd6f1a14e4f2a3b7b59711cc12294e81f52cbfd6a2"
 BUILDER_CONFIG_SHA256 = "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4"
+BUILDER_ALLOWLIST_SHA256 = "37af679c4f3f71cbd9e28b810897d4ff82c7c47cf4421a9d661b8b90947aef5b"
+BUILDER_MANIFEST_SCHEMA_SHA256 = "b044646ede4fef4543a4950e5842f51997dc3b65e6bfabad7eeb1ff84caf0bb5"
+BUILDER_PREPARER_SHA256 = "68e186914a0dd99e0b91f0851d45f8081086fffadae8d2949050e29ea1b832b3"
+BUNDLE_EXTRA_HASHES = {
+    BUILDER_PACKAGE_PATH: "be233b856939e83840a4807c22f59e8883643c2dd80cddb90166db655cd98143",
+    PROTOCOL_LOCK_PATH: "450870be5209d8a6bfc6080a52869ae0ed543ee4a674d7eb7bff24acf36fb44d",
+    EXPERIMENT_LOCK_SCHEMA_PATH: "fc0c15cc2fe47db5e29e82e9f6ecc6ac56c0f961bfdca837826b0930874e5e0e",
+    PROTOCOL_PATH: "d3a5a5eb98d9d58b7dcb4b5aa895a007c72e40f8d7b9b1e58600ba58a6bb7349",
+    GOLDEN_README_PATH: "7cb32b826cbd0919fa7eaf65154de833da7fe9c830a24451f3063b2dde672b55",
+    PROJECTION_PATHS[0]: "2c281ab2fc936c659323a135234622fb2c8ea1baa720fc411cca1e995b321424",
+    PROJECTION_PATHS[1]: "880acfdd79d16f24b1849ed6491198926ed49b6df89af2f4cac99defe8d78e9c",
+    PROJECTION_PATHS[2]: "e85aee3135740a7b5501030af2dc3ffe7c16f50d93812499759a6f60c7238ee9",
+    PROJECTION_PATHS[3]: "f1a2806abaa69116b0180d1e047916a4bc62b53fa89c0d65a2ece3a9aa94d00b",
+}
 LOCK_PROMPT_SHA256 = BUILDER_PROMPT_SHA256
 LOCK_CONFIG_SHA256 = BUILDER_CONFIG_SHA256
 CLI_BINARY_PATH = r"C:\Users\rhenm\.codex\plugins\.plugin-appserver\codex.exe"
@@ -249,6 +279,7 @@ def validate_bundles() -> list[str]:
         (CLI_SCHEMA_PATH, CLI_SCHEMA_SHA256, "CLI runtime schema"),
         (CLI_TEMPLATE_PATH, CLI_TEMPLATE_RAW_SHA256, "CLI runtime template"),
         (CLI_RUNNER_PATH, CLI_RUNNER_SHA256, "CLI builder runner"),
+        (CANONICAL_PATH_HELPER_PATH, CANONICAL_PATH_HELPER_SHA256, "canonical path helper"),
         (ROLE_SCHEMA_PATH, ROLE_SCHEMA_SHA256, "role runtime schema"),
         (ROLE_TEMPLATE_PATH, ROLE_TEMPLATE_RAW_SHA256, "role runtime template"),
         (ROLE_RUNNER_PATH, ROLE_RUNNER_SHA256, "role runner"),
@@ -262,6 +293,11 @@ def validate_bundles() -> list[str]:
         (NEUTRAL_PROMPT_PATH, BUILDER_PROMPT_SHA256, "neutral builder prompt"),
         (SMOKE_PROMPT_PATH, SMOKE_PROMPT_SHA256, "runner smoke prompt"),
         (BUILDER_CONFIG_PATH, BUILDER_CONFIG_SHA256, "builder config"),
+        (BUILDER_ALLOWLIST_PATH, BUILDER_ALLOWLIST_SHA256, "builder input allowlist"),
+        (BUILDER_MANIFEST_SCHEMA_PATH, BUILDER_MANIFEST_SCHEMA_SHA256, "builder manifest schema"),
+        (BUILDER_PREPARER_PATH, BUILDER_PREPARER_SHA256, "builder input preparer"),
+        *((path, digest, f"public bundle {path.name}")
+          for path, digest in BUNDLE_EXTRA_HASHES.items()),
         *((path, MODEL_ROLE_PROMPT_SHA256[role], f"{role} prompt")
           for role, path in ROLE_PROMPT_PATHS.items()),
     ):
@@ -274,7 +310,9 @@ def validate_bundles() -> list[str]:
                 f"bundled {label} raw bytes diverge", errors)
         if path.suffix == ".json":
             try:
-                json.loads(raw.decode("utf-8"))
+                parsed = json.loads(raw.decode("utf-8"))
+                if path == BUILDER_ALLOWLIST_PATH:
+                    errors.extend(validate_builder_allowlist(parsed))
             except (UnicodeError, json.JSONDecodeError) as exc:
                 errors.append(f"bundled {label} invalid JSON: {exc}")
         elif path == NEUTRAL_PROMPT_PATH:
@@ -339,7 +377,17 @@ def validate_contract(contract: Any) -> list[str]:
         "promptSha256": BUILDER_PROMPT_SHA256,
         "smokePromptSha256": SMOKE_PROMPT_SHA256,
         "configSha256": BUILDER_CONFIG_SHA256,
-        "rule": "each builder receives the exact raw prompt bytes on stdin under an otherwise identical frozen external CLI execution; only opaque invocation ID and runtime coordinate paths differ",
+        "rule": "each builder receives the exact raw prompt bytes and a byte-identical source-history-free neutral product projection; only opaque invocation ID and runtime coordinate paths differ",
+        "inputProjection": {
+            "allowlistPath": "experiment/builder-input-allowlist.json",
+            "allowlistSha256": BUILDER_ALLOWLIST_SHA256,
+            "manifestSchemaPath": "experiment/schemas/builder-input-manifest.schema.json",
+            "manifestSchemaSha256": BUILDER_MANIFEST_SCHEMA_SHA256,
+            "preparationScriptPath": "scripts/prepare-builder-input.mjs",
+            "preparationScriptSha256": BUILDER_PREPARER_SHA256,
+            "sourceRule": "private manifest binds the clean protocol source commit/tree; neither source nor manifest is builder input",
+            "outputRule": "two fresh nonnested git-init repositories with identical one-root commit/tree, core.autocrlf=false, no remotes, and exact allowlisted bytes only",
+        },
     }, "canonical builder prompt/config commitments diverge", errors)
     runtime = contract.get("cliRuntime", {})
     require(runtime.get("modelRoleCoverage") ==
@@ -354,6 +402,7 @@ def validate_contract(contract: Any) -> list[str]:
             } and
             runtime.get("schemaSha256") == CLI_SCHEMA_SHA256 and
             runtime.get("runnerSha256") == CLI_RUNNER_SHA256 and
+            runtime.get("canonicalPathHelperSha256") == CANONICAL_PATH_HELPER_SHA256 and
             runtime.get("binaryPath") == CLI_BINARY_PATH and
             runtime.get("binaryVersion") == CLI_VERSION and
             runtime.get("binarySha256") == CLI_BINARY_SHA256 and
@@ -583,22 +632,99 @@ def validate_neutral_builder_prompt(prompt_text: str) -> list[str]:
     required = (
         "The operator writes this entire file byte-for-byte to raw standard input for each fresh CLI execution.",
         "The CLI `-C` argument supplies the isolated checkout and is not model context.",
-        "You are a neutral builder. The current checkout is the frozen common-start commit.",
-        "No prefix, suffix, placeholder substitution, candidate label, deadline timestamp, path wrapper, prompt-embedded runtime override, or added guidance is permitted.",
+        "You are a neutral builder. Implement the Permissions Playground",
+        "This repository is a source-history-free neutral product task projection",
+        "No prefix, suffix, placeholder substitution, label, deadline timestamp, path wrapper, prompt-embedded runtime override, or added guidance is permitted.",
     )
     return [f"neutral builder runtime prose missing: {clause}"
             for clause in required if clause not in prompt_text]
 
 
+def safe_projection_path(value: Any) -> bool:
+    return (isinstance(value, str) and bool(value) and not value.startswith("/") and
+            "\\" not in value and ".." not in value and
+            not re.search(r"(^|/)(?:experiment|skills?|sealed-hidden-suite|evidence|role-artifacts?|\.git)(?:/|$)",
+                          value, re.IGNORECASE))
+
+
+def validate_builder_allowlist(value: Any) -> list[str]:
+    errors: list[str] = []
+    if not exact_fields(value, {"version", "files"}, "builderInputAllowlist", errors):
+        return errors
+    require(value.get("version") == "1.0.0", "builderInputAllowlist: version diverges", errors)
+    files = value.get("files")
+    require(isinstance(files, list) and bool(files), "builderInputAllowlist: files required", errors)
+    sources: list[str] = []
+    destinations: list[str] = []
+    if isinstance(files, list):
+        for index, item in enumerate(files):
+            location = f"builderInputAllowlist.files[{index}]"
+            if not exact_fields(item, {"source", "destination"}, location, errors):
+                continue
+            source, destination = item.get("source"), item.get("destination")
+            require(isinstance(source, str) and bool(source) and not source.startswith("/") and
+                    "\\" not in source and ".." not in source,
+                    f"{location}: unsafe source", errors)
+            require(safe_projection_path(destination), f"{location}: unsafe destination", errors)
+            sources.append(str(source))
+            destinations.append(str(destination))
+    require(len(sources) == len(set(sources)) and len(destinations) == len(set(destinations)),
+            "builderInputAllowlist: duplicate source or destination", errors)
+    return errors
+
+
+def validate_builder_input_manifest(value: Any) -> list[str]:
+    errors: list[str] = []
+    fields = {"version", "sourceCommit", "sourceTree", "allowlistSha256",
+              "projectionSha256", "projectionCommit", "projectionTree", "files"}
+    if not exact_fields(value, fields, "builderInputManifest", errors):
+        return errors
+    require(value.get("version") == "1.0.0" and
+            valid_hash(value.get("sourceCommit"), HEX40) and
+            valid_hash(value.get("sourceTree"), HEX40) and
+            value.get("allowlistSha256") == BUILDER_ALLOWLIST_SHA256 and
+            valid_hash(value.get("projectionCommit"), HEX40) and
+            valid_hash(value.get("projectionTree"), HEX40),
+            "builderInputManifest: version/source/projection binding invalid", errors)
+    files = value.get("files")
+    require(isinstance(files, list) and bool(files), "builderInputManifest: files required", errors)
+    records: list[dict[str, Any]] = []
+    if isinstance(files, list):
+        for index, item in enumerate(files):
+            location = f"builderInputManifest.files[{index}]"
+            if not exact_fields(item, {"path", "sha256", "bytes"}, location, errors):
+                continue
+            require(safe_projection_path(item.get("path")) and valid_hash(item.get("sha256")) and
+                    isinstance(item.get("bytes"), int) and not isinstance(item.get("bytes"), bool) and
+                    item.get("bytes", -1) >= 0,
+                    f"{location}: unsafe path/hash/size", errors)
+            records.append(item)
+    paths = [str(item.get("path")) for item in records]
+    require(paths == sorted(paths, key=lambda item: item.encode("utf-8")) and
+            len(paths) == len(set(paths)),
+            "builderInputManifest: file records must be unique UTF-8 sorted", errors)
+    material = "".join(f"{item.get('path')}\0{item.get('sha256')}\0{item.get('bytes')}\n"
+                       for item in records).encode("utf-8")
+    require(value.get("projectionSha256") == hashlib.sha256(material).hexdigest(),
+            "builderInputManifest: aggregate projection hash mismatch", errors)
+    return errors
+
+
 CLI_CONTRACT_FIELDS = (
     "contractVersion", "cliPath", "cliVersion", "cliSha256", "authStatus",
     "lockPath", "lockSha256", "contractSchemaPath", "contractSchemaSha256",
-    "commonStartCommit", "commonStartTree", "promptPath", "promptSha256",
+    "canonicalPathHelperPath", "canonicalPathHelperSha256",
+    "sourceCommonStartCommit", "sourceCommonStartTree", "commonStartCommit", "commonStartTree",
+    "builderInputManifestPath", "builderInputManifestSha256",
+    "builderInputManifestSchemaPath", "builderInputManifestSchemaSha256",
+    "builderInputAllowlistPath", "builderInputAllowlistSha256",
+    "builderInputPreparationScriptPath", "builderInputPreparationScriptSha256",
+    "builderInputProjectionSha256", "promptPath", "promptSha256",
     "evidenceRoot", "deadlineSeconds", "invariantArgv", "smokeMode", "invocations",
 )
 CLI_INVOCATION_FIELDS = (
     "invocationId", "workdir", "finalPath", "stdoutPath", "stderrPath",
-    "evidencePath", "tempRoot", "cacheRoot", "dependencyRoot", "port",
+    "evidencePath", "postStatePath", "tempRoot", "cacheRoot", "dependencyRoot", "port",
 )
 
 
@@ -616,10 +742,24 @@ def validate_cli_runtime_contract(contract: Any) -> list[str]:
             "CLI ChatGPT auth attestation mismatch", errors)
     require(valid_hash(contract.get("lockSha256")) and
             contract.get("contractSchemaSha256") == CLI_SCHEMA_SHA256 and
+            contract.get("canonicalPathHelperSha256") == CANONICAL_PATH_HELPER_SHA256 and
+            valid_hash(contract.get("sourceCommonStartCommit"), HEX40) and contract.get("sourceCommonStartCommit") != "0" * 40 and
+            valid_hash(contract.get("sourceCommonStartTree"), HEX40) and contract.get("sourceCommonStartTree") != "0" * 40 and
             valid_hash(contract.get("commonStartCommit"), HEX40) and contract.get("commonStartCommit") != "0" * 40 and
             valid_hash(contract.get("commonStartTree"), HEX40) and contract.get("commonStartTree") != "0" * 40,
             "CLI lock/schema/common-start binding mismatch", errors)
-    for field in ("lockPath", "contractSchemaPath", "evidenceRoot"):
+    require(contract.get("sourceCommonStartCommit") != contract.get("commonStartCommit") and
+            contract.get("sourceCommonStartTree") != contract.get("commonStartTree"),
+            "CLI source and projected common-start bindings must remain distinct", errors)
+    require(contract.get("builderInputManifestSchemaSha256") == BUILDER_MANIFEST_SCHEMA_SHA256 and
+            contract.get("builderInputAllowlistSha256") == BUILDER_ALLOWLIST_SHA256 and
+            contract.get("builderInputPreparationScriptSha256") == BUILDER_PREPARER_SHA256 and
+            valid_hash(contract.get("builderInputManifestSha256")) and
+            valid_hash(contract.get("builderInputProjectionSha256")),
+            "CLI builder input projection commitment mismatch", errors)
+    for field in ("lockPath", "contractSchemaPath", "canonicalPathHelperPath", "evidenceRoot",
+                  "builderInputManifestPath", "builderInputManifestSchemaPath",
+                  "builderInputAllowlistPath", "builderInputPreparationScriptPath"):
         require(nonempty(contract.get(field)), f"CLI {field} required", errors)
     require(nonempty(contract.get("promptPath")), "CLI promptPath required", errors)
     expected_prompt = SMOKE_PROMPT_SHA256 if contract.get("smokeMode") else BUILDER_PROMPT_SHA256
@@ -664,16 +804,43 @@ def validate_cli_runtime_contract(contract: Any) -> list[str]:
                 not nested_windows_path(workdirs[1], workdirs[0]),
                 "CLI workdirs must be distinct and nonnested", errors)
         root = lower_windows_path(str(contract.get("evidenceRoot", "")))
+        outputs: list[str] = []
+        runtime_roots: list[str] = []
         for index, invocation in enumerate(invocations):
-            for field in ("finalPath", "stdoutPath", "stderrPath", "evidencePath",
-                          "tempRoot", "cacheRoot", "dependencyRoot"):
+            for field in ("finalPath", "stdoutPath", "stderrPath", "evidencePath", "postStatePath"):
+                value = lower_windows_path(invocation[field])
+                outputs.append(value)
                 require(nested_windows_path(root, lower_windows_path(invocation[field])) and
                         not nested_windows_path(workdirs[index], lower_windows_path(invocation[field])),
                         f"CLI invocation {index} {field} escapes evidence isolation", errors)
+            for field in ("tempRoot", "cacheRoot", "dependencyRoot"):
+                value = lower_windows_path(invocation[field])
+                runtime_roots.append(value)
+                require(not nested_windows_path(root, value) and not nested_windows_path(value, root) and
+                        all(not nested_windows_path(workdir, value) and
+                            not nested_windows_path(value, workdir) for workdir in workdirs),
+                        f"CLI invocation {index} {field} must be external and nonnested", errors)
+        mutable = [root, *workdirs, *outputs, *runtime_roots]
+        private_inputs = [lower_windows_path(str(contract[field])) for field in (
+            "lockPath", "contractSchemaPath", "canonicalPathHelperPath", "builderInputManifestPath",
+            "builderInputManifestSchemaPath", "builderInputAllowlistPath",
+            "builderInputPreparationScriptPath", "promptPath")]
+        require(all(not nested_windows_path(private, target) and
+                    not nested_windows_path(target, private)
+                    for private in private_inputs for target in mutable),
+                "CLI private inputs must be external to every mutable path", errors)
+        require(all(not nested_windows_path(left, right) and not nested_windows_path(right, left)
+                    for index, left in enumerate(runtime_roots)
+                    for right in runtime_roots[index + 1:]),
+                "CLI runtime roots must be pairwise nonnested", errors)
+        require(all(not nested_windows_path(left, right) and not nested_windows_path(right, left)
+                    for index, left in enumerate(outputs)
+                    for right in outputs[index + 1:]),
+                "CLI authoritative outputs must be pairwise nonnested", errors)
     return errors
 
 
-SUPERVISION_FIELDS = (
+SUPERVISION_BASE_FIELDS = (
     "role", "invocationId", "contractSha256", "artifactSchemaSha256", "processId",
     "started", "startedAt", "startError", "stdinDelivered", "stdinError", "exitCode",
     "timedOut", "argv", "argvSha256", "promptSha256", "stdoutPath", "stdoutSha256",
@@ -708,7 +875,10 @@ def parse_jsonl(raw: Any, location: str, errors: list[str]) -> list[dict[str, An
 def validate_supervision_result(result: Any, invocation: dict[str, Any], raw: Any,
                                 location: str, role: str = "builder") -> list[str]:
     errors: list[str] = []
-    if not exact_fields(result, SUPERVISION_FIELDS, location, errors):
+    expected_fields = (*SUPERVISION_BASE_FIELDS,
+                       *(('postStatePath', 'postStateSha256') if role == 'builder' else
+                         ('completedAt', 'completionObservedAt', 'absoluteDeadline')))
+    if not exact_fields(result, expected_fields, location, errors):
         return errors
     expected_sandbox = "workspace-write" if role != "reviewer" else "read-only"
     expected_disposition = {
@@ -739,7 +909,9 @@ def validate_supervision_result(result: Any, invocation: dict[str, Any], raw: An
             (role != "builder" and valid_hash(result.get("promptSha256")) and
              result.get("promptSha256") != "0" * 64),
             f"{location}: prompt hash invalid", errors)
-    for field in ("stdoutPath", "stderrPath", "finalPath"):
+    bound_paths = ("stdoutPath", "stderrPath", "finalPath",
+                   *(('postStatePath',) if role == 'builder' else ()))
+    for field in bound_paths:
         require(lower_windows_path(str(result.get(field))) ==
                 lower_windows_path(str(invocation.get(field))),
                 f"{location}: {field} binding mismatch", errors)
@@ -747,8 +919,21 @@ def validate_supervision_result(result: Any, invocation: dict[str, Any], raw: An
     if isinstance(raw, str):
         require(result.get("stdoutSha256") == sha256_text(raw),
                 f"{location}: raw stdout hash mismatch", errors)
-    require(valid_hash(result.get("stderrSha256")) and valid_hash(result.get("finalSha256")),
+    require(valid_hash(result.get("stderrSha256")) and valid_hash(result.get("finalSha256")) and
+            (role != "builder" or (valid_hash(result.get("postStateSha256")) and
+                                   result.get("postStateSha256") != "0" * 64)),
             f"{location}: stderr/final hash invalid", errors)
+    if role != "builder":
+        started_at = parse_time(result.get("startedAt"), f"{location}.startedAt", errors)
+        completed_at = parse_time(result.get("completedAt"), f"{location}.completedAt", errors)
+        observed_at = parse_time(result.get("completionObservedAt"), f"{location}.completionObservedAt", errors)
+        deadline_at = parse_time(result.get("absoluteDeadline"), f"{location}.absoluteDeadline", errors)
+        if all(value is not None for value in (started_at, completed_at, observed_at, deadline_at)):
+            require(started_at <= completed_at <= deadline_at,
+                    f"{location}: process completion exceeds absolute deadline", errors)
+            require(completed_at <= observed_at and
+                    (observed_at - deadline_at).total_seconds() <= 2,
+                    f"{location}: completion observation chronology invalid", errors)
     threads = [event.get("thread_id") for event in events if event.get("type") == "thread.started"]
     turns = [event for event in events if event.get("type") == "turn.completed"]
     require(result.get("threadIds") == threads and len(threads) == 1,
@@ -853,6 +1038,7 @@ def validate_role_runtime_contract(contract: Any) -> list[str]:
             contract.get("authStatus") == CLI_AUTH_STATUS,
             "roleRuntimeContract: CLI/auth commitment mismatch", errors)
     require(contract.get("contractSchemaSha256") == ROLE_SCHEMA_SHA256 and
+            contract.get("canonicalPathHelperSha256") == CANONICAL_PATH_HELPER_SHA256 and
             contract.get("runnerSha256") == ROLE_RUNNER_SHA256 and
             contract.get("evidenceSchemaSha256") == EVIDENCE_SCHEMA_SHA256 and
             contract.get("promptTemplateSha256") == MODEL_ROLE_PROMPT_SHA256[role] and
@@ -875,7 +1061,12 @@ def validate_role_runtime_contract(contract: Any) -> list[str]:
                 "roleRuntimeContract: substitutions must be bounded single-line literals", errors)
     require(valid_hash(contract.get("promptSha256")),
             "roleRuntimeContract: rendered prompt hash invalid", errors)
-    for field in ("lockPath", "contractSchemaPath", "runnerPath", "evidenceSchemaPath",
+    deadline_text = substitutions.get("WALL_CLOCK_DEADLINE_ISO") if isinstance(substitutions, dict) else None
+    deadline_value = parse_time(deadline_text, "roleRuntimeContract.WALL_CLOCK_DEADLINE_ISO", errors)
+    require(deadline_value is not None and deadline_value.utcoffset() is not None and
+            deadline_value.utcoffset().total_seconds() == 0,
+            "roleRuntimeContract: absolute deadline must be strict UTC", errors)
+    for field in ("lockPath", "contractSchemaPath", "canonicalPathHelperPath", "runnerPath", "evidenceSchemaPath",
                   "promptTemplatePath", "artifactSchemaPath", "promptPath", "workdir",
                   "evidenceRoot", "finalPath", "stdoutPath", "stderrPath", "evidencePath",
                   "tempRoot", "cacheRoot", "dependencyRoot"):
@@ -884,9 +1075,32 @@ def validate_role_runtime_contract(contract: Any) -> list[str]:
     workdir = lower_windows_path(str(contract.get("workdir", "")))
     require(not nested_windows_path(root, workdir) and not nested_windows_path(workdir, root),
             "roleRuntimeContract: evidence and input must be separate and nonnested", errors)
-    for field in ("finalPath", "stdoutPath", "stderrPath", "evidencePath", "tempRoot", "cacheRoot", "dependencyRoot"):
+    outputs = [lower_windows_path(str(contract.get(field, "")))
+               for field in ("finalPath", "stdoutPath", "stderrPath", "evidencePath")]
+    runtime_roots = [lower_windows_path(str(contract.get(field, "")))
+                     for field in ("tempRoot", "cacheRoot", "dependencyRoot")]
+    for field in ("finalPath", "stdoutPath", "stderrPath", "evidencePath"):
         require(nested_windows_path(root, lower_windows_path(str(contract.get(field, "")))),
                 f"roleRuntimeContract: {field} escapes evidence root", errors)
+    require(all(not nested_windows_path(root, value) and not nested_windows_path(value, root) and
+                not nested_windows_path(workdir, value) and not nested_windows_path(value, workdir)
+                for value in runtime_roots),
+            "roleRuntimeContract: runtime roots must be external", errors)
+    require(all(not nested_windows_path(left, right) and not nested_windows_path(right, left)
+                for index, left in enumerate(runtime_roots)
+                for right in runtime_roots[index + 1:]),
+            "roleRuntimeContract: runtime roots must be pairwise nonnested", errors)
+    private_paths = [lower_windows_path(str(contract[field])) for field in (
+        "lockPath", "contractSchemaPath", "canonicalPathHelperPath", "runnerPath",
+        "evidenceSchemaPath", "promptTemplatePath", "artifactSchemaPath", "promptPath")]
+    private_paths.extend(lower_windows_path(str(contract[field])) for field in (
+        "handoffPath", "packageManifestPath", "rubricPath", "hiddenSuitePath",
+        "packageManifestSchemaPath", "packageScriptPath") if nonempty(contract.get(field)))
+    mutable = [root, workdir, *outputs, *runtime_roots]
+    require(all(not nested_windows_path(private, target) and
+                not nested_windows_path(target, private)
+                for private in private_paths for target in mutable),
+            "roleRuntimeContract: private inputs overlap mutable paths", errors)
     if role == "evaluator":
         require(contract.get("candidateLabel") is None and contract.get("cycle") is None and
                 isinstance(contract.get("evaluationSequence"), int) and 1 <= contract["evaluationSequence"] <= 3 and
@@ -1453,7 +1667,7 @@ def validate_execution(fixture: Any) -> list[str]:
         identities: set[tuple[Any, Any, Any]] = set()
         for index, item in enumerate(role_evidence):
             location = f"roleRuntimeEvidence[{index}]"
-            fields = {"role", "invocationId", "processId", "threadId", "lifecycleComplete",
+            fields = {"role", "invocationId", "processId", "threadId", "startedAt", "completedAt", "lifecycleComplete",
                       "evidenceSha256", "usage"}
             if not exact_fields(item, fields, location, errors):
                 continue
@@ -1464,6 +1678,10 @@ def validate_execution(fixture: Any) -> list[str]:
                     nonempty(item.get("threadId")) and item.get("lifecycleComplete") is True and
                     valid_hash(item.get("evidenceSha256")) and isinstance(item.get("usage"), dict),
                     f"{location}: runtime lifecycle evidence invalid", errors)
+            started = parse_time(item.get("startedAt"), f"{location}.startedAt", errors)
+            completed = parse_time(item.get("completedAt"), f"{location}.completedAt", errors)
+            if started and completed:
+                require(started <= completed, f"{location}: runtime chronology invalid", errors)
             identity = (item.get("invocationId"), item.get("processId"), item.get("threadId"))
             require(identity not in identities, f"{location}: duplicate runtime identity", errors)
             identities.add(identity)

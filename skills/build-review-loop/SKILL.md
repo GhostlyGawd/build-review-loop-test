@@ -9,7 +9,7 @@ Treat this as one provisional, descriptive pilot under a pinned deployment. Make
 
 ## Freeze the public boundary
 
-1. Bind [canonical-contract.json](references/canonical-contract.json) at canonical SHA-256 `541985e02a49b79910282a6e7f26e43fbde3ae500ebfcdf9cef6d031f1a74b49`.
+1. Bind [canonical-contract.json](references/canonical-contract.json) at canonical SHA-256 `604741c82d917d2cb5901ba4b1c046d29e2091ce4c91a68a514b713a24348b01`.
 2. Bind byte-exact [neutral-builder.md](references/neutral-builder.md), [runner-smoke.md](references/runner-smoke.md), [builder-config.json](references/builder-config.json), runtime schemas/templates, role prompts/artifact schemas, both PowerShell runners, the blinded mapping/manifest schemas, and the packager. Never substitute the harmless smoke prompt for a builder prompt.
 3. Require the frozen PowerShell 7 host and invoke each runner with `-NoProfile -File`. Require the frozen Codex binary, ChatGPT authentication, `gpt-5.4`, `xhigh`, exact argv order, `--ephemeral`, `--ignore-user-config`, and no resume.
 4. Keep the root orchestration-only. Every builder, reviewer, fixer, tester, and evaluator is a fresh external CLI subprocess with exact raw prompt bytes on stdin. Do not use in-process collaboration, inherited transcripts, resumed threads, or extra turns for model roles.
@@ -17,9 +17,11 @@ Treat this as one provisional, descriptive pilot under a pinned deployment. Make
 
 ## Preflight and build
 
-Create two clean, independent, remotes-disabled full clones at the same commit/tree. Keep clones, evidence, temp, cache, dependency, and port coordinates distinct, nonnested, and outside reparse points. Fill a fresh builder runtime contract from [cli-runtime-contract.template.json](references/cli-runtime-contract.template.json), then validate it before any CLI launch.
+From one clean exact source commit/tree, run [prepare-builder-input.mjs](scripts/prepare-builder-input.mjs) with the frozen [builder-input-allowlist.json](references/builder-input-allowlist.json). Require two identical source-history-free one-root projections and a private schema-valid manifest outside both workdirs. Builders never receive source history, protocol material, or the private manifest.
 
-Use the byte-exact [run-cli-builders.ps1](scripts/run-cli-builders.ps1) through the pinned `pwsh -NoProfile -File` host. The runner must validate its contract/schema/lock/runner/binary/auth/start/path bindings before launch, start both builders concurrently, write exact neutral prompt bytes to stdin, close stdin, enforce the external deadline, and preserve raw JSONL/stdout/stderr/final/evidence. Accept only distinct process and `thread.started` IDs, one `turn.completed`, reconciled hashes, exit zero, and clean committed clones.
+Before creating runtime or evidence directories, resolve every path through [canonicalize-paths.mjs](scripts/canonicalize-paths.mjs). Reject reparse ancestors, physical aliases including Windows short names, nesting, private inputs inside mutable paths, and ignored or untracked projection files. Fill and validate [cli-runtime-contract.template.json](references/cli-runtime-contract.template.json) before launch.
+
+Use the byte-exact [run-cli-builders.ps1](scripts/run-cli-builders.ps1) through the pinned `pwsh -NoProfile -File` host. It validates contract/schema/lock/helper/runner/binary/auth/projection/path bindings and preserves raw JSONL/stdout/stderr/final/evidence plus deterministic post-model visible-filesystem snapshots. Accept only distinct process and `thread.started` IDs, one `turn.completed`, reconciled hashes, exit zero, exact closed evidence trees, and clean committed projections.
 
 Freeze both initial snapshots and evidence before drawing one 32-byte OS-CSPRNG assignment seed. Apply the registered assignment bytes exactly; baseline receives zero treatment cycles.
 
@@ -31,13 +33,13 @@ Read [role-prompts.md](references/role-prompts.md). For every required reviewer,
 - Fixer: authorized isolated full-clone write; receive only current findings; finish with one clean child commit.
 - Tester: disposable workspace-write copy; run immutable `npm run check`; transfer no mutations.
 
-Stop before fixer/tester on verified zero findings. Otherwise run fresh fixer then tester. Stop at zero findings or after cycle 5 under the registered semantics. Bind every role artifact to supervisor-observed invocation/process/thread identity; the separate supervision record binds the contract and final hash without a circular self-hash.
+Stop before fixer/tester on verified zero findings. Otherwise run fresh fixer then tester. Stop at zero findings or after cycle 5 under the registered semantics. Bind every role artifact to supervisor-observed identity and actual OS-exit chronology. Charge all pre-launch delay to the monotonic budget and strict UTC prompt deadline; allow two seconds only for completion observation or process-tree termination.
 
 ## Package and evaluate
 
 After treatment stops, build a schema-valid private mapping for exactly B0, T0, and Tfinal in randomized X/Y/Z order. Bind exact refs, commits, trees, frozen gates, and private provenance markers. Run the byte-identical [package-blinded-snapshots.mjs](scripts/package-blinded-snapshots.mjs) from the frozen protocol checkout, where its schema and Ajv dependency layout is bound, with separate nonnested mapping, sources, output root, and private manifest paths. Treat the bundled copy as the exact source commitment.
 
-The packager must reject traversal, nesting, source/ref/commit/tree drift, non-clean or autocrlf-mutated sources, symlinks, frozen-gate drift, lineage tokens, and reused outputs. Its evaluator-facing package manifests contain only labels and package seals—never source role/ref/commit/tree/path or private provenance.
+The packager must reject traversal, nesting, source/ref/exact-HEAD/tree drift, non-clean or autocrlf-mutated sources, symlinks or reparse/short-name aliases, frozen-gate drift, lineage tokens, and reused outputs. Its evaluator-facing package manifests contain only labels and package seals—never source role/ref/commit/tree/path or private provenance.
 
 Launch one fresh evaluator subprocess per single history-free package, in randomized order. Give it only that package plus the frozen rubric/public tests and sealed hidden suite. Record its mapping guess and integer confidence, seal the artifact before launching the next evaluator, and prohibit revisions. Reveal the mapping only after all three evaluator artifacts are sealed.
 
