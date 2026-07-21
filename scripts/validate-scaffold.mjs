@@ -616,6 +616,12 @@ export const cliInvariantArgv = [
   "--json",
 ];
 const cliTail = (invocation) => [
+  "--add-dir",
+  invocation.tempRoot,
+  "--add-dir",
+  invocation.cacheRoot,
+  "--add-dir",
+  invocation.dependencyRoot,
   "-C",
   invocation.workdir,
   "-o",
@@ -824,6 +830,7 @@ export function validateCliSupervisionEvidence(
   rawStdoutByInvocation = null,
 ) {
   const failures = [];
+  const lock = readJson("experiment/lock.json");
   if (!Array.isArray(evidence.results) || evidence.results.length !== 2)
     return ["CLI supervision requires exactly two results"];
   const threadIds = [];
@@ -843,6 +850,14 @@ export function validateCliSupervisionEvidence(
       failures.push(`CLI result ${index} post-state path mismatch`);
     if (!nonzeroSha256(result.postStateSha256))
       failures.push(`CLI result ${index} post-state hash missing`);
+    if (
+      result.inputCommit !== contract.commonStartCommit ||
+      !/^[0-9a-f]{40}$/u.test(result.supervisorCommit ?? "") ||
+      !/^[0-9a-f]{40}$/u.test(result.supervisorCommitTree ?? "") ||
+      result.supervisorCommitScriptSha256 !== lock.candidateCommitScriptSha256 ||
+      result.supervisorCommitError !== null
+    )
+      failures.push(`CLI result ${index} supervisor commit binding invalid`);
     if (result.argvSha256 !== sha256(result.argv.join("\0")))
       failures.push(`CLI result ${index} argv hash mismatch`);
     if (result.promptSha256 !== contract.promptSha256)
@@ -1084,6 +1099,12 @@ export function validateRoleSupervisionEvidence(
     "--sandbox",
     contract.sandboxMode,
     "--json",
+    "--add-dir",
+    contract.tempRoot,
+    "--add-dir",
+    contract.cacheRoot,
+    "--add-dir",
+    contract.dependencyRoot,
     "-C",
     contract.workdir,
     "-o",
@@ -1161,6 +1182,20 @@ export function validateRoleSupervisionEvidence(
     result.inputDisposition !== contract.inputDisposition
   )
     failures.push("role result isolation mismatch");
+  if (
+    result.inputCommit !== contract.inputCommit ||
+    result.supervisorCommitScriptSha256 !==
+      readJson("experiment/lock.json").candidateCommitScriptSha256 ||
+    (contract.role === "fixer" &&
+      (!/^[0-9a-f]{40}$/u.test(result.supervisorCommit ?? "") ||
+        !/^[0-9a-f]{40}$/u.test(result.supervisorCommitTree ?? "") ||
+        result.supervisorCommitError !== null)) ||
+    (contract.role !== "fixer" &&
+      (result.supervisorCommit !== null ||
+        result.supervisorCommitTree !== null ||
+        result.supervisorCommitError !== null))
+  )
+    failures.push("role result supervisor commit binding invalid");
   if (result.usage == null && !result.usageUnavailableReason)
     failures.push("role result missing usage reason");
   if (result.usage != null && result.usageUnavailableReason != null)
@@ -1454,12 +1489,28 @@ export function validateCanonicalContract(contract) {
       fileSha256("scripts/canonicalize-paths.mjs") ||
     contract.cliRuntime?.canonicalPathHelperSha256 !==
       lock.canonicalPathHelperSha256 ||
+    contract.cliRuntime?.candidateCommitScriptSha256 !==
+      fileSha256("scripts/commit-candidate.ps1") ||
+    contract.cliRuntime?.candidateCommitScriptSha256 !==
+      lock.candidateCommitScriptSha256 ||
     contract.cliRuntime?.binarySha256 !==
       "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4" ||
     JSON.stringify(contract.cliRuntime?.invariantArgv) !==
       JSON.stringify(cliInvariantArgv) ||
     JSON.stringify(contract.cliRuntime?.perInvocationArgv) !==
-      JSON.stringify(["-C", "<workdir>", "-o", "<final-path>", "-"]) ||
+      JSON.stringify([
+        "--add-dir",
+        "<temp-root>",
+        "--add-dir",
+        "<cache-root>",
+        "--add-dir",
+        "<dependency-root>",
+        "-C",
+        "<workdir>",
+        "-o",
+        "<final-path>",
+        "-",
+      ]) ||
     contract.cliRuntime?.containmentGraphPolicy !==
       "before evidence or runtime directory creation and before model launch, canonicalize existing and prospective paths through their nearest existing physical parents; require independent nonnested workdirs, authoritative outputs contained only by evidenceRoot and pairwise nonnested, temp/cache/dependency roots external to and nonnested with evidenceRoot/workdirs/outputs/each other across invocations, and every private input external to every mutable root and output; after execution evidenceRoot contains exactly the authoritative outputs and their necessary parent directories with no reparse points" ||
     contract.cliRuntime?.v4Evidence?.contractSha256 !==
@@ -1919,7 +1970,7 @@ export function validateScaffold() {
     "experiment/lock.json",
     "experiment/preflight/operational-parent-inventory.json",
     "experiment/preflight/final-lock-evidence.json",
-    "experiment/preflight/aborted-lock-2.4.0.json",
+    "experiment/preflight/aborted-lock-2.5.0.json",
     "experiment/builder-config.json",
     "experiment/builder-package.json",
     "experiment/builder-input-allowlist.json",
@@ -2178,7 +2229,7 @@ export function validateScaffold() {
   );
   const actualAbortedPrelaunchRecordHash = sha256Bytes(
     readFileSync(
-      path.join(root, "experiment/preflight/aborted-lock-2.4.0.json"),
+      path.join(root, "experiment/preflight/aborted-lock-2.5.0.json"),
     ),
   );
   const actualReviewerPromptHash = sha256(
@@ -2213,7 +2264,7 @@ export function validateScaffold() {
   const goldenRun = readJson("experiment/golden-run/golden-run.json");
   const invalidCurrent = readJson("experiment/golden-run/invalid-current.json");
   const finalCommitments = {
-    protocolVersion: "2.5.0",
+    protocolVersion: "2.6.0",
     protocolStatus: "locked",
     supersedesLockCommit: "f85357139efd9d192afc4ad2494dd180a8c7e5cf",
     supersedesFinalizationCommit: "f85357139efd9d192afc4ad2494dd180a8c7e5cf",
@@ -2306,7 +2357,7 @@ export function validateScaffold() {
       "1807fe09799ad49e701c19497da37f44f5d77112f1e965c4f4141487fdf074ff",
     gateAggregateSha256:
       "f5b8877a0e3f23e66746d50062a0b88481a30e8ead6d5a7e0423330916119388",
-    abortedPrelaunchRecordPath: "experiment/preflight/aborted-lock-2.4.0.json",
+    abortedPrelaunchRecordPath: "experiment/preflight/aborted-lock-2.5.0.json",
     abortedPrelaunchRecordSha256:
       "9e44db3f8d900d71e8ca7363fd627dc7976d6397976cef00af84a07626183c79",
     canonicalContractSha256: canonicalHash(canonicalContract),
@@ -2480,6 +2531,6 @@ if (isEntrypoint) {
     process.exit(1);
   }
   console.log(
-    `Protocol 2.5.0 locked scaffold validation passed (${schemaPairCount} schema/data pairs; P-bound preflight and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.6.0 locked scaffold validation passed (${schemaPairCount} schema/data pairs; P-bound preflight and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }

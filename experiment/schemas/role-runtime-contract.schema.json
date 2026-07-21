@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/role-runtime-contract.schema.json",
-  "title": "Protocol 2.5 single model-role CLI invocation",
+  "title": "Protocol 2.6 single model-role CLI invocation",
   "type": "object",
   "additionalProperties": false,
   "required": [

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/final-lock-evidence.schema.json",
-  "title": "Protocol 2.5.0 final-lock preflight evidence",
+  "title": "Protocol 2.6.0 final-lock preflight evidence",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -86,7 +86,7 @@
       "additionalProperties": false,
       "required": ["path", "sha256", "disposition", "activityCount"],
       "properties": {
-        "path": { "const": "experiment/preflight/aborted-lock-2.4.0.json" },
+        "path": { "const": "experiment/preflight/aborted-lock-2.5.0.json" },
         "sha256": { "$ref": "#/$defs/sha256" },
         "disposition": { "const": "aborted-before-launch" },
         "activityCount": { "const": 0 }

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/experiment-lock.schema.json",
-  "title": "Protocol 2.5.0 locked experiment lock",
+  "title": "Protocol 2.6.0 locked experiment lock",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -45,6 +45,10 @@
     "cliRuntimeSchemaSha256",
     "cliRunnerSha256",
     "canonicalPathHelperSha256",
+    "candidateCommitScriptSha256",
+    "permissionProbePath",
+    "permissionProbeSha256",
+    "permissionProbeScriptSha256",
     "roleRuntimeSchemaSha256",
     "roleRunnerSha256",
     "supervisionEvidenceSchemaSha256",
@@ -89,7 +93,7 @@
     "freezeState"
   ],
   "properties": {
-    "protocolVersion": { "const": "2.5.0" },
+    "protocolVersion": { "const": "2.6.0" },
     "protocolStatus": { "const": "locked" },
     "supersedesLockCommit": { "$ref": "#/$defs/sha1" },
     "supersedesFinalizationCommit": {
@@ -139,6 +143,12 @@
     "cliRuntimeSchemaSha256": { "$ref": "#/$defs/sha256" },
     "cliRunnerSha256": { "$ref": "#/$defs/sha256" },
     "canonicalPathHelperSha256": { "$ref": "#/$defs/sha256" },
+    "candidateCommitScriptSha256": { "$ref": "#/$defs/sha256" },
+    "permissionProbePath": {
+      "const": "experiment/preflight/permission-probe-2.6.0.json"
+    },
+    "permissionProbeSha256": { "$ref": "#/$defs/sha256" },
+    "permissionProbeScriptSha256": { "$ref": "#/$defs/sha256" },
     "roleRuntimeSchemaSha256": { "$ref": "#/$defs/sha256" },
     "roleRunnerSha256": { "$ref": "#/$defs/sha256" },
     "supervisionEvidenceSchemaSha256": { "$ref": "#/$defs/sha256" },
@@ -179,7 +189,7 @@
     "preflightEvidenceSchemaSha256": { "$ref": "#/$defs/sha256" },
     "gateAggregateSha256": { "$ref": "#/$defs/sha256" },
     "abortedPrelaunchRecordPath": {
-      "const": "experiment/preflight/aborted-lock-2.4.0.json"
+      "const": "experiment/preflight/aborted-lock-2.5.0.json"
     },
     "abortedPrelaunchRecordSha256": { "$ref": "#/$defs/sha256" },
     "canonicalContractSha256": { "$ref": "#/$defs/sha256" },
