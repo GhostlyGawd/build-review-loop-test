@@ -416,6 +416,185 @@ const exactKeys = (value, expected) =>
   JSON.stringify(Object.keys(value).sort(compareUtf8)) ===
     JSON.stringify([...expected].sort(compareUtf8));
 
+export const assignmentEnvelopeFields = [
+  "schemaVersion",
+  "opaqueWorkerKey",
+  "opaqueCandidateId",
+  "absoluteWorktreePath",
+  "buildBranch",
+  "baseBranch",
+  "commonStartCommit",
+  "commonStartTree",
+  "promptSha256",
+  "configSha256",
+  "envelopeSchemaSha256",
+];
+export const assignmentCoordinationDirectory = String.raw`C:\Users\rhenm\Documents\Codex\2026-07-20\pilot-002-builder-assignments`;
+export const assignmentWorkspaceRoot = String.raw`C:\Users\rhenm\Documents\Codex\2026-07-20`;
+const assignmentPairDifferences = [
+  "opaqueWorkerKey",
+  "opaqueCandidateId",
+  "absoluteWorktreePath",
+  "buildBranch",
+  "baseBranch",
+];
+const assignmentAttestationFields = ["opaqueCandidateId", "envelopeSha256"];
+const lowerWinPath = (value) => path.win32.normalize(value).toLowerCase();
+const isNestedWinPath = (parent, candidate) => {
+  const relative = path.win32.relative(parent, candidate);
+  return (
+    relative.length > 0 &&
+    !relative.startsWith("..") &&
+    !path.win32.isAbsolute(relative)
+  );
+};
+
+export function validateAssignmentEnvelope(
+  envelope,
+  lock = readJson("experiment/lock.json"),
+  sourcePath = null,
+) {
+  const failures = [];
+  const ajv = new Ajv2020({
+    allErrors: true,
+    strict: true,
+    strictTypes: false,
+    validateFormats: false,
+  });
+  const validate = ajv.compile(
+    readJson("experiment/schemas/assignment-envelope.schema.json"),
+  );
+  if (!validate(envelope))
+    failures.push(
+      `assignment envelope schema failure: ${ajv.errorsText(validate.errors)}`,
+    );
+  if (!exactKeys(envelope, assignmentEnvelopeFields))
+    failures.push("assignment envelope must contain only the canonical fields");
+  if (envelope.promptSha256 !== lock.neutralBuilderPromptSha256)
+    failures.push("assignment envelope prompt commitment mismatch");
+  if (envelope.configSha256 !== lock.neutralBuilderConfigSha256)
+    failures.push("assignment envelope config commitment mismatch");
+  if (envelope.envelopeSchemaSha256 !== lock.assignmentEnvelopeSchemaSha256)
+    failures.push("assignment envelope schema commitment mismatch");
+
+  const worktree = envelope.absoluteWorktreePath;
+  if (typeof worktree === "string") {
+    const normalized = path.win32.normalize(worktree);
+    const relative = path.win32.relative(assignmentWorkspaceRoot, normalized);
+    if (
+      !path.win32.isAbsolute(worktree) ||
+      normalized !== worktree ||
+      relative.length === 0 ||
+      relative.startsWith("..") ||
+      path.win32.isAbsolute(relative) ||
+      isNestedWinPath(assignmentCoordinationDirectory, normalized) ||
+      lowerWinPath(normalized) === lowerWinPath(assignmentCoordinationDirectory)
+    )
+      failures.push(
+        "assignment envelope worktree path is not a safe canonical absolute path",
+      );
+  }
+
+  if (sourcePath !== null) {
+    const normalizedSource = path.win32.normalize(sourcePath);
+    const leaf = path.win32.basename(normalizedSource, ".json");
+    if (
+      lowerWinPath(path.win32.dirname(normalizedSource)) !==
+        lowerWinPath(assignmentCoordinationDirectory) ||
+      path.win32.extname(normalizedSource) !== ".json" ||
+      !/^[a-z0-9_]+$/.test(leaf)
+    )
+      failures.push(
+        "assignment file violates the frozen task-leaf path convention",
+      );
+  }
+  return failures;
+}
+
+export function validateAssignmentEnvelopePair(
+  envelopes,
+  attestations,
+  lock = readJson("experiment/lock.json"),
+  sourcePaths = [],
+) {
+  const failures = [];
+  if (!Array.isArray(envelopes) || envelopes.length !== 2)
+    return ["assignment envelope pair must contain exactly two envelopes"];
+  envelopes.forEach((envelope, index) =>
+    failures.push(
+      ...validateAssignmentEnvelope(envelope, lock, sourcePaths[index] ?? null),
+    ),
+  );
+  const [left, right] = envelopes;
+  for (const field of assignmentEnvelopeFields.filter(
+    (field) => !assignmentPairDifferences.includes(field),
+  )) {
+    if (left[field] !== right[field])
+      failures.push(`assignment envelope pair mismatch at ${field}`);
+  }
+  for (const field of ["opaqueWorkerKey", "opaqueCandidateId"]) {
+    if (left[field] === right[field])
+      failures.push(`assignment envelope pair duplicates ${field}`);
+  }
+  const worktrees = envelopes.map(({ absoluteWorktreePath }) =>
+    typeof absoluteWorktreePath === "string"
+      ? lowerWinPath(absoluteWorktreePath)
+      : null,
+  );
+  if (
+    worktrees.every((worktree) => worktree !== null) &&
+    (worktrees[0] === worktrees[1] ||
+      isNestedWinPath(worktrees[0], worktrees[1]) ||
+      isNestedWinPath(worktrees[1], worktrees[0]))
+  )
+    failures.push(
+      "assignment envelope worktree paths must be distinct and nonnested",
+    );
+  const branches = envelopes.flatMap(({ buildBranch, baseBranch }) => [
+    buildBranch,
+    baseBranch,
+  ]);
+  if (new Set(branches).size !== branches.length)
+    failures.push(
+      "assignment envelope build/base branches must all be distinct",
+    );
+
+  if (!Array.isArray(attestations) || attestations.length !== 2)
+    failures.push("assignment envelopes require two separate attestations");
+  else {
+    const attestedCandidates = new Set();
+    attestations.forEach((attestation) => {
+      if (!exactKeys(attestation, assignmentAttestationFields))
+        failures.push("assignment attestation fields diverge");
+      const envelope = envelopes.find(
+        ({ opaqueCandidateId }) =>
+          opaqueCandidateId === attestation.opaqueCandidateId,
+      );
+      if (!envelope || attestation.envelopeSha256 !== canonicalHash(envelope))
+        failures.push("assignment envelope attestation hash mismatch");
+      if (attestedCandidates.has(attestation.opaqueCandidateId))
+        failures.push(
+          "assignment envelope candidate is attested more than once",
+        );
+      attestedCandidates.add(attestation.opaqueCandidateId);
+    });
+  }
+  return failures;
+}
+
+export function validateNeutralBuilderPrompt(promptText) {
+  const required = [
+    "No placeholder substitution, prefix, suffix, candidate label, deadline timestamp, per-builder path wrapper, or added guidance is permitted.",
+    "Read exactly that one assignment file by its direct path.",
+    "You MUST NOT list or enumerate the coordination directory, and you MUST NOT read any sibling assignment file.",
+    "Listing the directory or reading a sibling assignment is an experiment invalidation.",
+    "After validation, use only `absoluteWorktreePath` for every repository read, write, command, and Git operation.",
+  ];
+  return required
+    .filter((clause) => !promptText.includes(clause))
+    .map((clause) => `neutral builder assignment prose missing: ${clause}`);
+}
+
 export function validateExperimentConclusion(record) {
   const failures = [];
   const activeFields = [
@@ -589,13 +768,34 @@ export function validateCanonicalContract(contract) {
   ];
   if (
     contract.builderFreeze?.promptSha256 !==
-      "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82" ||
+      "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39" ||
     contract.builderFreeze?.configSha256 !==
-      "caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b" ||
+      "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606" ||
     contract.builderFreeze?.rule !==
-      "every builder freeze must equal both canonical hashes and the corresponding lock commitments"
+      "every builder freeze must equal both canonical prompt/config hashes, the corresponding lock commitments, and one separately attested assignment-envelope hash"
   )
     failures.push("canonical builder prompt/config commitments diverge");
+  if (
+    contract.assignmentEnvelope?.schemaVersion !== "1.0.0" ||
+    contract.assignmentEnvelope?.schemaPath !==
+      "experiment/schemas/assignment-envelope.schema.json" ||
+    contract.assignmentEnvelope?.schemaSha256 !==
+      "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21" ||
+    JSON.stringify(contract.assignmentEnvelope?.fields) !==
+      JSON.stringify(assignmentEnvelopeFields) ||
+    JSON.stringify(contract.assignmentEnvelope?.attestationFields) !==
+      JSON.stringify(assignmentAttestationFields) ||
+    contract.assignmentEnvelope?.coordinationDirectory !==
+      assignmentCoordinationDirectory ||
+    contract.assignmentEnvelope?.fileConvention !== "<task-leaf>.json" ||
+    contract.assignmentEnvelope?.taskLeafPattern !== "^[a-z0-9_]+$" ||
+    contract.assignmentEnvelope?.workspaceRoot !== assignmentWorkspaceRoot ||
+    JSON.stringify(contract.assignmentEnvelope?.allowedPairDifferences) !==
+      JSON.stringify(assignmentPairDifferences) ||
+    contract.assignmentEnvelope?.siblingAccessRule !==
+      "listing the coordination directory or reading a sibling assignment file is an experiment invalidation"
+  )
+    failures.push("canonical assignment-envelope contract diverges");
   if (
     JSON.stringify(contract.invalidation?.completedStatuses) !==
       JSON.stringify(["valid", "invalid"]) ||
@@ -658,6 +858,18 @@ export function validateGoldenRun(
   if (fixture.canonicalContractSha256 !== canonicalHash(contract))
     failures.push("golden fixture canonical-contract hash mismatch");
   failures.push(...validateExperimentConclusion(fixture));
+  failures.push(
+    ...validateAssignmentEnvelopePair(
+      fixture.assignmentEnvelopes,
+      fixture.assignmentEnvelopeAttestations,
+      lock,
+    ),
+  );
+  const attestedEnvelopeHashes = new Set(
+    fixture.assignmentEnvelopeAttestations?.map(
+      ({ envelopeSha256 }) => envelopeSha256,
+    ) ?? [],
+  );
   for (const [candidate, freeze] of Object.entries(fixture.builderFreezes)) {
     if (
       freeze.promptSha256 !== contract.builderFreeze.promptSha256 ||
@@ -669,6 +881,13 @@ export function validateGoldenRun(
       freeze.configSha256 !== lock.neutralBuilderConfigSha256
     )
       failures.push(`golden ${candidate} config commitment drift`);
+    if (!attestedEnvelopeHashes.has(freeze.assignmentEnvelopeSha256))
+      failures.push(`golden ${candidate} assignment envelope is not attested`);
+    if (
+      fixture.runs[candidate]?.assignmentEnvelopeSha256 !==
+      freeze.assignmentEnvelopeSha256
+    )
+      failures.push(`golden ${candidate} run/envelope binding mismatch`);
   }
   const bindings = fixture.bindings;
   if (
@@ -812,9 +1031,12 @@ export function validateScaffold() {
     "experiment/schemas/test.schema.json",
     "experiment/schemas/outcome.schema.json",
     "experiment/schemas/experiment-status.schema.json",
+    "experiment/schemas/assignment-envelope.schema.json",
     "experiment/templates/test.json",
     "experiment/templates/outcome.json",
     "experiment/templates/experiment-status.json",
+    "experiment/templates/assignment-envelope.json",
+    "scripts/validate-builder-envelopes.mjs",
     "tests/public/evaluate.test.ts",
     "tests/public/ui.test.tsx",
     "package.json",
@@ -876,6 +1098,10 @@ export function validateScaffold() {
       "experiment/schemas/experiment-status.schema.json",
       "experiment/templates/experiment-status.json",
     ],
+    [
+      "experiment/schemas/assignment-envelope.schema.json",
+      "experiment/templates/assignment-envelope.json",
+    ],
   ];
   const ajv = new Ajv2020({
     allErrors: true,
@@ -914,28 +1140,35 @@ export function validateScaffold() {
     readFileSync(path.join(root, "experiment/builder-config.json"), "utf8"),
   );
   const actualAlgorithmHash = sha256(algorithmText);
+  const actualEnvelopeSchemaHash = sha256(
+    readFileSync(
+      path.join(root, "experiment/schemas/assignment-envelope.schema.json"),
+      "utf8",
+    ),
+  );
   const canonicalContract = readJson("experiment/canonical-contract.json");
   const goldenRun = readJson("experiment/golden-run/golden-run.json");
   const invalidCurrent = readJson("experiment/golden-run/invalid-current.json");
   const finalCommitments = {
-    protocolVersion: "2.2.0-frozen",
-    protocolStatus: "locked",
-    supersedesLockCommit: "b5c1d5f21e3d2f7e4ecf67dfee1eeb365ee041b9",
-    lockParentCommit: "bc0a704d94f739d55d7cda2eff42253df4440142",
+    protocolVersion: "2.3.0",
+    protocolStatus: "draft",
+    supersedesLockCommit: "67eb14066fc437f0944b963f7d8b3328e09a88b1",
+    lockParentCommit: null,
     hiddenSuiteId: "permissions-playground-sealed-v2",
     hiddenSuiteSha256:
       "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
-    treatmentSkillCommit: "7f313955de0dc2c85f66c8efb5d0ca4badf423c8",
-    treatmentSkillTree: "8ce31af123de1e537e2e9aa84fc33909004212fd",
-    treatmentSkillManifestSha256:
-      "f4ae6da4ee8335a9a798e9ab1113d6760cd7ce58a3e6dbaedfa18f60194e76eb",
+    treatmentSkillCommit: null,
+    treatmentSkillTree: null,
+    treatmentSkillManifestSha256: null,
     treatmentAlgorithmSha256: actualAlgorithmHash,
     neutralBuilderPromptSha256: actualPromptHash,
     neutralBuilderConfigSha256: actualConfigHash,
+    assignmentEnvelopeSchemaSha256: actualEnvelopeSchemaHash,
+    assignmentCoordinationDirectory,
     canonicalContractSha256: canonicalHash(canonicalContract),
     goldenFixtureSha256: canonicalHash(goldenRun),
     invalidCurrentFixtureSha256: canonicalHash(invalidCurrent),
-    freezeState: "frozen",
+    freezeState: "provisional",
   };
   for (const [key, expected] of Object.entries(finalCommitments)) {
     if (lock[key] !== expected)
@@ -945,6 +1178,11 @@ export function validateScaffold() {
     ...validateCanonicalContract(canonicalContract),
     ...validateGoldenRun(goldenRun, canonicalContract, lock),
     ...validateExperimentConclusion(invalidCurrent),
+    ...validateAssignmentEnvelopePair(
+      invalidCurrent.assignmentEnvelopes,
+      invalidCurrent.assignmentEnvelopeAttestations,
+      lock,
+    ),
   );
 
   const builderConfig = readJson("experiment/builder-config.json");
@@ -952,7 +1190,13 @@ export function validateScaffold() {
     builderConfig.turnLimit !== 1 ||
     builderConfig.wallSecondsMaximum !== 2400 ||
     builderConfig.maxTokens !== null ||
-    !builderConfig.maxTokensUnavailableReason
+    !builderConfig.maxTokensUnavailableReason ||
+    builderConfig.assignmentEnvelope?.schemaSha256 !==
+      actualEnvelopeSchemaHash ||
+    builderConfig.assignmentEnvelope?.coordinationDirectory !==
+      assignmentCoordinationDirectory ||
+    JSON.stringify(builderConfig.assignmentEnvelope?.allowedPairDifferences) !==
+      JSON.stringify(assignmentPairDifferences)
   )
     failures.push(
       "neutral builder config violates prospective budget invariants",
@@ -967,6 +1211,7 @@ export function validateScaffold() {
     )
   )
     failures.push("neutral builder prompt exposes treatment skill information");
+  failures.push(...validateNeutralBuilderPrompt(neutralPrompt));
 
   failures.push(
     ...validateAssignmentSemantics(
@@ -1060,7 +1305,14 @@ if (isEntrypoint) {
           ),
         );
       else if (relativeInput === "experiment/golden-run/invalid-current.json")
-        failures.push(...validateExperimentConclusion(value));
+        failures.push(
+          ...validateExperimentConclusion(value),
+          ...validateAssignmentEnvelopePair(
+            value.assignmentEnvelopes,
+            value.assignmentEnvelopeAttestations,
+            readJson("experiment/lock.json"),
+          ),
+        );
       else
         failures.push(
           "execution mode input must be a registered golden fixture",
@@ -1079,6 +1331,6 @@ if (isEntrypoint) {
     process.exit(1);
   }
   console.log(
-    `Protocol 2.2.0-frozen scaffold validation passed (${schemaPairCount} schema/data pairs; golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.3.0 provisional scaffold validation passed (${schemaPairCount} schema/data pairs; assignment envelopes and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }

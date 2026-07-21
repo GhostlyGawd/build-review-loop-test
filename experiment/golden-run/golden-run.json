@@ -1,8 +1,8 @@
 {
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-conformance",
-  "protocolVersion": "2.2.0",
-  "canonicalContractSha256": "05a869d36aca6c9c146c56fa8f6432438d5c7e2c87fd944f822f660747e0d6f5",
+  "protocolVersion": "2.3.0",
+  "canonicalContractSha256": "4b8c4753aca6a83025e72a0a76680bf78895b0e3be94cd64fed8c06c123b1b01",
   "status": "valid",
   "activeInvalidation": null,
   "invalidAttempts": [
@@ -41,6 +41,44 @@
     "node": "22.x",
     "npm": "11.11.0"
   },
+  "assignmentEnvelopes": [
+    {
+      "schemaVersion": "1.0.0",
+      "opaqueWorkerKey": "7f3a9d2c4b6e8f1023456789",
+      "opaqueCandidateId": "a1c3e5f709b2d4e6f8012345",
+      "absoluteWorktreePath": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-worktree-7f3a9d2c",
+      "buildBranch": "experiment/pilot-002-build-7f3a9d2c",
+      "baseBranch": "experiment/pilot-002-base-7f3a9d2c",
+      "commonStartCommit": "79454a133f990982253744a85ccb8516d62f5a19",
+      "commonStartTree": "1234567890abcdef1234567890abcdef12345678",
+      "promptSha256": "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39",
+      "configSha256": "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606",
+      "envelopeSchemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "opaqueWorkerKey": "1b4c7e9a2d5f803162748590",
+      "opaqueCandidateId": "b2d4f60718c3e5a709123456",
+      "absoluteWorktreePath": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-worktree-1b4c7e9a",
+      "buildBranch": "experiment/pilot-002-build-1b4c7e9a",
+      "baseBranch": "experiment/pilot-002-base-1b4c7e9a",
+      "commonStartCommit": "79454a133f990982253744a85ccb8516d62f5a19",
+      "commonStartTree": "1234567890abcdef1234567890abcdef12345678",
+      "promptSha256": "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39",
+      "configSha256": "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606",
+      "envelopeSchemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21"
+    }
+  ],
+  "assignmentEnvelopeAttestations": [
+    {
+      "opaqueCandidateId": "a1c3e5f709b2d4e6f8012345",
+      "envelopeSha256": "c11d5922f5477b9be7ec446c19cda7080c69904eb22189ac862fc9311ed3e399"
+    },
+    {
+      "opaqueCandidateId": "b2d4f60718c3e5a709123456",
+      "envelopeSha256": "bb438b9577df4658fae28c84864ead67422e8c6deb3d45a387d7e15331a4e2d8"
+    }
+  ],
   "workers": [
     {
       "workerId": "worker-01-builder-a-7b4c",
@@ -79,8 +117,9 @@
     "candidate-a": {
       "candidateLabel": "candidate-a",
       "workerId": "worker-01-builder-a-7b4c",
-      "promptSha256": "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82",
-      "configSha256": "caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b",
+      "promptSha256": "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39",
+      "configSha256": "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606",
+      "assignmentEnvelopeSha256": "c11d5922f5477b9be7ec446c19cda7080c69904eb22189ac862fc9311ed3e399",
       "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
       "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
       "sealedAt": "2026-07-20T01:00:00Z"
@@ -88,8 +127,9 @@
     "candidate-b": {
       "candidateLabel": "candidate-b",
       "workerId": "worker-02-builder-b-91e2",
-      "promptSha256": "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82",
-      "configSha256": "caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b",
+      "promptSha256": "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39",
+      "configSha256": "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606",
+      "assignmentEnvelopeSha256": "bb438b9577df4658fae28c84864ead67422e8c6deb3d45a387d7e15331a4e2d8",
       "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
       "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
       "sealedAt": "2026-07-20T01:00:00Z"
@@ -97,8 +137,8 @@
   },
   "assignment": {
     "frozenInitialEvidenceHashes": {
-      "candidate-a": "25f6a62ab957db146334fbbe7adbc51d26f4871c2f764c39b6425efb1b88436d",
-      "candidate-b": "dd367bdc9f4a6e888c2edb612c5ab8c507f40628c6957c0c8a7af964d30d9e0d"
+      "candidate-a": "3f6837046921cca0cb12d571242e007149f9179843864ebc617676a7c63697bb",
+      "candidate-b": "57cbfec8ba5fb04b0550f42baf5aecd2811cd38df125ffdda107d9db9992553d"
     },
     "seedHex": "4f8c49a049cdb2bef7fed4950c9bbe8127160599d5b72c549b6d2878e4706b02",
     "digestSha256": "aec4dcdcdefeae6fdda5dccb89d0cf2203e4d9ae200cb7f48650b8cea64f748e",
@@ -123,6 +163,9 @@
       "candidateLabel": "candidate-a",
       "assignedArm": "baseline",
       "builderWorkerId": "worker-01-builder-a-7b4c",
+      "assignmentEnvelopePath": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-builder-assignments\\builder_7f3a9d2c.json",
+      "assignmentEnvelopeSha256": "c11d5922f5477b9be7ec446c19cda7080c69904eb22189ac862fc9311ed3e399",
+      "assignmentEnvelopeSchemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21",
       "initialSnapshot": {
         "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
         "sealedAt": "2026-07-20T01:00:00Z",
@@ -144,6 +187,9 @@
       "candidateLabel": "candidate-b",
       "assignedArm": "treatment",
       "builderWorkerId": "worker-02-builder-b-91e2",
+      "assignmentEnvelopePath": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-builder-assignments\\builder_1b4c7e9a.json",
+      "assignmentEnvelopeSha256": "bb438b9577df4658fae28c84864ead67422e8c6deb3d45a387d7e15331a4e2d8",
+      "assignmentEnvelopeSchemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21",
       "initialSnapshot": {
         "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
         "sealedAt": "2026-07-20T01:00:00Z",
@@ -892,26 +938,26 @@
     {
       "sequence": 0,
       "artifactKey": "builderFreezes.candidate-a",
-      "artifactSha256": "25f6a62ab957db146334fbbe7adbc51d26f4871c2f764c39b6425efb1b88436d",
+      "artifactSha256": "3f6837046921cca0cb12d571242e007149f9179843864ebc617676a7c63697bb",
       "previousSha256": null
     },
     {
       "sequence": 1,
       "artifactKey": "builderFreezes.candidate-b",
-      "artifactSha256": "dd367bdc9f4a6e888c2edb612c5ab8c507f40628c6957c0c8a7af964d30d9e0d",
-      "previousSha256": "25f6a62ab957db146334fbbe7adbc51d26f4871c2f764c39b6425efb1b88436d"
+      "artifactSha256": "57cbfec8ba5fb04b0550f42baf5aecd2811cd38df125ffdda107d9db9992553d",
+      "previousSha256": "3f6837046921cca0cb12d571242e007149f9179843864ebc617676a7c63697bb"
     },
     {
       "sequence": 2,
       "artifactKey": "assignment",
-      "artifactSha256": "003bdc23da9a9ab4588fd28b400882281f6406c2a2308458a680fa7f26816a75",
-      "previousSha256": "dd367bdc9f4a6e888c2edb612c5ab8c507f40628c6957c0c8a7af964d30d9e0d"
+      "artifactSha256": "d5737e15ab62aeb26f1e1847f906c833989f92961b03e8f01b9d9be1f18bdf97",
+      "previousSha256": "57cbfec8ba5fb04b0550f42baf5aecd2811cd38df125ffdda107d9db9992553d"
     },
     {
       "sequence": 3,
       "artifactKey": "reviews.0",
       "artifactSha256": "e18d3960d1bea8be590499a40934e9b07824abdc391ba17b8b9ba9af85788267",
-      "previousSha256": "003bdc23da9a9ab4588fd28b400882281f6406c2a2308458a680fa7f26816a75"
+      "previousSha256": "d5737e15ab62aeb26f1e1847f906c833989f92961b03e8f01b9d9be1f18bdf97"
     },
     {
       "sequence": 4,

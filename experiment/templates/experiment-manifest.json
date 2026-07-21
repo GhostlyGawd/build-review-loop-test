@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "2.2.0",
+  "protocolVersion": "2.3.0",
   "experimentId": "pilot-001",
   "startedAt": "2026-07-20T00:00:00Z",
   "operator": "operator-id-required-at-run",

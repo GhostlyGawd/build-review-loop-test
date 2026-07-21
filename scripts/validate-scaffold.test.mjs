@@ -1,17 +1,21 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, it } from "node:test";
 import {
   canonicalHash,
   readJson,
   root,
   validateArtifactMode,
+  validateAssignmentEnvelopePair,
   validateAssignmentSemantics,
   validateCanonicalContract,
   validateCostSemantics,
   validateEvaluationSemantics,
   validateExperimentConclusion,
   validateGoldenRun,
+  validateNeutralBuilderPrompt,
   validateOutcomeSemantics,
   validateRunManifestSemantics,
   validateScaffold,
@@ -27,7 +31,7 @@ const snapshot = (number) => ({
   packageProcedure: "frozen-test-procedure",
 });
 
-describe("protocol 2.2.0-frozen cross-contract validation", () => {
+describe("protocol 2.3.0 cross-contract validation", () => {
   it("accepts the prospective scaffold and seeded assignment algorithms", () => {
     assert.deepEqual(validateScaffold().failures, []);
     assert.deepEqual(
@@ -256,6 +260,129 @@ describe("protocol 2.2.0-frozen cross-contract validation", () => {
       validateCanonicalContract(contract).join("\n"),
       /builder prompt\/config commitments/,
     );
+  });
+
+  it("accepts two opaque, separately attested assignment envelopes", () => {
+    const golden = readJson("experiment/golden-run/golden-run.json");
+    assert.deepEqual(
+      validateAssignmentEnvelopePair(
+        golden.assignmentEnvelopes,
+        golden.assignmentEnvelopeAttestations,
+      ),
+      [],
+    );
+  });
+
+  it("rejects assignment-envelope semantic extension fields", () => {
+    const golden = readJson("experiment/golden-run/golden-run.json");
+    golden.assignmentEnvelopes[0].arm = "treatment";
+    assert.match(
+      validateAssignmentEnvelopePair(
+        golden.assignmentEnvelopes,
+        golden.assignmentEnvelopeAttestations,
+      ).join("\n"),
+      /schema failure|only the canonical fields/,
+    );
+  });
+
+  it("rejects mismatched common start and prompt/config/schema bindings", () => {
+    const fields = [
+      ["commonStartCommit", "f".repeat(40), /commonStartCommit/],
+      ["commonStartTree", "e".repeat(40), /commonStartTree/],
+      ["promptSha256", hash("d"), /prompt commitment|promptSha256/],
+      ["configSha256", hash("c"), /config commitment|configSha256/],
+      [
+        "envelopeSchemaSha256",
+        hash("b"),
+        /schema commitment|envelopeSchemaSha256/,
+      ],
+    ];
+    for (const [field, value, pattern] of fields) {
+      const golden = readJson("experiment/golden-run/golden-run.json");
+      golden.assignmentEnvelopes[1][field] = value;
+      assert.match(
+        validateAssignmentEnvelopePair(
+          golden.assignmentEnvelopes,
+          golden.assignmentEnvelopeAttestations,
+        ).join("\n"),
+        pattern,
+      );
+    }
+  });
+
+  it("rejects shared or nested assignment worktree paths", () => {
+    const shared = readJson("experiment/golden-run/golden-run.json");
+    shared.assignmentEnvelopes[1].absoluteWorktreePath =
+      shared.assignmentEnvelopes[0].absoluteWorktreePath;
+    assert.match(
+      validateAssignmentEnvelopePair(
+        shared.assignmentEnvelopes,
+        shared.assignmentEnvelopeAttestations,
+      ).join("\n"),
+      /distinct and nonnested/,
+    );
+
+    const nested = readJson("experiment/golden-run/golden-run.json");
+    nested.assignmentEnvelopes[1].absoluteWorktreePath = `${nested.assignmentEnvelopes[0].absoluteWorktreePath}\\nested`;
+    assert.match(
+      validateAssignmentEnvelopePair(
+        nested.assignmentEnvelopes,
+        nested.assignmentEnvelopeAttestations,
+      ).join("\n"),
+      /distinct and nonnested/,
+    );
+  });
+
+  it("rejects duplicate opaque IDs, paths, and branches", () => {
+    const golden = readJson("experiment/golden-run/golden-run.json");
+    const [left, right] = golden.assignmentEnvelopes;
+    right.opaqueWorkerKey = left.opaqueWorkerKey;
+    right.opaqueCandidateId = left.opaqueCandidateId;
+    right.absoluteWorktreePath = left.absoluteWorktreePath;
+    right.buildBranch = left.buildBranch;
+    right.baseBranch = left.baseBranch;
+    const failures = validateAssignmentEnvelopePair(
+      golden.assignmentEnvelopes,
+      golden.assignmentEnvelopeAttestations,
+    ).join("\n");
+    assert.match(failures, /duplicates opaqueWorkerKey/);
+    assert.match(failures, /duplicates opaqueCandidateId/);
+    assert.match(failures, /distinct and nonnested/);
+    assert.match(failures, /branches must all be distinct/);
+  });
+
+  it("treats sibling assignment listing or reading as prose invalidation", () => {
+    const prompt = readFileSync(
+      path.join(root, "experiment/prompts/neutral-builder.md"),
+      "utf8",
+    );
+    assert.deepEqual(validateNeutralBuilderPrompt(prompt), []);
+    assert.match(
+      validateNeutralBuilderPrompt(
+        prompt.replace(
+          "Listing the directory or reading a sibling assignment is an experiment invalidation.",
+          "Sibling access is discouraged.",
+        ),
+      ).join("\n"),
+      /assignment prose missing/,
+    );
+  });
+
+  it("exposes deterministic steward envelope-pair validation", () => {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "scripts/validate-builder-envelopes.mjs",
+        "--fixture",
+        "experiment/golden-run/golden-run.json",
+      ],
+      { cwd: root, encoding: "utf8" },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    const report = JSON.parse(result.stdout);
+    assert.equal(report.status, "valid");
+    assert.equal(report.envelopeCount, 2);
+    assert.equal(new Set(report.envelopeSha256).size, 2);
   });
 
   it("accepts a valid outcome with a preserved invalid attempt", () => {
