@@ -454,7 +454,7 @@ const createRoleRunnerFixture = () => {
   };
 };
 
-describe("protocol 2.4.0 locked cross-contract validation", () => {
+describe("protocol 2.5.0 locked cross-contract validation", () => {
   it("projects only allowlisted bytes into identical one-root builder repositories", () => {
     const fixture = createProjectionFixture(
       [{ source: "product.txt", destination: "product.txt" }],

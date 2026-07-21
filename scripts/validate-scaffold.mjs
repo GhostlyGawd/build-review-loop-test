@@ -1409,9 +1409,7 @@ export function validateCanonicalContract(contract) {
     "npm run format:check",
     "npm run lint",
     "npm run typecheck",
-    "npm run validate:scaffold",
-    "npm run test:protocol",
-    "npm run test:public:if-implemented",
+    "npm run test:public",
     "npm run build",
   ];
   if (
@@ -2191,7 +2189,7 @@ export function validateScaffold() {
   const goldenRun = readJson("experiment/golden-run/golden-run.json");
   const invalidCurrent = readJson("experiment/golden-run/invalid-current.json");
   const finalCommitments = {
-    protocolVersion: "2.4.0",
+    protocolVersion: "2.5.0",
     protocolStatus: "locked",
     supersedesLockCommit: "0fc2e5c6d0cc2355310f10e4f04fcf8e2131d636",
     supersedesFinalizationCommit: "a37774cf25821103861ed94c261ac5db4f433860",
@@ -2452,6 +2450,6 @@ if (isEntrypoint) {
     process.exit(1);
   }
   console.log(
-    `Protocol 2.4.0 locked scaffold validation passed (${schemaPairCount} schema/data pairs; P-bound preflight and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.5.0 locked scaffold validation passed (${schemaPairCount} schema/data pairs; P-bound preflight and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }

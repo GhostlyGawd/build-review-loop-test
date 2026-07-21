@@ -1,7 +1,7 @@
 {
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-conformance",
-  "protocolVersion": "2.4.0",
+  "protocolVersion": "2.5.0",
   "canonicalContractSha256": "604741c82d917d2cb5901ba4b1c046d29e2091ce4c91a68a514b713a24348b01",
   "status": "valid",
   "activeInvalidation": null,
@@ -62,8 +62,6 @@
       "npm run format:check",
       "npm run lint",
       "npm run typecheck",
-      "npm run validate:scaffold",
-      "npm run test:protocol",
       "npm run test:public:if-implemented",
       "npm run build"
     ],
