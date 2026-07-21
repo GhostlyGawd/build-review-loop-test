@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/cli-runtime-contract.schema.json",
+  "title": "Protocol 2.4 external CLI runtime contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "cliPath",
+    "cliVersion",
+    "cliSha256",
+    "authStatus",
+    "promptPath",
+    "promptSha256",
+    "deadlineSeconds",
+    "invariantArgv",
+    "smokeMode",
+    "invocations"
+  ],
+  "properties": {
+    "contractVersion": { "const": "1.0.0" },
+    "cliPath": {
+      "const": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe"
+    },
+    "cliVersion": { "const": "codex-cli 0.145.0-alpha.18" },
+    "cliSha256": {
+      "const": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4"
+    },
+    "authStatus": { "const": "Logged in using ChatGPT" },
+    "promptPath": { "type": "string", "minLength": 3 },
+    "promptSha256": { "$ref": "#/$defs/sha256" },
+    "deadlineSeconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2400,
+      "default": 2400
+    },
+    "invariantArgv": {
+      "const": [
+        "-a",
+        "never",
+        "exec",
+        "--ephemeral",
+        "--ignore-user-config",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "danger-full-access",
+        "--json"
+      ]
+    },
+    "smokeMode": { "type": "boolean" },
+    "invocations": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/invocation" }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invocationId",
+        "workdir",
+        "finalPath",
+        "stdoutPath",
+        "stderrPath",
+        "evidencePath"
+      ],
+      "properties": {
+        "invocationId": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+        "workdir": { "type": "string", "minLength": 3 },
+        "finalPath": { "type": "string", "minLength": 3 },
+        "stdoutPath": { "type": "string", "minLength": 3 },
+        "stderrPath": { "type": "string", "minLength": 3 },
+        "evidencePath": { "type": "string", "minLength": 3 }
+      }
+    }
+  }
+}

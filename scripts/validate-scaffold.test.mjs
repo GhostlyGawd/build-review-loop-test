@@ -8,7 +8,8 @@ import {
   readJson,
   root,
   validateArtifactMode,
-  validateAssignmentEnvelopePair,
+  validateCliRuntimeContract,
+  validateCliSupervisionEvidence,
   validateAssignmentSemantics,
   validateCanonicalContract,
   validateCostSemantics,
@@ -31,7 +32,7 @@ const snapshot = (number) => ({
   packageProcedure: "frozen-test-procedure",
 });
 
-describe("protocol 2.3.0-frozen cross-contract validation", () => {
+describe("protocol 2.4.0-draft cross-contract validation", () => {
   it("accepts the prospective scaffold and seeded assignment algorithms", () => {
     assert.deepEqual(validateScaffold().failures, []);
     assert.deepEqual(
@@ -262,96 +263,81 @@ describe("protocol 2.3.0-frozen cross-contract validation", () => {
     );
   });
 
-  it("accepts two opaque, separately attested assignment envelopes", () => {
+  it("accepts the frozen CLI runtime contract and concurrent evidence", () => {
     const golden = readJson("experiment/golden-run/golden-run.json");
+    assert.deepEqual(validateCliRuntimeContract(golden.cliRuntimeContract), []);
     assert.deepEqual(
-      validateAssignmentEnvelopePair(
-        golden.assignmentEnvelopes,
-        golden.assignmentEnvelopeAttestations,
+      validateCliSupervisionEvidence(
+        golden.cliRuntimeEvidence,
+        golden.cliRuntimeContract,
       ),
       [],
     );
   });
 
-  it("rejects assignment-envelope semantic extension fields", () => {
+  it("rejects binary, argv-order, resume, and config drift", () => {
     const golden = readJson("experiment/golden-run/golden-run.json");
-    golden.assignmentEnvelopes[0].arm = "treatment";
-    assert.match(
-      validateAssignmentEnvelopePair(
-        golden.assignmentEnvelopes,
-        golden.assignmentEnvelopeAttestations,
-      ).join("\n"),
-      /schema failure|only the canonical fields/,
-    );
-  });
-
-  it("rejects mismatched common start and prompt/config/schema bindings", () => {
-    const fields = [
-      ["commonStartCommit", "f".repeat(40), /commonStartCommit/],
-      ["commonStartTree", "e".repeat(40), /commonStartTree/],
-      ["promptSha256", hash("d"), /prompt commitment|promptSha256/],
-      ["configSha256", hash("c"), /config commitment|configSha256/],
-      [
-        "envelopeSchemaSha256",
-        hash("b"),
-        /schema commitment|envelopeSchemaSha256/,
-      ],
+    golden.cliRuntimeContract.cliSha256 = hash("f");
+    golden.cliRuntimeContract.invariantArgv = [
+      "exec",
+      "-a",
+      "never",
+      "resume",
+      "--config",
+      "x=y",
     ];
-    for (const [field, value, pattern] of fields) {
-      const golden = readJson("experiment/golden-run/golden-run.json");
-      golden.assignmentEnvelopes[1][field] = value;
-      assert.match(
-        validateAssignmentEnvelopePair(
-          golden.assignmentEnvelopes,
-          golden.assignmentEnvelopeAttestations,
-        ).join("\n"),
-        pattern,
-      );
-    }
+    const failures = validateCliRuntimeContract(golden.cliRuntimeContract).join(
+      "\n",
+    );
+    assert.match(failures, /binary|cli/i);
+    assert.match(failures, /argv|ephemeral|resume|config/i);
   });
 
-  it("rejects shared or nested assignment worktree paths", () => {
-    const shared = readJson("experiment/golden-run/golden-run.json");
-    shared.assignmentEnvelopes[1].absoluteWorktreePath =
-      shared.assignmentEnvelopes[0].absoluteWorktreePath;
-    assert.match(
-      validateAssignmentEnvelopePair(
-        shared.assignmentEnvelopes,
-        shared.assignmentEnvelopeAttestations,
-      ).join("\n"),
-      /distinct and nonnested/,
-    );
-
-    const nested = readJson("experiment/golden-run/golden-run.json");
-    nested.assignmentEnvelopes[1].absoluteWorktreePath = `${nested.assignmentEnvelopes[0].absoluteWorktreePath}\\nested`;
-    assert.match(
-      validateAssignmentEnvelopePair(
-        nested.assignmentEnvelopes,
-        nested.assignmentEnvelopeAttestations,
-      ).join("\n"),
-      /distinct and nonnested/,
-    );
-  });
-
-  it("rejects duplicate opaque IDs, paths, and branches", () => {
+  it("rejects missing lifecycle, timeout, nonzero exit, and unauthorized writes", () => {
     const golden = readJson("experiment/golden-run/golden-run.json");
-    const [left, right] = golden.assignmentEnvelopes;
-    right.opaqueWorkerKey = left.opaqueWorkerKey;
-    right.opaqueCandidateId = left.opaqueCandidateId;
-    right.absoluteWorktreePath = left.absoluteWorktreePath;
-    right.buildBranch = left.buildBranch;
-    right.baseBranch = left.baseBranch;
-    const failures = validateAssignmentEnvelopePair(
-      golden.assignmentEnvelopes,
-      golden.assignmentEnvelopeAttestations,
+    const result = golden.cliRuntimeEvidence.results[0];
+    result.threadIds = [];
+    result.turnCompleted = false;
+    result.timedOut = true;
+    result.exitCode = 1;
+    result.unauthorizedToolOrWriteDetected = true;
+    const failures = validateCliSupervisionEvidence(
+      golden.cliRuntimeEvidence,
+      golden.cliRuntimeContract,
     ).join("\n");
-    assert.match(failures, /duplicates opaqueWorkerKey/);
-    assert.match(failures, /duplicates opaqueCandidateId/);
-    assert.match(failures, /distinct and nonnested/);
-    assert.match(failures, /branches must all be distinct/);
+    assert.match(failures, /thread|lifecycle/i);
+    assert.match(failures, /timeout|exit/i);
+    assert.match(failures, /unauthorized/i);
   });
 
-  it("treats sibling assignment listing or reading as prose invalidation", () => {
+  it("rejects duplicated process and thread IDs and differing prompt bytes", () => {
+    const golden = readJson("experiment/golden-run/golden-run.json");
+    const [left, right] = golden.cliRuntimeEvidence.results;
+    right.processId = left.processId;
+    right.threadIds = [...left.threadIds];
+    right.promptSha256 = hash("e");
+    const failures = validateCliSupervisionEvidence(
+      golden.cliRuntimeEvidence,
+      golden.cliRuntimeContract,
+    ).join("\n");
+    assert.match(failures, /process/i);
+    assert.match(failures, /thread/i);
+    assert.match(failures, /prompt/i);
+  });
+
+  it("requires unavailable reasons for unobservable runtime metadata", () => {
+    const golden = readJson("experiment/golden-run/golden-run.json");
+    golden.cliRuntimeEvidence.results[0].runtimeModelUnavailableReason = "";
+    assert.match(
+      validateCliSupervisionEvidence(
+        golden.cliRuntimeEvidence,
+        golden.cliRuntimeContract,
+      ).join("\n"),
+      /unavailable reason/i,
+    );
+  });
+
+  it("requires raw-stdin/current-checkout neutral builder prose", () => {
     const prompt = readFileSync(
       path.join(root, "experiment/prompts/neutral-builder.md"),
       "utf8",
@@ -360,34 +346,17 @@ describe("protocol 2.3.0-frozen cross-contract validation", () => {
     assert.match(
       validateNeutralBuilderPrompt(
         prompt.replace(
-          "Listing the directory or reading a sibling assignment is an experiment invalidation.",
-          "Sibling access is discouraged.",
+          "The operator writes this entire file byte-for-byte to raw standard input",
+          "The operator may wrap this file before standard input",
         ),
       ).join("\n"),
-      /assignment prose missing/,
+      /raw standard input|wrapper/i,
     );
-  });
-
-  it("exposes deterministic steward envelope-pair validation", () => {
-    const result = spawnSync(
-      process.execPath,
-      [
-        "scripts/validate-builder-envelopes.mjs",
-        "--fixture",
-        "experiment/golden-run/golden-run.json",
-      ],
-      { cwd: root, encoding: "utf8" },
-    );
-    assert.equal(result.status, 0, result.stderr);
-    const report = JSON.parse(result.stdout);
-    assert.equal(report.status, "valid");
-    assert.equal(report.envelopeCount, 2);
-    assert.equal(new Set(report.envelopeSha256).size, 2);
   });
 
   it("accepts a valid outcome with a preserved invalid attempt", () => {
     const golden = readJson("experiment/golden-run/golden-run.json");
-    assert.equal(golden.invalidAttempts.length, 1);
+    assert.equal(golden.invalidAttempts.length, 5);
     assert.deepEqual(validateExperimentConclusion(golden), []);
   });
 

@@ -1,15 +1,15 @@
 # Permissions Playground review-loop experiment
 
-This repository is the prospective common-start scaffold for protocol version 2.3.0-frozen. It tests a treatment-only review loop after two independent builders create the same React permissions-policy playground from an identical neutral prompt and configuration.
+This repository is the prospective common-start scaffold for protocol version 2.4.0-draft. It tests a treatment-only review loop after two independent builders create the same React permissions-policy playground from identical raw prompt bytes under a supervised external Codex CLI runtime.
 
 ## Status
 
-- Phase: protocol 2.3.0-frozen preregistration lock, before builder exposure
+- Phase: protocol 2.4.0-draft provisional lock, before builder exposure and final runner smoke
 - Product: intentionally not implemented on this branch
 - Public contract tests: committed but gated until all required implementation files exist
 - Hidden tests: sealed externally; the existing v2 commitment remains unchanged
 - Treatment algorithm: exact skill-v1 flow incorporated and content-addressed
-- Experiment lock: 2.3.0-frozen, bound to the synchronized skill and content parent
+- Experiment lock: 2.4.0-draft provisional; the skill and final runner-smoke commitments remain null until their prospective gates complete
 - License: none has been granted; no license file is included
 
 Do not present this branch as a completed application or executable experiment. A passing scaffold check establishes internal consistency only.
@@ -62,7 +62,7 @@ The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact t
 
 ## Architecture and boundaries
 
-The scaffold contains protocol documents, schemas, test contracts, public tests, and a Vite placeholder. Builders begin in a shared orchestrator directory, derive one fixed assignment-file path from their opaque task leaf, and then use only their assigned worktree. The two envelopes contain workspace coordinates and commitments only—never task, treatment, comparison, ranking, prior-run, or hint semantics. Builders own the three required implementation modules, application documentation, and candidate-added tests. Public gates, pinned dependencies, and evaluator semantics remain immutable. Builders never receive the treatment skill or loop algorithm. Only the randomly assigned treatment snapshot is processed by fresh cycle roles; baseline remains byte-frozen at its initial snapshot.
+The scaffold contains protocol documents, schemas, test contracts, public tests, a parameterized concurrent supervisor, and a Vite placeholder. Invoke the runner as `powershell -File scripts/run-cli-builders.ps1 -ContractPath <absolute-contract.json>`. It launches exactly two fresh ephemeral processes with global `-a never` before `exec`, writes the neutral prompt bytes directly to stdin, and uses `-C` only as process configuration. Builder-visible context contains no assignment envelope or task-leaf wrapper. Public gates, pinned dependencies, product semantics, and evaluator semantics remain immutable.
 
 Evaluators own the sealed hidden suite outside this repository. They receive three history-free packages labeled only X/Y/Z and never see lineage, assignment, role artifacts, or Git metadata. The browser product is specified to use local in-memory state only: no authentication, backend, network calls, credentials, persistence, or personal data.
 

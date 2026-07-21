@@ -584,15 +584,146 @@ export function validateAssignmentEnvelopePair(
 
 export function validateNeutralBuilderPrompt(promptText) {
   const required = [
-    "No placeholder substitution, prefix, suffix, candidate label, deadline timestamp, per-builder path wrapper, or added guidance is permitted.",
-    "Read exactly that one assignment file by its direct path.",
-    "You MUST NOT list or enumerate the coordination directory, and you MUST NOT read any sibling assignment file.",
-    "Listing the directory or reading a sibling assignment is an experiment invalidation.",
-    "After validation, use only `absoluteWorktreePath` for every repository read, write, command, and Git operation.",
+    "The operator writes this entire file byte-for-byte to raw standard input for each fresh CLI execution.",
+    "The CLI `-C` argument supplies the isolated checkout and is not model context.",
+    "You are a neutral builder. The current checkout is the frozen common-start commit.",
+    "No prefix, suffix, placeholder substitution, candidate label, deadline timestamp, path wrapper, model override, reasoning override, or added guidance is permitted.",
   ];
   return required
     .filter((clause) => !promptText.includes(clause))
     .map((clause) => `neutral builder assignment prose missing: ${clause}`);
+}
+
+export const cliInvariantArgv = [
+  "-a",
+  "never",
+  "exec",
+  "--ephemeral",
+  "--ignore-user-config",
+  "--skip-git-repo-check",
+  "--sandbox",
+  "danger-full-access",
+  "--json",
+];
+const cliTail = (invocation) => [
+  "-C",
+  invocation.workdir,
+  "-o",
+  invocation.finalPath,
+  "-",
+];
+
+export function validateCliRuntimeContract(
+  contract,
+  lock = readJson("experiment/lock.json"),
+) {
+  const failures = [];
+  const ajv = new Ajv2020({
+    allErrors: true,
+    strict: true,
+    strictTypes: false,
+  });
+  const validate = ajv.compile(
+    readJson("experiment/schemas/cli-runtime-contract.schema.json"),
+  );
+  if (!validate(contract))
+    failures.push(
+      `CLI runtime contract schema failure: ${ajv.errorsText(validate.errors)}`,
+    );
+  if (
+    JSON.stringify(contract.invariantArgv) !== JSON.stringify(cliInvariantArgv)
+  )
+    failures.push("CLI invariant argv or global-before-exec ordering mismatch");
+  if (
+    !contract.invariantArgv?.includes("--ephemeral") ||
+    contract.invariantArgv?.includes("resume")
+  )
+    failures.push("CLI runtime must be ephemeral and never resumed");
+  if (
+    contract.invariantArgv?.some((arg) => /model|reasoning|config=/i.test(arg))
+  )
+    failures.push("CLI runtime forbids model, reasoning, and config overrides");
+  if (
+    contract.cliPath !== lock.cliBinaryPath ||
+    contract.cliVersion !== lock.cliVersion ||
+    contract.cliSha256 !== lock.cliBinarySha256
+  )
+    failures.push("CLI binary path/version/hash commitment mismatch");
+  if (contract.promptSha256 !== lock.neutralBuilderPromptSha256)
+    failures.push("CLI raw stdin prompt commitment mismatch");
+  if (contract.authStatus !== "Logged in using ChatGPT")
+    failures.push("CLI ChatGPT auth attestation mismatch");
+  if (!Array.isArray(contract.invocations) || contract.invocations.length !== 2)
+    return [...failures, "CLI runtime requires exactly two invocations"];
+  for (const field of [
+    "invocationId",
+    "workdir",
+    "finalPath",
+    "stdoutPath",
+    "stderrPath",
+    "evidencePath",
+  ]) {
+    const values = contract.invocations.map(
+      (entry) => entry[field]?.toLowerCase?.() ?? entry[field],
+    );
+    if (new Set(values).size !== 2)
+      failures.push(`CLI invocations duplicate ${field}`);
+  }
+  return failures;
+}
+
+export function validateCliSupervisionEvidence(evidence, contract) {
+  const failures = [];
+  if (!Array.isArray(evidence.results) || evidence.results.length !== 2)
+    return ["CLI supervision requires exactly two results"];
+  const threadIds = [];
+  const processIds = [];
+  evidence.results.forEach((result, index) => {
+    const invocation = contract.invocations[index];
+    const expectedArgv = [...cliInvariantArgv, ...cliTail(invocation)];
+    if (JSON.stringify(result.argv) !== JSON.stringify(expectedArgv))
+      failures.push(`CLI result ${index} argv differs or is reordered`);
+    if (result.promptSha256 !== contract.promptSha256)
+      failures.push(`CLI result ${index} prompt differs`);
+    if (!result.started || !result.stdinDelivered)
+      failures.push(`CLI result ${index} did not start with raw stdin`);
+    if (result.timedOut) failures.push(`CLI result ${index} timed out`);
+    if (result.exitCode !== 0)
+      failures.push(`CLI result ${index} exit was nonzero`);
+    if (!result.turnCompleted)
+      failures.push(`CLI result ${index} lacks turn.completed`);
+    if (!Array.isArray(result.threadIds) || result.threadIds.length !== 1)
+      failures.push(
+        `CLI result ${index} must have exactly one thread.started ID`,
+      );
+    else threadIds.push(result.threadIds[0]);
+    if (result.processId == null)
+      failures.push(`CLI result ${index} lacks process ID`);
+    else processIds.push(result.processId);
+    if (result.unauthorizedToolOrWriteDetected)
+      failures.push(`CLI result ${index} recorded unauthorized tool or write`);
+    for (const field of [
+      "runtimeModel",
+      "runtimeProvider",
+      "reasoningSetting",
+    ]) {
+      if (result[field] == null && !result[`${field}UnavailableReason`])
+        failures.push(
+          `CLI result ${index} null ${field} lacks unavailable reason`,
+        );
+      if (result[field] != null && result.metadataSource !== "trusted-jsonl")
+        failures.push(
+          `CLI result ${index} ${field} is not trusted JSONL metadata`,
+        );
+    }
+  });
+  if (new Set(threadIds).size !== 2)
+    failures.push("CLI thread.started IDs must be distinct");
+  if (new Set(processIds).size !== 2)
+    failures.push("CLI OS process IDs must be distinct");
+  if (evidence.valid !== (failures.length === 0))
+    failures.push("CLI supervision valid flag disagrees with evidence");
+  return failures;
 }
 
 export function validateExperimentConclusion(record) {
@@ -748,9 +879,21 @@ export function validateCanonicalContract(contract) {
     unblinder: 300,
     git_worker: 600,
   };
+  const cliModelRoles = ["builder", "reviewer", "fixer", "tester", "evaluator"];
+  if (
+    JSON.stringify(contract.cliRuntime.modelRoleCoverage) !==
+      JSON.stringify(cliModelRoles) ||
+    !contract.cliRuntime.roleLaunchRule?.includes("every model-bearing role")
+  )
+    failures.push("canonical CLI runtime does not cover every model role");
   for (const [role, maximum] of Object.entries(expectedRoleBudgets)) {
     if (contract.roles[role]?.wallSecondsMaximum !== maximum)
       failures.push(`canonical ${role} wall budget diverges`);
+    if (
+      cliModelRoles.includes(role) &&
+      contract.roles[role]?.executionRuntime !== "fresh-external-cli-subprocess"
+    )
+      failures.push(`canonical ${role} CLI subprocess policy diverges`);
   }
   if (
     contract.costPolicy.maxTokens !== null ||
@@ -768,34 +911,28 @@ export function validateCanonicalContract(contract) {
   ];
   if (
     contract.builderFreeze?.promptSha256 !==
-      "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39" ||
+      "d6f4aeeddf0dd83fda8b85dcaec57b9ea69781a4ce666fefacbe2d9de6e8de01" ||
     contract.builderFreeze?.configSha256 !==
-      "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606" ||
+      "e0f924128130a9f1f9a44168bb4a6c0626b074e96ef71fb78c347b3a984fbffa" ||
     contract.builderFreeze?.rule !==
-      "every builder freeze must equal both canonical prompt/config hashes, the corresponding lock commitments, and one separately attested assignment-envelope hash"
+      "each builder receives the exact raw prompt bytes on stdin under an otherwise identical frozen external CLI execution; only opaque invocation ID and runtime coordinate paths differ"
   )
     failures.push("canonical builder prompt/config commitments diverge");
   if (
-    contract.assignmentEnvelope?.schemaVersion !== "1.0.0" ||
-    contract.assignmentEnvelope?.schemaPath !==
-      "experiment/schemas/assignment-envelope.schema.json" ||
-    contract.assignmentEnvelope?.schemaSha256 !==
-      "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21" ||
-    JSON.stringify(contract.assignmentEnvelope?.fields) !==
-      JSON.stringify(assignmentEnvelopeFields) ||
-    JSON.stringify(contract.assignmentEnvelope?.attestationFields) !==
-      JSON.stringify(assignmentAttestationFields) ||
-    contract.assignmentEnvelope?.coordinationDirectory !==
-      assignmentCoordinationDirectory ||
-    contract.assignmentEnvelope?.fileConvention !== "<task-leaf>.json" ||
-    contract.assignmentEnvelope?.taskLeafPattern !== "^[a-z0-9_]+$" ||
-    contract.assignmentEnvelope?.workspaceRoot !== assignmentWorkspaceRoot ||
-    JSON.stringify(contract.assignmentEnvelope?.allowedPairDifferences) !==
-      JSON.stringify(assignmentPairDifferences) ||
-    contract.assignmentEnvelope?.siblingAccessRule !==
-      "listing the coordination directory or reading a sibling assignment file is an experiment invalidation"
+    contract.cliRuntime?.schemaSha256 !==
+      "d6c9fbc6c766955bfb9f1da513b6dd408980c382ce72368cec678650f7bd13f4" ||
+    contract.cliRuntime?.runnerSha256 !==
+      "9634de81d0654aa218d49474b8a11b279d0ec12e18082399bee0ca355301f33e" ||
+    contract.cliRuntime?.binarySha256 !==
+      "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4" ||
+    JSON.stringify(contract.cliRuntime?.invariantArgv) !==
+      JSON.stringify(cliInvariantArgv) ||
+    JSON.stringify(contract.cliRuntime?.perInvocationArgv) !==
+      JSON.stringify(["-C", "<workdir>", "-o", "<final-path>", "-"]) ||
+    contract.cliRuntime?.v4Evidence?.contractSha256 !==
+      "d1a47087dc0bfcf85638e6c9faef4c7399c98626556747f1fda31e0a67e0645d"
   )
-    failures.push("canonical assignment-envelope contract diverges");
+    failures.push("canonical external CLI runtime contract diverges");
   if (
     JSON.stringify(contract.invalidation?.completedStatuses) !==
       JSON.stringify(["valid", "invalid"]) ||
@@ -859,18 +996,15 @@ export function validateGoldenRun(
     failures.push("golden fixture canonical-contract hash mismatch");
   failures.push(...validateExperimentConclusion(fixture));
   failures.push(
-    ...validateAssignmentEnvelopePair(
-      fixture.assignmentEnvelopes,
-      fixture.assignmentEnvelopeAttestations,
-      lock,
+    ...validateCliRuntimeContract(fixture.cliRuntimeContract, lock),
+    ...validateCliSupervisionEvidence(
+      fixture.cliRuntimeEvidence,
+      fixture.cliRuntimeContract,
     ),
   );
-  const attestedEnvelopeHashes = new Set(
-    fixture.assignmentEnvelopeAttestations?.map(
-      ({ envelopeSha256 }) => envelopeSha256,
-    ) ?? [],
-  );
-  for (const [candidate, freeze] of Object.entries(fixture.builderFreezes)) {
+  for (const [index, [candidate, freeze]] of Object.entries(
+    fixture.builderFreezes,
+  ).entries()) {
     if (
       freeze.promptSha256 !== contract.builderFreeze.promptSha256 ||
       freeze.promptSha256 !== lock.neutralBuilderPromptSha256
@@ -881,13 +1015,17 @@ export function validateGoldenRun(
       freeze.configSha256 !== lock.neutralBuilderConfigSha256
     )
       failures.push(`golden ${candidate} config commitment drift`);
-    if (!attestedEnvelopeHashes.has(freeze.assignmentEnvelopeSha256))
-      failures.push(`golden ${candidate} assignment envelope is not attested`);
+    const invocation = fixture.cliRuntimeContract.invocations[index];
+    const evidence = fixture.cliRuntimeEvidence.results[index];
     if (
-      fixture.runs[candidate]?.assignmentEnvelopeSha256 !==
-      freeze.assignmentEnvelopeSha256
+      freeze.runtimeInvocationId !== invocation?.invocationId ||
+      freeze.runtimeEvidenceSha256 !== canonicalHash(evidence) ||
+      fixture.runs[candidate]?.runtimeInvocationId !==
+        freeze.runtimeInvocationId ||
+      fixture.runs[candidate]?.runtimeEvidenceSha256 !==
+        freeze.runtimeEvidenceSha256
     )
-      failures.push(`golden ${candidate} run/envelope binding mismatch`);
+      failures.push(`golden ${candidate} runtime evidence binding mismatch`);
   }
   const bindings = fixture.bindings;
   if (
@@ -1031,12 +1169,12 @@ export function validateScaffold() {
     "experiment/schemas/test.schema.json",
     "experiment/schemas/outcome.schema.json",
     "experiment/schemas/experiment-status.schema.json",
-    "experiment/schemas/assignment-envelope.schema.json",
+    "experiment/schemas/cli-runtime-contract.schema.json",
     "experiment/templates/test.json",
     "experiment/templates/outcome.json",
     "experiment/templates/experiment-status.json",
-    "experiment/templates/assignment-envelope.json",
-    "scripts/validate-builder-envelopes.mjs",
+    "experiment/templates/cli-runtime-contract.json",
+    "scripts/run-cli-builders.ps1",
     "tests/public/evaluate.test.ts",
     "tests/public/ui.test.tsx",
     "package.json",
@@ -1099,8 +1237,8 @@ export function validateScaffold() {
       "experiment/templates/experiment-status.json",
     ],
     [
-      "experiment/schemas/assignment-envelope.schema.json",
-      "experiment/templates/assignment-envelope.json",
+      "experiment/schemas/cli-runtime-contract.schema.json",
+      "experiment/templates/cli-runtime-contract.json",
     ],
   ];
   const ajv = new Ajv2020({
@@ -1140,36 +1278,54 @@ export function validateScaffold() {
     readFileSync(path.join(root, "experiment/builder-config.json"), "utf8"),
   );
   const actualAlgorithmHash = sha256(algorithmText);
-  const actualEnvelopeSchemaHash = sha256(
+  const actualCliSchemaHash = sha256(
     readFileSync(
-      path.join(root, "experiment/schemas/assignment-envelope.schema.json"),
+      path.join(root, "experiment/schemas/cli-runtime-contract.schema.json"),
       "utf8",
     ),
+  );
+  const actualCliRunnerHash = sha256(
+    readFileSync(path.join(root, "scripts/run-cli-builders.ps1"), "utf8"),
   );
   const canonicalContract = readJson("experiment/canonical-contract.json");
   const goldenRun = readJson("experiment/golden-run/golden-run.json");
   const invalidCurrent = readJson("experiment/golden-run/invalid-current.json");
   const finalCommitments = {
-    protocolVersion: "2.3.0-frozen",
-    protocolStatus: "locked",
-    supersedesLockCommit: "67eb14066fc437f0944b963f7d8b3328e09a88b1",
-    lockParentCommit: "1c89143c023ccf267289b1a0e2e2831ce7bc5c56",
+    protocolVersion: "2.4.0-draft",
+    protocolStatus: "provisional",
+    supersedesLockCommit: "0fc2e5c6d0cc2355310f10e4f04fcf8e2131d636",
+    lockParentCommit: null,
     hiddenSuiteId: "permissions-playground-sealed-v2",
     hiddenSuiteSha256:
       "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
-    treatmentSkillCommit: "33355b97041070e1dec4b7c9beca4ce96faa50bb",
-    treatmentSkillTree: "14b0ca16dfe873e07307c6d0d333744ebbc88cc0",
-    treatmentSkillManifestSha256:
-      "4f2909c061f342170a3f1658a3a4d68551ddc0dd46b66054c85e31eb53c6dfc5",
+    treatmentSkillCommit: null,
+    treatmentSkillTree: null,
+    treatmentSkillManifestSha256: null,
     treatmentAlgorithmSha256: actualAlgorithmHash,
     neutralBuilderPromptSha256: actualPromptHash,
     neutralBuilderConfigSha256: actualConfigHash,
-    assignmentEnvelopeSchemaSha256: actualEnvelopeSchemaHash,
-    assignmentCoordinationDirectory,
+    cliBinaryPath: String.raw`C:\Users\rhenm\.codex\plugins\.plugin-appserver\codex.exe`,
+    cliVersion: "codex-cli 0.145.0-alpha.18",
+    cliBinarySha256:
+      "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
+    cliAuthStatus: "Logged in using ChatGPT",
+    cliRuntimeSchemaSha256: actualCliSchemaHash,
+    cliRunnerSha256: actualCliRunnerHash,
+    v4SmokeContractSha256:
+      "d1a47087dc0bfcf85638e6c9faef4c7399c98626556747f1fda31e0a67e0645d",
+    v4SmokeSupervisorSha256:
+      "2d1c8408af254da00f892217ea2df3863671986249605c4ef8d2431c897d9a25",
+    v4SmokeSupervisionSha256:
+      "06ed787a595abe3a22334e099a35af1a11e2a2a855e54aa7f37a386d28ea20c1",
+    v4SmokePromptSha256:
+      "5e099d26f1aa21ca6077051d681e974b1a9b3ae182dafe26741b4937c0c98a8a",
+    runnerSmokeContractSha256: null,
+    runnerSmokeSupervisionSha256: null,
+    runnerSmokeAttestationSha256: null,
     canonicalContractSha256: canonicalHash(canonicalContract),
     goldenFixtureSha256: canonicalHash(goldenRun),
     invalidCurrentFixtureSha256: canonicalHash(invalidCurrent),
-    freezeState: "frozen",
+    freezeState: "provisional",
   };
   for (const [key, expected] of Object.entries(finalCommitments)) {
     if (lock[key] !== expected)
@@ -1179,25 +1335,17 @@ export function validateScaffold() {
     ...validateCanonicalContract(canonicalContract),
     ...validateGoldenRun(goldenRun, canonicalContract, lock),
     ...validateExperimentConclusion(invalidCurrent),
-    ...validateAssignmentEnvelopePair(
-      invalidCurrent.assignmentEnvelopes,
-      invalidCurrent.assignmentEnvelopeAttestations,
-      lock,
-    ),
   );
 
   const builderConfig = readJson("experiment/builder-config.json");
   if (
-    builderConfig.turnLimit !== 1 ||
+    builderConfig.executionLimit !== 1 ||
     builderConfig.wallSecondsMaximum !== 2400 ||
     builderConfig.maxTokens !== null ||
     !builderConfig.maxTokensUnavailableReason ||
-    builderConfig.assignmentEnvelope?.schemaSha256 !==
-      actualEnvelopeSchemaHash ||
-    builderConfig.assignmentEnvelope?.coordinationDirectory !==
-      assignmentCoordinationDirectory ||
-    JSON.stringify(builderConfig.assignmentEnvelope?.allowedPairDifferences) !==
-      JSON.stringify(assignmentPairDifferences)
+    builderConfig.cliPath !== lock.cliBinaryPath ||
+    JSON.stringify(builderConfig.invariantArgv) !==
+      JSON.stringify(cliInvariantArgv)
   )
     failures.push(
       "neutral builder config violates prospective budget invariants",
@@ -1306,14 +1454,7 @@ if (isEntrypoint) {
           ),
         );
       else if (relativeInput === "experiment/golden-run/invalid-current.json")
-        failures.push(
-          ...validateExperimentConclusion(value),
-          ...validateAssignmentEnvelopePair(
-            value.assignmentEnvelopes,
-            value.assignmentEnvelopeAttestations,
-            readJson("experiment/lock.json"),
-          ),
-        );
+        failures.push(...validateExperimentConclusion(value));
       else
         failures.push(
           "execution mode input must be a registered golden fixture",
@@ -1332,6 +1473,6 @@ if (isEntrypoint) {
     process.exit(1);
   }
   console.log(
-    `Protocol 2.3.0-frozen scaffold validation passed (${schemaPairCount} schema/data pairs; assignment envelopes and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.4.0-draft provisional scaffold validation passed (${schemaPairCount} schema/data pairs; CLI runtime and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }

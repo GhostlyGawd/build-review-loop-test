@@ -1,0 +1,40 @@
+{
+  "contractVersion": "1.0.0",
+  "cliPath": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe",
+  "cliVersion": "codex-cli 0.145.0-alpha.18",
+  "cliSha256": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
+  "authStatus": "Logged in using ChatGPT",
+  "promptPath": "template-prompt-required-at-run.md",
+  "promptSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "deadlineSeconds": 2400,
+  "invariantArgv": [
+    "-a",
+    "never",
+    "exec",
+    "--ephemeral",
+    "--ignore-user-config",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "danger-full-access",
+    "--json"
+  ],
+  "smokeMode": false,
+  "invocations": [
+    {
+      "invocationId": "00000000000000000000000000000000",
+      "workdir": "template-workdir-a",
+      "finalPath": "template-final-a.json",
+      "stdoutPath": "template-stdout-a.jsonl",
+      "stderrPath": "template-stderr-a.txt",
+      "evidencePath": "template-evidence-a.json"
+    },
+    {
+      "invocationId": "11111111111111111111111111111111",
+      "workdir": "template-workdir-b",
+      "finalPath": "template-final-b.json",
+      "stdoutPath": "template-stdout-b.jsonl",
+      "stderrPath": "template-stderr-b.txt",
+      "evidencePath": "template-evidence-b.json"
+    }
+  ]
+}

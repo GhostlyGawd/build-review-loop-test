@@ -1,6 +1,6 @@
 # Preregistered neutral-build versus review-loop protocol
 
-Protocol version: 2.3.0-frozen
+Protocol version: 2.4.0-draft (provisional)
 
 Design: paired, blinded pilot with two independent neutral builds, post-build random assignment, and treatment-only iterative review
 
@@ -20,7 +20,7 @@ The primary estimand is `score(Tfinal) - score(B0)`. The secondary within-treatm
 
 ## 2. Canonical contract and frozen lock boundary
 
-This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. The 2.2.0-frozen lock is superseded because collaboration workers share the orchestrator initial directory. The integrated 2.3.0-frozen lock binds the synchronized skill, content parent, workspace-envelope schema, and coordination convention. Before builder exposure, the frozen lock MUST:
+This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. The 2.4.0 draft supersedes the 2.3.0 lock with a supervised external CLI runtime. It remains provisional until the final runner smoke and treatment-skill commitments are recorded. Before builder exposure, the final lock MUST:
 
 1. pass `npm ci` and `npm run check` on Node 22;
 2. record the exact lock-parent commit;
@@ -28,9 +28,9 @@ This Markdown protocol is the canonical public source. `experiment/canonical-con
 4. freeze the treatment skill-v1 source and manifest and record their commit and SHA-256;
 5. verify the treatment-loop algorithm against the final skill-v1 source and record its commitment;
 6. record SHA-256 hashes of the neutral builder prompt and neutral builder configuration, both of which MUST be delivered byte-for-byte without per-builder substitution;
-7. freeze the strict assignment-envelope schema, coordination convention, and schema SHA-256;
-8. validate all templates and prospective semantic test cases; and
-9. confirm no builder has received task materials.
+7. freeze the CLI binary path, version, SHA-256, ChatGPT authentication attestation, exact argv order, runtime-contract schema, and concurrent supervisor;
+8. validate all templates, negative runtime cases, and prospective semantic test cases; and
+9. run the final harmless supervisor smoke, record its three commitments, and confirm no builder has received task materials.
 
 The lock cannot contain its own commit SHA. After the lock is merged, the operator records the final GitHub `commonStartCommit`, preregistration lock commit, and byte-identical lock-file SHA-256 in the private experiment manifest and both run manifests. That triple is the authoritative common-start binding.
 
@@ -38,15 +38,13 @@ After locking, the specification, rubric, public tests, prompts, schemas, valida
 
 ## 3. Experimental units and neutral construction
 
-The units are two isolated worktrees created from the same bound `commonStartCommit`, privately tracked by the operator as `candidate-a` and `candidate-b`. Collaboration workers begin in the shared orchestrator directory, so per-builder path wrappers are forbidden. Each receives the exact same bytes of `experiment/prompts/neutral-builder.md` and builder configuration, with no path/label/deadline substitution or surrounding coaching.
+The units are two isolated worktrees created from the same bound `commonStartCommit`, privately tracked by the operator as `candidate-a` and `candidate-b`. Operator assignment records may exist, but are never read by a builder or injected into model context.
 
-Before dispatch, the steward creates exactly two strict opaque envelopes and runs `node scripts/validate-builder-envelopes.mjs --first <path-one> --second <path-two>`. The frozen directory is `C:\Users\rhenm\Documents\Codex\2026-07-20\pilot-002-builder-assignments`; each filename is `<task-leaf>.json`, derived only from orchestrator system context and matching `^[a-z0-9_]+$`. The helper reads only the named files and no candidate contents.
+The steward invokes `scripts/run-cli-builders.ps1 -ContractPath <absolute-contract.json>`. The contract supplies the two workdirs and evidence destinations. For both concurrent processes the executable, version, binary hash, ChatGPT auth, `--ignore-user-config`, default model/provider/reasoning resolution, and invariant argv are identical. The exact argv begins `-a never exec --ephemeral --ignore-user-config --skip-git-repo-check --sandbox danger-full-access --json`; only `-C <workdir>` and `-o <final-path>` differ, followed by `-`.
 
-Each envelope contains only the 11 canonical schema fields. The pair may differ only in opaque worker key, opaque candidate ID, absolute worktree path, build branch, and base branch. Those values are distinct, paths are safe absolute and nonnested, every other value is identical, and prompt/config/schema hashes equal canonical and lock commitments. Each envelope hash is attested separately. These workspace coordinates are a narrow exception, not additions to the identical prompt/config, and contain no task, arm/treatment/comparison, timestamp, ranking, prior-run, or hint semantics.
+The supervisor writes the exact raw bytes of `experiment/prompts/neutral-builder.md` to stdin and closes it. There is no prefix, suffix, substitution, wrapper, assignment envelope, or task-leaf context. Each run must have a distinct OS process ID and exactly one distinct `thread.started` ID; it may never resume. Success requires start, stdin delivery, `turn.completed`, no timeout, exit zero, exact hashes, and no unauthorized tool/write observation. Runtime model/provider/reasoning fields are accepted only from trusted JSONL metadata; otherwise they are `null` with an unavailable reason, never builder self-report.
 
-Each builder derives its task leaf, reads exactly that assignment file, validates its bindings, and then uses only the assigned worktree. Listing the coordination directory or reading a sibling assignment file invalidates the experiment. No builder receives, reads, or is told about the treatment skill, review algorithm, assignment, other candidate, hidden suite, or downstream role prompts.
-
-Each builder gets exactly one agent/subagent turn and inherits the same model, provider/version, reasoning setting, tool permissions, starting context, machine class, Node/npm versions, network policy, and prospective limits. The two initial builds may run concurrently in equivalent isolation or sequentially without cross-run context. Their initial commits and evidence chains are sealed before assignment.
+The default common deadline is 2400 seconds. On timeout the supervisor kills the process tree, preserves stdout/stderr/final/evidence artifacts, and marks the run invalid. Binary or argv/config drift, unequal prompt bytes, missing or duplicate thread IDs, missing lifecycle events, nonzero exit, unobservable metadata without a reason, and unauthorized writes/tools are invalidations. Initial commits and evidence chains are sealed before assignment.
 
 ## 4. Post-build assignment
 
@@ -63,7 +61,7 @@ This maps exactly one candidate to each arm without modulo bias. Preserve the se
 
 ## 5. Prospective budgets and role freshness
 
-Every role receives exactly one agent/subagent turn. Token ceilings are unavailable in this execution environment and are therefore `null`, with a required `tokenCeilingUnavailableReason`; provider usage is recorded when exposed and otherwise remains `null`, never estimated. Wall-clock exhaustion seals the current filesystem state without operator repair.
+Every model-bearing role—builder, adversarial reviewer, fixer, tester, and blinded evaluator—runs in a new external Codex CLI subprocess under the frozen binary/auth/argv rules in section 3. Each gets exactly one ephemeral turn, a distinct process ID and `thread.started` ID, exact role-prompt bytes on stdin, and no resume or inherited transcript. The bundled concurrent supervisor is the builder instantiation of this general launch rule; downstream role evidence must record the same lifecycle and metadata fields. Token ceilings are unavailable in this execution environment and are therefore `null`, with a required `tokenCeilingUnavailableReason`; provider usage is recorded when exposed and otherwise remains `null`, never estimated. Wall-clock exhaustion seals the current filesystem state without operator repair.
 
 | Role            | Maximum wall time | Applicability                                   |
 | --------------- | ----------------: | ----------------------------------------------- |

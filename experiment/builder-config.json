@@ -1,29 +1,31 @@
 {
   "role": "neutral-builder",
-  "turnLimit": 1,
+  "executionLimit": 1,
   "wallSecondsMaximum": 2400,
   "maxTokens": null,
-  "maxTokensUnavailableReason": "provider-orchestrator-does-not-expose-an-enforceable-per-role-token-ceiling",
-  "modelPolicy": "same-inherited-model-and-provider-version",
-  "reasoningPolicy": "same-inherited-setting",
-  "toolPolicy": "same-frozen-tool-permissions",
-  "contextPolicy": "shared-orchestrator-cwd-then-one-opaque-envelope-and-assigned-worktree-only",
+  "maxTokensUnavailableReason": "cli-runtime-does-not-expose-an-enforceable-per-execution-token-ceiling",
+  "runtimePolicy": "fresh-external-codex-cli-exec-process",
+  "cliPath": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe",
+  "cliVersion": "codex-cli 0.145.0-alpha.18",
+  "cliSha256": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
+  "authPolicy": "Logged in using ChatGPT-attested-before-launch",
+  "invariantArgv": [
+    "-a",
+    "never",
+    "exec",
+    "--ephemeral",
+    "--ignore-user-config",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "danger-full-access",
+    "--json"
+  ],
+  "perInvocationArgv": ["-C", "<workdir>", "-o", "<final-path>", "-"],
+  "modelPolicy": "same-frozen-cli-binary-auth-ignore-user-config-and-default-resolution-with-no-model-override",
+  "reasoningPolicy": "same-default-resolution-with-no-reasoning-override",
+  "metadataPolicy": "jsonl-observation-only-null-with-required-unavailable-reason-never-agent-self-report",
+  "freshnessPolicy": "distinct-os-process-and-thread-started-ids-plus-ephemeral-and-never-resume",
+  "toolPolicy": "same-danger-full-access-sandbox-with-supervisor-write-boundary-enforcement",
   "networkPolicy": "same-frozen-operator-policy",
-  "nodeVersion": "22.x",
-  "assignmentEnvelope": {
-    "schemaVersion": "1.0.0",
-    "schemaPath": "experiment/schemas/assignment-envelope.schema.json",
-    "schemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21",
-    "coordinationDirectory": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-builder-assignments",
-    "fileConvention": "<task-leaf>.json",
-    "taskLeafPattern": "^[a-z0-9_]+$",
-    "allowedPairDifferences": [
-      "opaqueWorkerKey",
-      "opaqueCandidateId",
-      "absoluteWorktreePath",
-      "buildBranch",
-      "baseBranch"
-    ],
-    "siblingAccess": "forbidden-and-invalidating"
-  }
+  "nodeVersion": "22.x"
 }
