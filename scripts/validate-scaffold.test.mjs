@@ -324,17 +324,23 @@ const createBuilderRunnerFixture = () => {
   const run = () => {
     const contractPath = path.join(temporaryRoot, "private", "contract.json");
     writeFileSync(contractPath, `${JSON.stringify(contract, null, 2)}\n`);
-    return spawnSync(
-      lock.powerShellHostPath,
-      [
-        "-NoProfile",
-        "-File",
-        lockedPath("scripts/run-cli-builders.ps1"),
-        "-ContractPath",
-        contractPath,
-      ],
-      { cwd: root, encoding: "utf8", timeout: 120000 },
-    );
+    const argv = [
+      "-NoProfile",
+      "-File",
+      lockedPath("scripts/run-cli-builders.ps1"),
+      "-ContractPath",
+      contractPath,
+    ];
+    let result;
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      result = spawnSync(lock.powerShellHostPath, argv, {
+        cwd: root,
+        encoding: "utf8",
+        timeout: 120000,
+      });
+      if (!isExactClrStartupCrash(result)) break;
+    }
+    return result;
   };
   return {
     temporaryRoot,
@@ -451,7 +457,7 @@ const createRoleRunnerFixture = () => {
       contractPath,
     ];
     let result;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
       result = spawnSync(lock.powerShellHostPath, argv, {
         cwd: root,
         encoding: "utf8",
@@ -480,7 +486,7 @@ const createRoleRunnerFixture = () => {
   };
 };
 
-describe("protocol 2.7.0 locked cross-contract validation", () => {
+describe("protocol 2.8.0 locked cross-contract validation", () => {
   it("parses populated supervisor JSON and fails closed on malformed, empty, or nonzero helper results", () => {
     const builderBlock = supervisorJsonHelperBlock(
       "scripts/run-cli-builders.ps1",
@@ -530,8 +536,8 @@ describe("protocol 2.7.0 locked cross-contract validation", () => {
           "  $LASTEXITCODE = 0",
           '  $output = @(& $CommitScript -Workdir $Workdir -ExpectedParent $ExpectedParent -TemporaryIndexPath $IndexPath -Message "Seal helper regression" -Timestamp "2026-07-21T00:00:00Z")',
           '  $value = Convert-RequiredJsonHelperOutput $output $LASTEXITCODE "Candidate commit helper"',
-          '  if ($null -eq $value.commit) { exit 91 }',
-          '  $value | ConvertTo-Json -Compress',
+          "  if ($null -eq $value.commit) { exit 91 }",
+          "  $value | ConvertTo-Json -Compress",
           "  exit 0",
           "}",
           "try {",
@@ -540,7 +546,7 @@ describe("protocol 2.7.0 locked cross-contract validation", () => {
           '  elseif ($Mode -eq "nonzero") { [void](Convert-RequiredJsonHelperOutput @("{`"commit`":`"ignored`"}") 7 "Candidate commit helper") }',
           "  else { exit 92 }",
           "  exit 93",
-          '} catch { [Console]::Error.Write($_.Exception.Message); exit 23 }',
+          "} catch { [Console]::Error.Write($_.Exception.Message); exit 23 }",
           "",
         ].join("\n"),
       );
@@ -1332,11 +1338,11 @@ describe("protocol 2.7.0 locked cross-contract validation", () => {
     assert.deepEqual(validateFinalLockEvidence(evidence, inventory, lock), []);
     assert.equal(
       lock.supersedesFinalizationCommit,
-      "a45a257a1039c6de2729d23fff2ef427ce59e784",
+      "e2c892e3b88702fcbd9a2049926d4a28b94efa4a",
     );
-    assert.equal(lock.treatmentSkillManifestEntryCount, 62);
+    assert.equal(lock.treatmentSkillManifestEntryCount, 63);
     assert.equal(lock.treatmentSkillManifestCommentLineCount, 3);
-    assert.equal(lock.treatmentSkillManifestPhysicalLineCount, 65);
+    assert.equal(lock.treatmentSkillManifestPhysicalLineCount, 66);
     assert.equal(lock.treatmentSkillManifestByteSource, "canonical-git-blob");
     assert.equal(lock.runnerSmokeContractSha256, null);
     assert.equal(lock.runnerSmokeSupervisionSha256, null);
@@ -1807,17 +1813,21 @@ describe("protocol 2.7.0 locked cross-contract validation", () => {
       cases.push(["scripts/run-cli-role.ps1", rolePath, role.evidenceRoot]);
 
       for (const [runner, contractPath, evidenceRoot] of cases) {
-        const result = spawnSync(
-          lock.powerShellHostPath,
-          [
-            "-NoProfile",
-            "-File",
-            lockedPath(runner),
-            "-ContractPath",
-            contractPath,
-          ],
-          { cwd: root, encoding: "utf8" },
-        );
+        const argv = [
+          "-NoProfile",
+          "-File",
+          lockedPath(runner),
+          "-ContractPath",
+          contractPath,
+        ];
+        let result;
+        for (let attempt = 0; attempt < 8; attempt += 1) {
+          result = spawnSync(lock.powerShellHostPath, argv, {
+            cwd: root,
+            encoding: "utf8",
+          });
+          if (!isExactClrStartupCrash(result)) break;
+        }
         assert.notEqual(result.status, 0, runner);
         assert.match(
           `${result.stdout}\n${result.stderr}`,
