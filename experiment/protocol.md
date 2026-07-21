@@ -1,6 +1,6 @@
 # Preregistered neutral-build versus review-loop protocol
 
-Protocol version: 2.1.0-frozen
+Protocol version: 2.2.0 (provisional until integrated skill refreeze)
 
 Design: paired, blinded pilot with two independent neutral builds, post-build random assignment, and treatment-only iterative review
 
@@ -18,9 +18,9 @@ The three scored snapshots are:
 
 The primary estimand is `score(Tfinal) - score(B0)`. The secondary within-treatment estimand is `score(Tfinal) - score(T0)`. Negative values favor the comparator. For promotion to `main`, select the higher of `B0` and `Tfinal`; an exact tie selects `B0` (baseline).
 
-## 2. Canonical contract and frozen lock boundary
+## 2. Canonical contract and provisional lock boundary
 
-This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. The earlier 2.0.0-frozen lock is superseded; version 2.1.0-frozen binds the corrected integrated skill, canonical contract, golden fixture, hidden suite, prompt/config, and algorithms. The completed freeze, performed before any builder sees task materials, MUST:
+This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. The earlier 2.1.0-frozen lock is superseded; version 2.2.0 MUST NOT execute while its integrated skill fields and lock parent remain provisional. Refreeze, performed before any builder sees task materials, MUST:
 
 1. pass `npm ci` and `npm run check` on Node 22;
 2. record the exact lock-parent commit;
@@ -135,6 +135,12 @@ The seven role names and maximum wall seconds are exact: `builder` 2400, `review
 The tester command is exactly `npm run check`, invoking in order `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run validate:scaffold`, `npm run test:protocol`, `npm run test:public:if-implemented`, and `npm run build`. The evaluator public command is exactly `npm run test:public`. The sealed hidden suite ID is `permissions-playground-sealed-v2`, its command is `node sealed-hidden-suite/run.mjs`, and its SHA-256 commitment is `a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b`. Run records bind all of these values and the canonical-contract hash.
 
 Templates are non-executable examples and validate only in explicit `template` mode. `execution` mode rejects a provisional lock, zero hashes/seeds, sentinel or `required-at-run` values, template-equal records, duplicate worker IDs, invalid snapshots, and any divergence from this contract.
+
+## 10.2 Executable invalidation state
+
+A completed experiment status is exactly `valid` or `invalid`. A valid experiment has `activeInvalidation: null`, may preserve zero or more structured `invalidAttempts`, and requires sealed evaluation and scored outcome artifacts. An invalid current experiment has a structured active invalidation with ID, scope, code, reason, detection timestamp, evidence SHA-256, and preserved-artifact SHA-256; its evaluation conclusion and scored outcome are null. Invalid attempts preserve only those metadata and content commitments, never candidate contents. A scored outcome is forbidden whenever active invalidation is non-null.
+
+The public validator interface is `node scripts/validate-scaffold.mjs --mode template|execution --input <json-path>`. Template mode is restricted to explicit template files. Execution mode validates the canonical golden aggregate or a canonical invalid-current record and rejects arbitrary status values.
 
 ## 11. Invalidation rules
 

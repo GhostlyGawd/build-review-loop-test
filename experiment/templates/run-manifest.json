@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "2.1.0",
+  "protocolVersion": "2.2.0",
   "candidateLabel": "candidate-a",
   "bindings": {
     "commonStartCommit": "0000000000000000000000000000000000000000",

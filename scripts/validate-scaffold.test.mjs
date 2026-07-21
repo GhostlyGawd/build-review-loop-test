@@ -1,13 +1,16 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { describe, it } from "node:test";
 import {
   canonicalHash,
   readJson,
+  root,
   validateArtifactMode,
   validateAssignmentSemantics,
   validateCanonicalContract,
   validateCostSemantics,
   validateEvaluationSemantics,
+  validateExperimentConclusion,
   validateGoldenRun,
   validateOutcomeSemantics,
   validateRunManifestSemantics,
@@ -24,7 +27,7 @@ const snapshot = (number) => ({
   packageProcedure: "frozen-test-procedure",
 });
 
-describe("protocol 2.1.0 cross-contract validation", () => {
+describe("protocol 2.2.0 cross-contract validation", () => {
   it("accepts the prospective scaffold and seeded assignment algorithms", () => {
     assert.deepEqual(validateScaffold().failures, []);
     assert.deepEqual(
@@ -230,6 +233,85 @@ describe("protocol 2.1.0 cross-contract validation", () => {
     const failures = validateCanonicalContract(contract).join("\n");
     assert.match(failures, /public gate commands/);
     assert.match(failures, /hidden-suite binding/);
+  });
+
+  it("binds every golden builder freeze to canonical and lock prompt/config commitments", () => {
+    const contract = readJson("experiment/canonical-contract.json");
+    const golden = readJson("experiment/golden-run/golden-run.json");
+    golden.builderFreezes["candidate-a"].promptSha256 = hash("e");
+    assert.match(
+      validateGoldenRun(golden, contract).join("\n"),
+      /prompt commitment drift/,
+    );
+
+    const configDrift = readJson("experiment/golden-run/golden-run.json");
+    configDrift.builderFreezes["candidate-b"].configSha256 = hash("d");
+    assert.match(
+      validateGoldenRun(configDrift, contract).join("\n"),
+      /config commitment drift/,
+    );
+
+    contract.builderFreeze.configSha256 = hash("c");
+    assert.match(
+      validateCanonicalContract(contract).join("\n"),
+      /builder prompt\/config commitments/,
+    );
+  });
+
+  it("accepts a valid outcome with a preserved invalid attempt", () => {
+    const golden = readJson("experiment/golden-run/golden-run.json");
+    assert.equal(golden.invalidAttempts.length, 1);
+    assert.deepEqual(validateExperimentConclusion(golden), []);
+  });
+
+  it("accepts an invalid current run only without evaluations or outcome", () => {
+    const invalid = readJson("experiment/golden-run/invalid-current.json");
+    assert.deepEqual(validateExperimentConclusion(invalid), []);
+  });
+
+  it("rejects an invalid current run carrying a scored outcome", () => {
+    const invalid = readJson("experiment/golden-run/invalid-current.json");
+    invalid.outcome = { score: 100 };
+    const failures = validateExperimentConclusion(invalid).join("\n");
+    assert.match(failures, /outcome must be null/);
+    assert.match(failures, /active invalidation forbids/);
+  });
+
+  it("rejects arbitrary completed experiment status", () => {
+    const invalid = readJson("experiment/golden-run/invalid-current.json");
+    invalid.status = "blocked";
+    assert.match(
+      validateExperimentConclusion(invalid).join("\n"),
+      /status must be valid or invalid/,
+    );
+  });
+
+  it("exposes explicit template and execution CLI modes", () => {
+    const cases = [
+      ["template", "experiment/templates/run-manifest.json"],
+      ["execution", "experiment/golden-run/golden-run.json"],
+      ["execution", "experiment/golden-run/invalid-current.json"],
+    ];
+    for (const [mode, input] of cases) {
+      const result = spawnSync(
+        process.execPath,
+        ["scripts/validate-scaffold.mjs", "--mode", mode, "--input", input],
+        { cwd: root, encoding: "utf8" },
+      );
+      assert.equal(result.status, 0, result.stderr);
+      assert.match(result.stdout, new RegExp(`^${mode} validation passed:`));
+    }
+    const missingMode = spawnSync(
+      process.execPath,
+      [
+        "scripts/validate-scaffold.mjs",
+        "--input",
+        "experiment/golden-run/golden-run.json",
+      ],
+      { cwd: root, encoding: "utf8" },
+    );
+    assert.equal(missingMode.status, 1);
+    assert.match(missingMode.stderr, /both required/);
   });
 
   it("rejects zero hashes and seeds in execution mode", () => {

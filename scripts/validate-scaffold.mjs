@@ -406,6 +406,95 @@ export function validateArtifactMode(value, mode, templateValues = []) {
   return failures;
 }
 
+const sha256Pattern = /^[0-9a-f]{64}$/;
+const nonzeroSha256 = (value) =>
+  typeof value === "string" && sha256Pattern.test(value) && !/^0+$/.test(value);
+const exactKeys = (value, expected) =>
+  value != null &&
+  typeof value === "object" &&
+  !Array.isArray(value) &&
+  JSON.stringify(Object.keys(value).sort(compareUtf8)) ===
+    JSON.stringify([...expected].sort(compareUtf8));
+
+export function validateExperimentConclusion(record) {
+  const failures = [];
+  const activeFields = [
+    "invalidationId",
+    "scope",
+    "code",
+    "reason",
+    "detectedAt",
+    "evidenceSha256",
+    "preservedArtifactSha256",
+  ];
+  const attemptFields = [
+    "attemptId",
+    "scope",
+    "code",
+    "reason",
+    "invalidatedAt",
+    "evidenceSha256",
+    "preservedArtifactSha256",
+  ];
+  const validateInvalidation = (value, fields, timestampField, label) => {
+    if (!exactKeys(value, fields)) {
+      failures.push(`${label} must contain exactly the canonical fields`);
+      return;
+    }
+    for (const field of fields.slice(0, 4)) {
+      if (typeof value[field] !== "string" || value[field].length === 0)
+        failures.push(`${label}.${field} must be a non-empty string`);
+    }
+    if (
+      typeof value[timestampField] !== "string" ||
+      Number.isNaN(Date.parse(value[timestampField]))
+    )
+      failures.push(`${label}.${timestampField} must be a timestamp`);
+    for (const field of ["evidenceSha256", "preservedArtifactSha256"]) {
+      if (!nonzeroSha256(value[field]))
+        failures.push(`${label}.${field} must be a nonzero SHA-256`);
+    }
+  };
+
+  if (!new Set(["valid", "invalid"]).has(record.status))
+    failures.push("completed experiment status must be valid or invalid");
+  if (!Array.isArray(record.invalidAttempts))
+    failures.push("invalidAttempts must be an array");
+  else
+    record.invalidAttempts.forEach((attempt, index) =>
+      validateInvalidation(
+        attempt,
+        attemptFields,
+        "invalidatedAt",
+        `invalidAttempts[${index}]`,
+      ),
+    );
+
+  if (record.status === "valid") {
+    if (record.activeInvalidation !== null)
+      failures.push("valid experiment activeInvalidation must be null");
+    if (!Array.isArray(record.evaluations) || record.evaluations.length !== 3)
+      failures.push("valid experiment requires exactly three evaluations");
+    if (record.outcome == null)
+      failures.push("valid experiment requires a scored outcome");
+  }
+  if (record.status === "invalid") {
+    validateInvalidation(
+      record.activeInvalidation,
+      activeFields,
+      "detectedAt",
+      "activeInvalidation",
+    );
+    if (record.evaluations !== null)
+      failures.push("invalid experiment evaluations must be null");
+    if (record.outcome !== null)
+      failures.push("invalid experiment outcome must be null");
+  }
+  if (record.activeInvalidation != null && record.outcome != null)
+    failures.push("active invalidation forbids a scored outcome");
+  return failures;
+}
+
 export function validateCanonicalContract(contract) {
   const failures = [];
   const findingSchema = readJson("experiment/schemas/finding.schema.json");
@@ -499,6 +588,40 @@ export function validateCanonicalContract(contract) {
     "npm run build",
   ];
   if (
+    contract.builderFreeze?.promptSha256 !==
+      "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82" ||
+    contract.builderFreeze?.configSha256 !==
+      "caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b" ||
+    contract.builderFreeze?.rule !==
+      "every builder freeze must equal both canonical hashes and the corresponding lock commitments"
+  )
+    failures.push("canonical builder prompt/config commitments diverge");
+  if (
+    JSON.stringify(contract.invalidation?.completedStatuses) !==
+      JSON.stringify(["valid", "invalid"]) ||
+    JSON.stringify(contract.invalidation?.activeInvalidationFields) !==
+      JSON.stringify([
+        "invalidationId",
+        "scope",
+        "code",
+        "reason",
+        "detectedAt",
+        "evidenceSha256",
+        "preservedArtifactSha256",
+      ]) ||
+    JSON.stringify(contract.invalidation?.invalidAttemptFields) !==
+      JSON.stringify([
+        "attemptId",
+        "scope",
+        "code",
+        "reason",
+        "invalidatedAt",
+        "evidenceSha256",
+        "preservedArtifactSha256",
+      ])
+  )
+    failures.push("canonical invalidation state contract diverges");
+  if (
     contract.gates.testerCommand !== "npm run check" ||
     contract.gates.evaluatorPublicCommand !== "npm run test:public" ||
     JSON.stringify(contract.gates.componentCommands) !==
@@ -518,7 +641,11 @@ export function validateCanonicalContract(contract) {
 const resolveArtifactKey = (fixture, artifactKey) =>
   artifactKey.split(".").reduce((value, key) => value?.[key], fixture);
 
-export function validateGoldenRun(fixture, contract) {
+export function validateGoldenRun(
+  fixture,
+  contract,
+  lock = readJson("experiment/lock.json"),
+) {
   const failures = validateArtifactMode(fixture, "execution", [
     readJson("experiment/templates/experiment-manifest.json"),
     readJson("experiment/templates/run-manifest.json"),
@@ -530,6 +657,19 @@ export function validateGoldenRun(fixture, contract) {
     failures.push("golden fixture kind must be prospective-conformance");
   if (fixture.canonicalContractSha256 !== canonicalHash(contract))
     failures.push("golden fixture canonical-contract hash mismatch");
+  failures.push(...validateExperimentConclusion(fixture));
+  for (const [candidate, freeze] of Object.entries(fixture.builderFreezes)) {
+    if (
+      freeze.promptSha256 !== contract.builderFreeze.promptSha256 ||
+      freeze.promptSha256 !== lock.neutralBuilderPromptSha256
+    )
+      failures.push(`golden ${candidate} prompt commitment drift`);
+    if (
+      freeze.configSha256 !== contract.builderFreeze.configSha256 ||
+      freeze.configSha256 !== lock.neutralBuilderConfigSha256
+    )
+      failures.push(`golden ${candidate} config commitment drift`);
+  }
   const bindings = fixture.bindings;
   if (
     JSON.stringify(bindings.publicGates) !==
@@ -659,6 +799,7 @@ export function validateScaffold() {
     "experiment/canonical-contract.json",
     "experiment/golden-run/README.md",
     "experiment/golden-run/golden-run.json",
+    "experiment/golden-run/invalid-current.json",
     "experiment/lock.json",
     "experiment/builder-config.json",
     "experiment/treatment-loop-algorithm.md",
@@ -670,8 +811,10 @@ export function validateScaffold() {
     "experiment/schemas/finding.schema.json",
     "experiment/schemas/test.schema.json",
     "experiment/schemas/outcome.schema.json",
+    "experiment/schemas/experiment-status.schema.json",
     "experiment/templates/test.json",
     "experiment/templates/outcome.json",
+    "experiment/templates/experiment-status.json",
     "tests/public/evaluate.test.ts",
     "tests/public/ui.test.tsx",
     "package.json",
@@ -729,6 +872,10 @@ export function validateScaffold() {
       "experiment/schemas/outcome.schema.json",
       "experiment/templates/outcome.json",
     ],
+    [
+      "experiment/schemas/experiment-status.schema.json",
+      "experiment/templates/experiment-status.json",
+    ],
   ];
   const ajv = new Ajv2020({
     allErrors: true,
@@ -770,23 +917,22 @@ export function validateScaffold() {
   const canonicalContract = readJson("experiment/canonical-contract.json");
   const goldenRun = readJson("experiment/golden-run/golden-run.json");
   const finalCommitments = {
-    protocolVersion: "2.1.0-frozen",
-    protocolStatus: "locked",
-    supersedesLockCommit: "c19c5b3ec96e70b8cedfb15b188394165f4a2759",
-    lockParentCommit: "211ec41b165c9400a49bb4f55ec2ef2490c9655a",
+    protocolVersion: "2.2.0",
+    protocolStatus: "draft",
+    supersedesLockCommit: "b5c1d5f21e3d2f7e4ecf67dfee1eeb365ee041b9",
+    lockParentCommit: null,
     hiddenSuiteId: "permissions-playground-sealed-v2",
     hiddenSuiteSha256:
       "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
-    treatmentSkillCommit: "b65e03b3d1ba7767d7a0b17c958e2326f292a4d5",
-    treatmentSkillTree: "da8da2f4600651711cd56e1680f02ff0adbd69bf",
-    treatmentSkillManifestSha256:
-      "d25688cb382a748d55de7633500cd0aa17bcc31dcf3ec85a5980d2acb232079b",
+    treatmentSkillCommit: null,
+    treatmentSkillTree: null,
+    treatmentSkillManifestSha256: null,
     treatmentAlgorithmSha256: actualAlgorithmHash,
     neutralBuilderPromptSha256: actualPromptHash,
     neutralBuilderConfigSha256: actualConfigHash,
     canonicalContractSha256: canonicalHash(canonicalContract),
     goldenFixtureSha256: canonicalHash(goldenRun),
-    freezeState: "frozen",
+    freezeState: "provisional",
   };
   for (const [key, expected] of Object.entries(finalCommitments)) {
     if (lock[key] !== expected)
@@ -794,7 +940,10 @@ export function validateScaffold() {
   }
   failures.push(
     ...validateCanonicalContract(canonicalContract),
-    ...validateGoldenRun(goldenRun, canonicalContract),
+    ...validateGoldenRun(goldenRun, canonicalContract, lock),
+    ...validateExperimentConclusion(
+      readJson("experiment/golden-run/invalid-current.json"),
+    ),
   );
 
   const builderConfig = readJson("experiment/builder-config.json");
@@ -851,12 +1000,84 @@ const isEntrypoint =
   process.argv[1] &&
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isEntrypoint) {
+  const args = process.argv.slice(2);
+  const modeIndex = args.indexOf("--mode");
+  const inputIndex = args.indexOf("--input");
+  if (modeIndex !== -1 || inputIndex !== -1) {
+    if (
+      modeIndex === -1 ||
+      inputIndex === -1 ||
+      !args[modeIndex + 1] ||
+      !args[inputIndex + 1]
+    ) {
+      console.error(
+        "--mode template|execution and --input PATH are both required",
+      );
+      process.exit(1);
+    }
+    const mode = args[modeIndex + 1];
+    const inputPath = path.resolve(root, args[inputIndex + 1]);
+    if (!inputPath.startsWith(`${root}${path.sep}`)) {
+      console.error("--input must resolve inside the protocol repository");
+      process.exit(1);
+    }
+    const relativeInput = path.relative(root, inputPath).replaceAll("\\", "/");
+    const value = JSON.parse(readFileSync(inputPath, "utf8"));
+    const failures = validateArtifactMode(value, mode);
+    if (mode === "template") {
+      if (!relativeInput.startsWith("experiment/templates/"))
+        failures.push(
+          "template mode input must be under experiment/templates/",
+        );
+      else {
+        const schemaPath = `experiment/schemas/${path.basename(relativeInput, ".json")}.schema.json`;
+        if (!existsSync(path.join(root, schemaPath)))
+          failures.push(`no registered schema for template: ${relativeInput}`);
+        else {
+          const ajv = new Ajv2020({
+            allErrors: true,
+            strict: true,
+            strictTypes: false,
+            validateFormats: false,
+          });
+          ajv.addSchema(readJson("experiment/schemas/finding.schema.json"));
+          const validate = ajv.compile(readJson(schemaPath));
+          if (!validate(value))
+            failures.push(
+              `${relativeInput} does not validate: ${ajv.errorsText(validate.errors)}`,
+            );
+        }
+      }
+    }
+    if (mode === "execution") {
+      if (relativeInput === "experiment/golden-run/golden-run.json")
+        failures.push(
+          ...validateGoldenRun(
+            value,
+            readJson("experiment/canonical-contract.json"),
+            readJson("experiment/lock.json"),
+          ),
+        );
+      else if (relativeInput === "experiment/golden-run/invalid-current.json")
+        failures.push(...validateExperimentConclusion(value));
+      else
+        failures.push(
+          "execution mode input must be a registered golden fixture",
+        );
+    }
+    if (failures.length > 0) {
+      console.error(failures.map((failure) => `- ${failure}`).join("\n"));
+      process.exit(1);
+    }
+    console.log(`${mode} validation passed: ${relativeInput}`);
+    process.exit(0);
+  }
   const { failures, schemaPairCount, implementationCount } = validateScaffold();
   if (failures.length > 0) {
     console.error(failures.map((failure) => `- ${failure}`).join("\n"));
     process.exit(1);
   }
   console.log(
-    `Protocol 2.1.0-frozen scaffold validation passed (${schemaPairCount} schema/data pairs; golden execution fixture accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.2.0 provisional scaffold validation passed (${schemaPairCount} schema/data pairs; golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }

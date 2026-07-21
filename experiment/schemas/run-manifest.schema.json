@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/run-manifest.schema.json",
-  "title": "Protocol 2.1.0 candidate run manifest",
+  "title": "Protocol 2.2.0 candidate run manifest",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -26,7 +26,7 @@
     "deviations"
   ],
   "properties": {
-    "protocolVersion": { "const": "2.1.0" },
+    "protocolVersion": { "const": "2.2.0" },
     "candidateLabel": { "enum": ["candidate-a", "candidate-b"] },
     "bindings": { "$ref": "#/$defs/bindings" },
     "canonicalContractSha256": { "$ref": "#/$defs/sha256" },
@@ -62,7 +62,7 @@
       ]
     },
     "convergence": { "type": ["boolean", "null"] },
-    "status": { "enum": ["pending", "valid", "invalid", "blocked"] },
+    "status": { "enum": ["pending", "valid", "invalid"] },
     "checks": { "type": "array", "items": { "$ref": "#/$defs/check" } },
     "evidenceChain": {
       "type": "array",
