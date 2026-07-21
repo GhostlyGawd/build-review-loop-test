@@ -534,6 +534,8 @@ export function validateCliRuntimeContract(
     failures.push("CLI ChatGPT auth attestation mismatch");
   if (contract.contractSchemaSha256 !== lock.cliRuntimeSchemaSha256)
     failures.push("CLI contract schema does not match frozen lock");
+  if (contract.canonicalPathHelperSha256 !== lock.canonicalPathHelperSha256)
+    failures.push("CLI canonical path helper does not match frozen lock");
   if (
     contract.builderInputManifestSchemaSha256 !==
       lock.builderInputManifestSchemaSha256 ||
@@ -753,6 +755,8 @@ export function validateRoleRuntimeContract(
     failures.push("role runtime CLI binding mismatch");
   if (contract.contractSchemaSha256 !== lock.roleRuntimeSchemaSha256)
     failures.push("role runtime schema lock mismatch");
+  if (contract.canonicalPathHelperSha256 !== lock.canonicalPathHelperSha256)
+    failures.push("role canonical path helper lock mismatch");
   if (
     contract.runnerSha256 !== lock.roleRunnerSha256 ||
     contract.evidenceSchemaSha256 !== lock.supervisionEvidenceSchemaSha256
@@ -1117,6 +1121,10 @@ export function validateCanonicalContract(contract) {
     contract.cliRuntime?.runnerSha256 !==
       fileSha256("scripts/run-cli-builders.ps1") ||
     contract.cliRuntime?.runnerSha256 !== lock.cliRunnerSha256 ||
+    contract.cliRuntime?.canonicalPathHelperSha256 !==
+      fileSha256("scripts/canonicalize-paths.mjs") ||
+    contract.cliRuntime?.canonicalPathHelperSha256 !==
+      lock.canonicalPathHelperSha256 ||
     contract.cliRuntime?.binarySha256 !==
       "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4" ||
     JSON.stringify(contract.cliRuntime?.invariantArgv) !==
@@ -1601,6 +1609,7 @@ export function validateScaffold() {
     "experiment/templates/blinded-package-manifest.json",
     "experiment/templates/blinded-package-mapping.json",
     "scripts/run-cli-builders.ps1",
+    "scripts/canonicalize-paths.mjs",
     "scripts/prepare-builder-input.mjs",
     "scripts/run-cli-role.ps1",
     "scripts/package-blinded-snapshots.mjs",
@@ -1749,6 +1758,9 @@ export function validateScaffold() {
   const actualCliRunnerHash = sha256(
     readFileSync(path.join(root, "scripts/run-cli-builders.ps1"), "utf8"),
   );
+  const actualCanonicalPathHelperHash = sha256(
+    readFileSync(path.join(root, "scripts/canonicalize-paths.mjs"), "utf8"),
+  );
   const actualRoleSchemaHash = sha256(
     readFileSync(
       path.join(root, "experiment/schemas/role-runtime-contract.schema.json"),
@@ -1848,6 +1860,7 @@ export function validateScaffold() {
     cliAuthStatus: "Logged in using ChatGPT",
     cliRuntimeSchemaSha256: actualCliSchemaHash,
     cliRunnerSha256: actualCliRunnerHash,
+    canonicalPathHelperSha256: actualCanonicalPathHelperHash,
     roleRuntimeSchemaSha256: actualRoleSchemaHash,
     roleRunnerSha256: actualRoleRunnerHash,
     supervisionEvidenceSchemaSha256: actualEvidenceSchemaHash,

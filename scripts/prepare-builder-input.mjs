@@ -54,7 +54,7 @@ const canonicalProspective = (candidate) => {
     missing.unshift(path.basename(cursor));
     cursor = path.dirname(cursor);
   }
-  const canonical = path.join(realpathSync(cursor), ...missing);
+  const canonical = path.join(realpathSync.native(cursor), ...missing);
   if (pathKey(canonical) !== pathKey(requested))
     throw new Error(
       `Physical path alias or reparse ancestor forbidden: ${candidate}`,
@@ -63,7 +63,7 @@ const canonicalProspective = (candidate) => {
 };
 const sourceRequested = path.resolve(args.get("--source"));
 assertNoLinkAncestors(sourceRequested);
-const source = realpathSync(sourceRequested);
+const source = realpathSync.native(sourceRequested);
 if (pathKey(source) !== pathKey(sourceRequested))
   throw new Error("Source path must not use a physical alias");
 const destinations = [
@@ -72,7 +72,7 @@ const destinations = [
 ];
 const allowlistRequested = path.resolve(args.get("--allowlist"));
 assertNoLinkAncestors(allowlistRequested);
-const allowlistPath = realpathSync(allowlistRequested);
+const allowlistPath = realpathSync.native(allowlistRequested);
 if (pathKey(allowlistPath) !== pathKey(allowlistRequested))
   throw new Error("Allowlist path must not use a physical alias");
 const manifestPath = canonicalProspective(args.get("--manifest"));
@@ -160,7 +160,10 @@ const records = allowlist.files
     const absolute = path.resolve(source, sourcePath);
     if (!absolute.startsWith(`${source}${path.sep}`) || !existsSync(absolute))
       throw new Error(`Missing allowlisted source: ${sourcePath}`);
-    if (!lstatSync(absolute).isFile() || realpathSync(absolute) !== absolute)
+    if (
+      !lstatSync(absolute).isFile() ||
+      realpathSync.native(absolute) !== absolute
+    )
       throw new Error(
         `Allowlisted source must be a regular non-symlink file: ${sourcePath}`,
       );
@@ -194,7 +197,7 @@ for (const destination of destinations) {
   if (existsSync(destination))
     throw new Error(`Destination must not exist: ${destination}`);
   mkdirSync(destination, { recursive: true });
-  if (pathKey(realpathSync(destination)) !== pathKey(destination))
+  if (pathKey(realpathSync.native(destination)) !== pathKey(destination))
     throw new Error("Created destination resolved through a physical alias");
   for (const record of records) {
     const output = path.join(destination, ...record.path.split("/"));

@@ -54,9 +54,39 @@ const runGit = (cwd, args, env = {}) =>
     env: { ...process.env, ...env },
   });
 
+const windowsShortPath = (absolute) => {
+  if (process.platform !== "win32") return null;
+  const suffix = [];
+  let cursor = path.resolve(absolute);
+  while (path.dirname(cursor) !== cursor) {
+    const parent = path.dirname(cursor);
+    const name = path.basename(cursor);
+    const result = spawnSync("cmd.exe", ["/d", "/c", "dir", "/x", parent], {
+      encoding: "utf8",
+    });
+    if (result.status !== 0) return null;
+    const line = result.stdout
+      .split(/\r?\n/u)
+      .find((value) => value.trimEnd().endsWith(` ${name}`));
+    if (line) {
+      const fields = line.trim().split(/\s+/u);
+      const alias = fields.at(-2);
+      if (
+        alias &&
+        alias !== "<DIR>" &&
+        alias.toLowerCase() !== name.toLowerCase()
+      )
+        return path.join(parent, alias, ...suffix);
+    }
+    suffix.unshift(name);
+    cursor = parent;
+  }
+  return null;
+};
+
 const createProjectionFixture = (entries, contents, layout = {}) => {
   const temporaryRoot = mkdtempSync(
-    path.join(os.tmpdir(), "builder-projection-"),
+    path.join(root, "node_modules", "builder-projection-"),
   );
   const source = path.join(temporaryRoot, "source");
   mkdirSync(source);
@@ -83,6 +113,9 @@ const createProjectionFixture = (entries, contents, layout = {}) => {
   assert.equal(runGit(source, ["commit", "-m", "source fixture"]).status, 0);
   const sourceCommit = runGit(source, ["rev-parse", "HEAD"]).stdout.trim();
   const sourceTree = runGit(source, ["rev-parse", "HEAD^{tree}"]).stdout.trim();
+  const sourceArgument = layout.useShortSource
+    ? windowsShortPath(source)
+    : source;
   let destinationA = layout.destinationAInsideSource
     ? path.join(source, "builder-a")
     : path.join(temporaryRoot, "builder-a");
@@ -106,7 +139,7 @@ const createProjectionFixture = (entries, contents, layout = {}) => {
     [
       path.join(root, "scripts/prepare-builder-input.mjs"),
       "--source",
-      source,
+      sourceArgument ?? source,
       "--destination-a",
       destinationA,
       "--destination-b",
@@ -129,11 +162,14 @@ const createProjectionFixture = (entries, contents, layout = {}) => {
     destinationB,
     manifest,
     result,
+    shortSourceAvailable: !layout.useShortSource || sourceArgument != null,
   };
 };
 
 const createBuilderRunnerFixture = () => {
-  const temporaryRoot = mkdtempSync(path.join(os.tmpdir(), "builder-runner-"));
+  const temporaryRoot = mkdtempSync(
+    path.join(root, "node_modules", "builder-runner-"),
+  );
   const source = path.join(temporaryRoot, "source");
   mkdirSync(source);
   const allowlist = readJson("experiment/builder-input-allowlist.json");
@@ -195,6 +231,7 @@ const createBuilderRunnerFixture = () => {
     "experiment/schemas/cli-runtime-contract.schema.json",
   );
   lock.cliRunnerSha256 = bytesHash("scripts/run-cli-builders.ps1");
+  lock.canonicalPathHelperSha256 = bytesHash("scripts/canonicalize-paths.mjs");
   lock.builderInputPreparationScriptSha256 = bytesHash(
     "scripts/prepare-builder-input.mjs",
   );
@@ -218,6 +255,8 @@ const createBuilderRunnerFixture = () => {
       "experiment/schemas/cli-runtime-contract.schema.json",
     ),
     contractSchemaSha256: lock.cliRuntimeSchemaSha256,
+    canonicalPathHelperPath: lockedPath("scripts/canonicalize-paths.mjs"),
+    canonicalPathHelperSha256: lock.canonicalPathHelperSha256,
     sourceCommonStartCommit: sourceCommit,
     sourceCommonStartTree: sourceTree,
     commonStartCommit: manifest.projectionCommit,
@@ -280,6 +319,116 @@ const createBuilderRunnerFixture = () => {
     contract,
     run,
   };
+};
+
+const createRoleRunnerFixture = () => {
+  const temporaryRoot = mkdtempSync(
+    path.join(root, "node_modules", "role-runner-"),
+  );
+  const workdir = path.join(temporaryRoot, "role-workdir");
+  mkdirSync(workdir);
+  writeFileSync(path.join(workdir, "README.md"), "neutral role fixture\n");
+  for (const args of [
+    ["init", "--initial-branch=role-input"],
+    ["config", "core.autocrlf", "false"],
+    ["config", "user.name", "Role Runner Test"],
+    ["config", "user.email", "role-runner@invalid.local"],
+    ["add", "--all"],
+    ["commit", "-m", "role fixture"],
+  ])
+    assert.equal(runGit(workdir, args).status, 0);
+  const inputCommit = runGit(workdir, ["rev-parse", "HEAD"]).stdout.trim();
+  const inputTree = runGit(workdir, ["rev-parse", "HEAD^{tree}"]).stdout.trim();
+  const lockedPath = (relative) => path.join(root, relative);
+  const bytesHash = (relative) => sha256(readFileSync(lockedPath(relative)));
+  const lock = clone(readJson("experiment/lock.json"));
+  lock.roleRuntimeSchemaSha256 = bytesHash(
+    "experiment/schemas/role-runtime-contract.schema.json",
+  );
+  lock.roleRunnerSha256 = bytesHash("scripts/run-cli-role.ps1");
+  lock.supervisionEvidenceSchemaSha256 = bytesHash(
+    "experiment/schemas/cli-supervision-evidence.schema.json",
+  );
+  lock.canonicalPathHelperSha256 = bytesHash("scripts/canonicalize-paths.mjs");
+  const privateRoot = path.join(temporaryRoot, "private");
+  mkdirSync(privateRoot);
+  const shadowLockPath = path.join(privateRoot, "lock.json");
+  writeFileSync(shadowLockPath, `${JSON.stringify(lock, null, 2)}\n`);
+  const templatePath = lockedPath("experiment/prompts/blinded-reviewer.md");
+  const substitutions = {
+    CANDIDATE_LABEL: "candidate-alias-test",
+    CYCLE_NUMBER: "1",
+    SNAPSHOT_COMMIT: inputCommit,
+    WALL_CLOCK_DEADLINE_ISO: "2026-07-21T23:59:59Z",
+  };
+  let rendered = readFileSync(templatePath, "utf8");
+  for (const [key, value] of Object.entries(substitutions))
+    rendered = rendered.replaceAll(`{{${key}}}`, value);
+  const promptPath = path.join(privateRoot, "reviewer-prompt.md");
+  writeFileSync(promptPath, rendered);
+  const evidenceRoot = path.join(temporaryRoot, "evidence");
+  const contract = clone(
+    readJson("experiment/templates/role-runtime-contract.json"),
+  );
+  Object.assign(contract, {
+    role: "reviewer",
+    candidateLabel: substitutions.CANDIDATE_LABEL,
+    cycle: 1,
+    invocationId: `d${"8".repeat(31)}`,
+    cliPath: lock.cliBinaryPath,
+    cliVersion: lock.cliVersion,
+    cliSha256: lock.cliBinarySha256,
+    authStatus: lock.cliAuthStatus,
+    lockPath: shadowLockPath,
+    lockSha256: sha256(readFileSync(shadowLockPath)),
+    contractSchemaPath: lockedPath(
+      "experiment/schemas/role-runtime-contract.schema.json",
+    ),
+    contractSchemaSha256: lock.roleRuntimeSchemaSha256,
+    canonicalPathHelperPath: lockedPath("scripts/canonicalize-paths.mjs"),
+    canonicalPathHelperSha256: lock.canonicalPathHelperSha256,
+    runnerPath: lockedPath("scripts/run-cli-role.ps1"),
+    runnerSha256: lock.roleRunnerSha256,
+    evidenceSchemaPath: lockedPath(
+      "experiment/schemas/cli-supervision-evidence.schema.json",
+    ),
+    evidenceSchemaSha256: lock.supervisionEvidenceSchemaSha256,
+    promptTemplatePath: templatePath,
+    promptTemplateSha256: lock.reviewerPromptTemplateSha256,
+    promptSubstitutions: substitutions,
+    artifactSchemaPath: lockedPath("experiment/schemas/review.schema.json"),
+    artifactSchemaSha256: lock.reviewArtifactSchemaSha256,
+    inputCommit,
+    inputTree,
+    promptPath,
+    promptSha256: sha256(readFileSync(promptPath)),
+    workdir,
+    evidenceRoot,
+    finalPath: path.join(evidenceRoot, "final.json"),
+    stdoutPath: path.join(evidenceRoot, "stdout.jsonl"),
+    stderrPath: path.join(evidenceRoot, "stderr.txt"),
+    evidencePath: path.join(evidenceRoot, "evidence.json"),
+    tempRoot: path.join(evidenceRoot, "temp"),
+    cacheRoot: path.join(evidenceRoot, "cache"),
+    dependencyRoot: path.join(evidenceRoot, "deps"),
+    deadlineSeconds: 60,
+  });
+  const run = () => {
+    const contractPath = path.join(privateRoot, "role-contract.json");
+    writeFileSync(contractPath, `${JSON.stringify(contract, null, 2)}\n`);
+    return spawnSync(
+      lock.powerShellHostPath,
+      [
+        "-NoProfile",
+        "-File",
+        lockedPath("scripts/run-cli-role.ps1"),
+        "-ContractPath",
+        contractPath,
+      ],
+      { cwd: root, encoding: "utf8", timeout: 120000 },
+    );
+  };
+  return { temporaryRoot, workdir, promptPath, evidenceRoot, contract, run };
 };
 
 describe("protocol 2.4.0-draft cross-contract validation", () => {
@@ -421,6 +570,15 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
         /private runtime input must remain outside/i,
       );
       assert.equal(existsSync(fixture.evidenceRoot), false);
+      const runnerSource = readFileSync(
+        path.join(root, "scripts/run-cli-builders.ps1"),
+        "utf8",
+      );
+      assert.ok(
+        runnerSource.indexOf("Private runtime input must remain outside") <
+          runnerSource.indexOf("$started = $process.Start()"),
+        "alias rejection gate must execute before the model process start",
+      );
     } finally {
       rmSync(fixture.temporaryRoot, { recursive: true, force: true });
     }
@@ -439,6 +597,120 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
         /symlink, junction, or reparse point/i,
       );
       assert.equal(existsSync(fixture.evidenceRoot), false);
+    } finally {
+      rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("canonicalizes real Windows 8.3 aliases and rejects aliased private builder input before model launch", (testContext) => {
+    const fixture = createBuilderRunnerFixture();
+    try {
+      const shortWorkdir = windowsShortPath(fixture.workA);
+      if (shortWorkdir == null) {
+        testContext.skip(
+          "Windows 8.3 alias unavailable for the temporary builder root",
+        );
+        return;
+      }
+      const helper = spawnSync(
+        process.execPath,
+        [
+          path.join(root, "scripts/canonicalize-paths.mjs"),
+          fixture.workA,
+          shortWorkdir,
+        ],
+        { encoding: "utf8" },
+      );
+      assert.equal(helper.status, 0, helper.stderr);
+      const [longCanonical, shortCanonical] = JSON.parse(helper.stdout);
+      assert.equal(shortCanonical.toLowerCase(), longCanonical.toLowerCase());
+      const nestedManifest = path.join(
+        fixture.workA,
+        ".git",
+        "private-manifest.json",
+      );
+      copyFileSync(fixture.manifestPath, nestedManifest);
+      fixture.contract.invocations[0].workdir = shortWorkdir;
+      fixture.contract.builderInputManifestPath = nestedManifest;
+      fixture.contract.builderInputManifestSha256 = sha256(
+        readFileSync(nestedManifest),
+      );
+      const result = fixture.run();
+      assert.notEqual(result.status, 0);
+      assert.match(
+        `${result.stdout}\n${result.stderr}`,
+        /private runtime input must remain outside/i,
+      );
+      assert.equal(existsSync(fixture.evidenceRoot), false);
+      const runnerSource = readFileSync(
+        path.join(root, "scripts/run-cli-builders.ps1"),
+        "utf8",
+      );
+      assert.ok(
+        runnerSource.indexOf("Private runtime input must remain outside") <
+          runnerSource.indexOf("$started = $process.Start()"),
+        "8.3 alias rejection gate must execute before model process start",
+      );
+    } finally {
+      rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a real Windows 8.3 source alias in builder preparation", (testContext) => {
+    const fixture = createProjectionFixture(
+      [{ source: "input.txt", destination: "input.txt" }],
+      { "input.txt": "neutral\n" },
+      { useShortSource: true },
+    );
+    try {
+      if (!fixture.shortSourceAvailable) {
+        testContext.skip(
+          "Windows 8.3 alias unavailable for the preparer source root",
+        );
+        return;
+      }
+      assert.notEqual(fixture.result.status, 0);
+      assert.match(fixture.result.stderr, /physical alias/i);
+    } finally {
+      rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects real Windows 8.3 alias nesting in the role runner before model launch", (testContext) => {
+    const fixture = createRoleRunnerFixture();
+    try {
+      const shortWorkdir = windowsShortPath(fixture.workdir);
+      if (shortWorkdir == null) {
+        testContext.skip(
+          "Windows 8.3 alias unavailable for the temporary role root",
+        );
+        return;
+      }
+      const nestedPrompt = path.join(
+        fixture.workdir,
+        ".git",
+        "private-role-prompt.md",
+      );
+      copyFileSync(fixture.promptPath, nestedPrompt);
+      fixture.contract.workdir = shortWorkdir;
+      fixture.contract.promptPath = nestedPrompt;
+      fixture.contract.promptSha256 = sha256(readFileSync(nestedPrompt));
+      const result = fixture.run();
+      assert.notEqual(result.status, 0);
+      assert.match(
+        `${result.stdout}\n${result.stderr}`,
+        /private role runtime input must remain outside/i,
+      );
+      assert.equal(existsSync(fixture.evidenceRoot), false);
+      const runnerSource = readFileSync(
+        path.join(root, "scripts/run-cli-role.ps1"),
+        "utf8",
+      );
+      assert.ok(
+        runnerSource.indexOf("Private role runtime input must remain outside") <
+          runnerSource.indexOf("$started = $process.Start()"),
+        "role alias rejection gate must execute before the model process start",
+      );
     } finally {
       rmSync(fixture.temporaryRoot, { recursive: true, force: true });
     }
@@ -958,6 +1230,7 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
     );
     const lock = readJson("experiment/lock.json");
     contract.contractSchemaSha256 = lock.roleRuntimeSchemaSha256;
+    contract.canonicalPathHelperSha256 = lock.canonicalPathHelperSha256;
     contract.runnerSha256 = lock.roleRunnerSha256;
     contract.evidenceSchemaSha256 = lock.supervisionEvidenceSchemaSha256;
     contract.promptTemplateSha256 = lock.reviewerPromptTemplateSha256;
@@ -1034,8 +1307,10 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
     );
   });
 
-  it("packages deterministic blinded snapshots and rejects traversal, nesting, and source drift", () => {
-    const temp = mkdtempSync(path.join(os.tmpdir(), "protocol-package-test-"));
+  it("packages deterministic blinded snapshots and rejects traversal, physical-alias nesting, and source drift", (testContext) => {
+    const temp = mkdtempSync(
+      path.join(root, "node_modules", "protocol-package-test-"),
+    );
     try {
       const source = path.join(temp, "source");
       mkdirSync(path.join(source, "docs"), { recursive: true });
@@ -1227,6 +1502,28 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
         { cwd: root },
       );
       assert.notEqual(nested.status, 0);
+      const shortSource = windowsShortPath(clones[0]);
+      if (shortSource == null) {
+        testContext.diagnostic(
+          "Windows 8.3 alias unavailable for packager nesting regression",
+        );
+      } else {
+        const aliasNested = spawnSync(
+          process.execPath,
+          [
+            "scripts/package-blinded-snapshots.mjs",
+            "--mapping",
+            mappingPath,
+            "--output-root",
+            path.join(shortSource, "nested-alias-output"),
+            "--manifest",
+            path.join(temp, "nested-alias-manifest.json"),
+          ],
+          { cwd: root, encoding: "utf8" },
+        );
+        assert.notEqual(aliasNested.status, 0);
+        assert.match(aliasNested.stderr, /separate and nonnested/i);
+      }
       const exactLeakCases = [
         ["source-path", clones[1]],
         ["source-ref", "refs/heads/main"],

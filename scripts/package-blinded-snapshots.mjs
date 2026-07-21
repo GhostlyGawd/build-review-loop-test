@@ -30,8 +30,8 @@ if (!args["--mapping"] || !args["--output-root"] || !args["--manifest"])
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const normalizedPath = (candidate) => {
   const absolute = path.resolve(candidate);
-  if (existsSync(absolute)) return realpathSync(absolute);
-  const parent = realpathSync(path.dirname(absolute));
+  if (existsSync(absolute)) return realpathSync.native(absolute);
+  const parent = realpathSync.native(path.dirname(absolute));
   return path.join(parent, path.basename(absolute));
 };
 const nestedOrEqual = (left, right) => {

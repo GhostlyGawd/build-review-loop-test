@@ -42,6 +42,18 @@ function Invoke-NativeCapture([string]$FilePath, [string[]]$Arguments) {
   }
 }
 
+function Get-CanonicalPhysicalMap([string]$HelperPath, [System.Collections.Specialized.OrderedDictionary]$Paths) {
+  $arguments = @($HelperPath) + @($Paths.Values)
+  $result = Invoke-NativeCapture "node" $arguments
+  if ($result.ExitCode -ne 0) { throw "Canonical path helper failed: $($result.Stderr.Trim())" }
+  $values = @(ConvertFrom-JsonLiteral $result.Stdout)
+  if ($values.Count -ne $Paths.Count) { throw "Canonical path helper returned the wrong path count" }
+  $mapped = @{}
+  $index = 0
+  foreach ($key in $Paths.Keys) { $mapped[$key] = [string]$values[$index]; $index++ }
+  return $mapped
+}
+
 function Assert-PowerShellHost($Lock) {
   $hostPath = [System.IO.Path]::GetFullPath([System.Environment]::ProcessPath)
   if (-not $hostPath.Equals([System.IO.Path]::GetFullPath($Lock.powerShellHostPath), [System.StringComparison]::OrdinalIgnoreCase) -or $PSVersionTable.PSVersion.ToString() -ne $Lock.powerShellVersion -or (Get-Sha256 $hostPath) -ne $Lock.powerShellHostSha256) {
@@ -126,10 +138,31 @@ if ((Get-Sha256 $schemaPath) -ne $contract.contractSchemaSha256) { throw "Runtim
 Assert-JsonSchema $schemaPath $contractFullPath "Runtime contract"
 $lock = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $lockPath -Raw)
 Assert-PowerShellHost $lock
+$canonicalPathHelperPath = [System.IO.Path]::GetFullPath($contract.canonicalPathHelperPath)
+if ((Get-Sha256 $canonicalPathHelperPath) -ne $contract.canonicalPathHelperSha256 -or $contract.canonicalPathHelperSha256 -ne $lock.canonicalPathHelperSha256) { throw "Canonical path helper binding mismatch" }
 $builderManifestPath = [System.IO.Path]::GetFullPath($contract.builderInputManifestPath)
 $builderManifestSchemaPath = [System.IO.Path]::GetFullPath($contract.builderInputManifestSchemaPath)
 $builderAllowlistPath = [System.IO.Path]::GetFullPath($contract.builderInputAllowlistPath)
 $builderPreparationScriptPath = [System.IO.Path]::GetFullPath($contract.builderInputPreparationScriptPath)
+$pathsToCanonicalize = [ordered]@{
+  contract = $contractFullPath
+  lock = $lockPath
+  schema = $schemaPath
+  helper = $canonicalPathHelperPath
+  manifest = $builderManifestPath
+  manifestSchema = $builderManifestSchemaPath
+  allowlist = $builderAllowlistPath
+  preparationScript = $builderPreparationScriptPath
+  prompt = [System.IO.Path]::GetFullPath($contract.promptPath)
+  evidenceRoot = [System.IO.Path]::GetFullPath($contract.evidenceRoot)
+}
+foreach ($spec in $contract.invocations) {
+  $prefix = $spec.invocationId
+  $pathsToCanonicalize["$prefix.workdir"] = [System.IO.Path]::GetFullPath($spec.workdir)
+  $pathsToCanonicalize["$prefix.git"] = [System.IO.Path]::GetFullPath((Join-Path $spec.workdir ".git"))
+  foreach ($field in @("finalPath", "stdoutPath", "stderrPath", "evidencePath", "postStatePath", "tempRoot", "cacheRoot", "dependencyRoot")) { $pathsToCanonicalize["$prefix.$field"] = [System.IO.Path]::GetFullPath($spec.$field) }
+}
+$physical = Get-CanonicalPhysicalMap $canonicalPathHelperPath $pathsToCanonicalize
 if ((Get-Sha256 $builderManifestPath) -ne $contract.builderInputManifestSha256) { throw "Builder input manifest hash mismatch" }
 if ((Get-Sha256 $builderManifestSchemaPath) -ne $contract.builderInputManifestSchemaSha256 -or $contract.builderInputManifestSchemaSha256 -ne $lock.builderInputManifestSchemaSha256) { throw "Builder input manifest schema binding mismatch" }
 if ((Get-Sha256 $builderAllowlistPath) -ne $contract.builderInputAllowlistSha256 -or $contract.builderInputAllowlistSha256 -ne $lock.builderInputAllowlistSha256) { throw "Builder input allowlist binding mismatch" }
@@ -149,9 +182,9 @@ $authResult = Invoke-NativeCapture $contract.cliPath @("login", "status")
 if ($authResult.ExitCode -ne 0) { throw "ChatGPT auth status command failed" }
 $authStatus = "$($authResult.Stdout)`n$($authResult.Stderr)".Trim()
 if ($authStatus -notlike "*$($contract.authStatus)*") { throw "ChatGPT auth status mismatch" }
-$promptBytes = [System.IO.File]::ReadAllBytes([System.IO.Path]::GetFullPath($contract.promptPath))
+$promptBytes = [System.IO.File]::ReadAllBytes($physical.prompt)
 if ((Get-Sha256 $contract.promptPath) -ne $contract.promptSha256) { throw "Raw stdin prompt hash mismatch" }
-$evidenceRoot = [System.IO.Path]::GetFullPath($contract.evidenceRoot).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
+$evidenceRoot = $physical.evidenceRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar)
 if (-not [System.IO.Path]::IsPathFullyQualified($evidenceRoot)) { throw "Evidence root must be absolute" }
 Assert-NoReparseAncestors $evidenceRoot "Evidence root"
 if ([System.IO.Directory]::Exists($evidenceRoot) -and $null -ne (Get-ChildItem -LiteralPath $evidenceRoot -Force | Select-Object -First 1)) { throw "Evidence root must be fresh and empty" }
@@ -160,31 +193,35 @@ $ids = @($contract.invocations | ForEach-Object { $_.invocationId })
 if (($ids | Select-Object -Unique).Count -ne 2) { throw "Opaque invocation IDs must be distinct" }
 $variablePaths = @()
 foreach ($spec in $contract.invocations) {
-  $variablePaths += @($spec.workdir, $spec.finalPath, $spec.stdoutPath, $spec.stderrPath, $spec.evidencePath, $spec.postStatePath, $spec.tempRoot, $spec.cacheRoot, $spec.dependencyRoot)
-  $workdir = [System.IO.Path]::GetFullPath($spec.workdir).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
-  Assert-NoReparseAncestors $workdir "Builder workdir"
+  $prefix = $spec.invocationId
+  $workdir = $physical["$prefix.workdir"].TrimEnd([System.IO.Path]::DirectorySeparatorChar)
+  $variablePaths += @($workdir) + @(@("finalPath", "stdoutPath", "stderrPath", "evidencePath", "postStatePath", "tempRoot", "cacheRoot", "dependencyRoot") | ForEach-Object { $physical["$prefix.$_"] })
+  Assert-NoReparseAncestors ([System.IO.Path]::GetFullPath($spec.workdir)) "Builder workdir"
+  Assert-NoReparseAncestors ([System.IO.Path]::GetFullPath((Join-Path $spec.workdir ".git"))) "Builder Git directory"
   if (-not [System.IO.Directory]::Exists($workdir)) { throw "Workdir must exist" }
   if (Test-PathsNestedOrEqual $workdir $evidenceRoot) { throw "Evidence root and candidate clone must be separate and nonnested" }
-  foreach ($outputPath in @($spec.finalPath, $spec.stdoutPath, $spec.stderrPath, $spec.evidencePath, $spec.postStatePath, $spec.tempRoot, $spec.cacheRoot, $spec.dependencyRoot)) {
-    $resolvedOutput = [System.IO.Path]::GetFullPath($outputPath)
-    Assert-NoReparseAncestors $resolvedOutput "Runtime output"
+  foreach ($field in @("finalPath", "stdoutPath", "stderrPath", "evidencePath", "postStatePath", "tempRoot", "cacheRoot", "dependencyRoot")) {
+    $outputPath = $spec.$field
+    $resolvedOutput = $physical["$prefix.$field"]
+    Assert-NoReparseAncestors ([System.IO.Path]::GetFullPath($outputPath)) "Runtime output"
     if (-not $resolvedOutput.StartsWith($evidenceRoot + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) { throw "Every output path must resolve beneath evidenceRoot" }
     if (Test-PathBeneath $workdir $resolvedOutput) { throw "Runtime output may not be inside a candidate clone" }
   }
 }
-$privateInputPaths = @($contractFullPath, $lockPath, $schemaPath, $builderManifestPath, $builderManifestSchemaPath, $builderAllowlistPath, $builderPreparationScriptPath, [System.IO.Path]::GetFullPath($contract.promptPath))
+$privateInputPaths = @($physical.contract, $physical.lock, $physical.schema, $physical.helper, $physical.manifest, $physical.manifestSchema, $physical.allowlist, $physical.preparationScript, $physical.prompt)
+$privateInputRawPaths = @($contractFullPath, $lockPath, $schemaPath, $canonicalPathHelperPath, $builderManifestPath, $builderManifestSchemaPath, $builderAllowlistPath, $builderPreparationScriptPath, [System.IO.Path]::GetFullPath($contract.promptPath))
+foreach ($privatePath in $privateInputRawPaths) { Assert-NoReparseAncestors $privatePath "Private runtime input" }
 foreach ($privatePath in $privateInputPaths) {
-  Assert-NoReparseAncestors $privatePath "Private runtime input"
   if (Test-PathsNestedOrEqual $privatePath $evidenceRoot) { throw "Private runtime input and evidence root must be separate and nonnested" }
-  foreach ($invocation in $contract.invocations) { if (Test-PathsNestedOrEqual $privatePath $invocation.workdir) { throw "Private runtime input must remain outside every builder workdir" } }
+  foreach ($invocation in $contract.invocations) { if (Test-PathsNestedOrEqual $privatePath $physical["$($invocation.invocationId).workdir"]) { throw "Private runtime input must remain outside every builder workdir" } }
 }
-if ((Test-PathBeneath $contract.invocations[0].workdir $contract.invocations[1].workdir) -or (Test-PathBeneath $contract.invocations[1].workdir $contract.invocations[0].workdir)) { throw "Candidate clones must be nonnested" }
+if ((Test-PathBeneath $physical["$($contract.invocations[0].invocationId).workdir"] $physical["$($contract.invocations[1].invocationId).workdir"]) -or (Test-PathBeneath $physical["$($contract.invocations[1].invocationId).workdir"] $physical["$($contract.invocations[0].invocationId).workdir"])) { throw "Candidate clones must be nonnested" }
 if (($contract.invocations.port | Select-Object -Unique).Count -ne 2) { throw "Candidate ports must be distinct" }
-if (($variablePaths | ForEach-Object { [System.IO.Path]::GetFullPath($_).ToLowerInvariant() } | Select-Object -Unique).Count -ne $variablePaths.Count) { throw "Runtime paths must be distinct" }
+if (($variablePaths | ForEach-Object { $_.ToLowerInvariant() } | Select-Object -Unique).Count -ne $variablePaths.Count) { throw "Runtime paths must be distinct" }
 
 foreach ($spec in $contract.invocations) {
-  $workdir = [System.IO.Path]::GetFullPath($spec.workdir).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
-  if (-not [System.IO.Directory]::Exists((Join-Path $workdir ".git"))) { throw "Builder input must be an independent full clone" }
+  $workdir = $physical["$($spec.invocationId).workdir"].TrimEnd([System.IO.Path]::DirectorySeparatorChar)
+  if (-not [System.IO.Directory]::Exists($physical["$($spec.invocationId).git"])) { throw "Builder input must be an independent full clone" }
   if ((Invoke-Git $workdir @("remote")).Length -ne 0) { throw "Builder clone remotes must be disabled" }
   if ((Invoke-Git $workdir @("rev-parse", "HEAD")) -ne $contract.commonStartCommit -or (Invoke-Git $workdir @("rev-parse", "HEAD^{tree}")) -ne $contract.commonStartTree) { throw "Builder common-start commit/tree mismatch" }
   if ((Invoke-Git $workdir @("rev-list", "--count", "HEAD")) -ne "1" -or (Invoke-Git $workdir @("rev-list", "--parents", "-n", "1", "HEAD")).Split(" ").Count -ne 1) { throw "Builder input must be a source-history-free root commit" }
@@ -218,8 +255,9 @@ foreach ($spec in $contract.invocations) {
 
 $runs = @()
 foreach ($spec in $contract.invocations) {
-  $workdir = [System.IO.Path]::GetFullPath($spec.workdir)
-  $argv = @($ExpectedInvariant + @("-C", $workdir, "-o", [System.IO.Path]::GetFullPath($spec.finalPath), "-"))
+  $prefix = $spec.invocationId
+  $workdir = $physical["$prefix.workdir"]
+  $argv = @($ExpectedInvariant + @("-C", $workdir, "-o", $physical["$prefix.finalPath"], "-"))
   $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
   $startInfo.FileName = $contract.cliPath
   $startInfo.WorkingDirectory = (Split-Path -Parent $contractFullPath)
@@ -228,9 +266,9 @@ foreach ($spec in $contract.invocations) {
   $startInfo.RedirectStandardInput = $true
   $startInfo.RedirectStandardOutput = $true
   $startInfo.RedirectStandardError = $true
-  foreach ($runtimeRoot in @($spec.tempRoot, $spec.cacheRoot, $spec.dependencyRoot)) { [System.IO.Directory]::CreateDirectory([System.IO.Path]::GetFullPath($runtimeRoot)) | Out-Null }
-  $startInfo.Environment["TEMP"] = [System.IO.Path]::GetFullPath($spec.tempRoot); $startInfo.Environment["TMP"] = [System.IO.Path]::GetFullPath($spec.tempRoot)
-  $startInfo.Environment["NPM_CONFIG_CACHE"] = [System.IO.Path]::GetFullPath($spec.cacheRoot); $startInfo.Environment["CODEX_DEPENDENCY_ROOT"] = [System.IO.Path]::GetFullPath($spec.dependencyRoot); $startInfo.Environment["PORT"] = [string]$spec.port
+  foreach ($field in @("tempRoot", "cacheRoot", "dependencyRoot")) { [System.IO.Directory]::CreateDirectory($physical["$prefix.$field"]) | Out-Null }
+  $startInfo.Environment["TEMP"] = $physical["$prefix.tempRoot"]; $startInfo.Environment["TMP"] = $physical["$prefix.tempRoot"]
+  $startInfo.Environment["NPM_CONFIG_CACHE"] = $physical["$prefix.cacheRoot"]; $startInfo.Environment["CODEX_DEPENDENCY_ROOT"] = $physical["$prefix.dependencyRoot"]; $startInfo.Environment["PORT"] = [string]$spec.port
   foreach ($argument in $argv) { [void]$startInfo.ArgumentList.Add($argument) }
   $process = [System.Diagnostics.Process]::new()
   $process.StartInfo = $startInfo
@@ -272,11 +310,12 @@ foreach ($run in $runs) {
     $exitCode = $run.process.ExitCode
     $processId = $run.process.Id
   }
-  $stdoutPath = [System.IO.Path]::GetFullPath($run.spec.stdoutPath)
-  $stderrPath = [System.IO.Path]::GetFullPath($run.spec.stderrPath)
-  $evidencePath = [System.IO.Path]::GetFullPath($run.spec.evidencePath)
-  $postStatePath = [System.IO.Path]::GetFullPath($run.spec.postStatePath)
-  foreach ($outputPath in @($stdoutPath, $stderrPath, $evidencePath, $postStatePath, [System.IO.Path]::GetFullPath($run.spec.finalPath))) { [System.IO.Directory]::CreateDirectory((Split-Path -Parent $outputPath)) | Out-Null }
+  $prefix = $run.spec.invocationId
+  $stdoutPath = $physical["$prefix.stdoutPath"]
+  $stderrPath = $physical["$prefix.stderrPath"]
+  $evidencePath = $physical["$prefix.evidencePath"]
+  $postStatePath = $physical["$prefix.postStatePath"]
+  foreach ($outputPath in @($stdoutPath, $stderrPath, $evidencePath, $postStatePath, $physical["$prefix.finalPath"])) { [System.IO.Directory]::CreateDirectory((Split-Path -Parent $outputPath)) | Out-Null }
   [System.IO.File]::WriteAllText($stdoutPath, $stdout, $Utf8NoBom)
   [System.IO.File]::WriteAllText($stderrPath, $stderr, $Utf8NoBom)
   $events = @(); $rawJsonlValid = $true
@@ -287,13 +326,13 @@ foreach ($run in $runs) {
   $turnEvents = @($events | Where-Object { $_.type -eq "turn.completed" })
   $turnCompleted = $turnEvents.Count -eq 1
   $usage = if ($turnEvents.Count -eq 1 -and $null -ne $turnEvents[0].usage) { $turnEvents[0].usage } else { $null }
-  $postState = Get-VisibleFilesystemSnapshot ([System.IO.Path]::GetFullPath($run.spec.workdir)) $false
+  $postState = Get-VisibleFilesystemSnapshot $physical["$prefix.workdir"] $false
   [System.IO.File]::WriteAllText($postStatePath, ($postState | ConvertTo-Json -Depth 8), $Utf8NoBom)
   $result = [ordered]@{
     role = "builder"; invocationId = $run.spec.invocationId; contractSha256 = Get-Sha256 $contractFullPath; artifactSchemaSha256 = $null; processId = $processId; started = $run.started; startedAt = $run.startedAt.ToString("o")
     startError = $run.startError; stdinDelivered = $run.stdinDelivered; stdinError = $run.stdinError; exitCode = $exitCode; timedOut = $run.timedOut
     argv = $run.argv; argvSha256 = Get-TextSha256 ($run.argv -join "`0"); promptSha256 = $contract.promptSha256
-    stdoutPath = $stdoutPath; stderrPath = $stderrPath; finalPath = [System.IO.Path]::GetFullPath($run.spec.finalPath); finalSha256 = if ([System.IO.File]::Exists([System.IO.Path]::GetFullPath($run.spec.finalPath))) { Get-Sha256 ([System.IO.Path]::GetFullPath($run.spec.finalPath)) } else { $null }; finalSchemaValid = $null; artifactBindingValid = $null
+    stdoutPath = $stdoutPath; stderrPath = $stderrPath; finalPath = $physical["$prefix.finalPath"]; finalSha256 = if ([System.IO.File]::Exists($physical["$prefix.finalPath"])) { Get-Sha256 $physical["$prefix.finalPath"] } else { $null }; finalSchemaValid = $null; artifactBindingValid = $null
     postStatePath = $postStatePath; postStateSha256 = Get-Sha256 $postStatePath
     threadIds = $threadIds; turnCompleted = $turnCompleted; rawJsonlValid = $rawJsonlValid; unauthorizedToolOrWriteDetected = $null; unauthorizedToolOrWriteUnavailableReason = "runner cannot observe every external tool or write; scoped candidate checks are enforced separately"; sandboxMode = "workspace-write"; inputDisposition = "authorized-worktree-write"; isolationEnforcedBy = "audited-procedural-boundary-plus-cli-sandbox"
     usage = $usage; usageUnavailableReason = if ($null -eq $usage) { "turn.completed did not expose usage" } else { $null }
@@ -308,7 +347,7 @@ foreach ($run in $runs) {
 
 $threadIds = @($results | ForEach-Object { $_.threadIds })
 $valid = ($results | Where-Object { -not $_.started -or -not $_.stdinDelivered -or $_.timedOut -or $_.exitCode -ne 0 -or $_.threadIds.Count -ne 1 -or -not $_.turnCompleted -or -not $_.rawJsonlValid -or $null -eq $_.finalSha256 -or $_.sandboxMode -ne "workspace-write" }).Count -eq 0 -and ($threadIds | Select-Object -Unique).Count -eq 2
-foreach ($run in $runs) { if ($run.started -and ((Invoke-Git ([System.IO.Path]::GetFullPath($run.spec.workdir)) @("status", "--porcelain=v1")).Length -ne 0)) { $valid = $false } }
+foreach ($run in $runs) { if ($run.started -and ((Invoke-Git $physical["$($run.spec.invocationId).workdir"] @("status", "--porcelain=v1")).Length -ne 0)) { $valid = $false } }
 $summary = [ordered]@{
   contractSha256 = Get-Sha256 $contractFullPath; runnerMode = if ($contract.smokeMode) { "smoke" } else { "builder" }
   deadlineSeconds = $contract.deadlineSeconds; binarySha256 = $contract.cliSha256; authStatus = $contract.authStatus

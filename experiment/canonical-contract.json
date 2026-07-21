@@ -41,7 +41,7 @@
       "manifestSchemaPath": "experiment/schemas/builder-input-manifest.schema.json",
       "manifestSchemaSha256": "b044646ede4fef4543a4950e5842f51997dc3b65e6bfabad7eeb1ff84caf0bb5",
       "preparationScriptPath": "scripts/prepare-builder-input.mjs",
-      "preparationScriptSha256": "c0557964337369403e98d43f0abdf99397c501c978b6e042fd3d3ce3be40520f",
+      "preparationScriptSha256": "68e186914a0dd99e0b91f0851d45f8081086fffadae8d2949050e29ea1b832b3",
       "sourceRule": "private manifest binds the clean protocol source commit/tree; neither source nor manifest is builder input",
       "outputRule": "two fresh nonnested git-init repositories with identical one-root commit/tree, core.autocrlf=false, no remotes, and exact allowlisted bytes only"
     }
@@ -62,9 +62,11 @@
     ],
     "roleLaunchRule": "every model-bearing role invocation is a fresh external Codex CLI subprocess using the frozen binary/auth/invariant argv, role-specific exact raw prompt bytes on stdin, --ephemeral, no resume, and distinct process and thread.started IDs; the bundled two-invocation contract and supervisor instantiate this rule for builders",
     "schemaPath": "experiment/schemas/cli-runtime-contract.schema.json",
-    "schemaSha256": "0d8f38f41282667d01e54d650c9f89b28da644c3b251ea99a7c4a290b1404175",
+    "schemaSha256": "665016233b950a2f39f0bbee1f5f75b530980d3bcd979e543943cf976b0a2689",
     "runnerPath": "scripts/run-cli-builders.ps1",
-    "runnerSha256": "8433350c57051c8d54fbff52c00912a596875e393b1051bae3c8afa8b55e46c2",
+    "runnerSha256": "7e63b5bc76847831d9801ac53425f8d8bfd134662743b48ee1606620b969f18f",
+    "canonicalPathHelperPath": "scripts/canonicalize-paths.mjs",
+    "canonicalPathHelperSha256": "194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e",
     "binaryPath": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe",
     "binaryVersion": "codex-cli 0.145.0-alpha.18",
     "binarySha256": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
@@ -106,9 +108,9 @@
     "successRule": "each process starts, receives stdin, exits zero before the external deadline, emits exactly one thread.started and turn.completed, exposes or explains absent usage, uses a distinct thread ID, reconciles raw JSONL and hashes, and finishes with a clean committed clone",
     "roleRuntime": {
       "schemaPath": "experiment/schemas/role-runtime-contract.schema.json",
-      "schemaSha256": "25a30d43ceb77e7bd4b908f8e577dc6ea0c7f9eb41c61f7c8c77af83f528632f",
+      "schemaSha256": "ac620774663e6ce8dd9917f760f6f53eeb8063e70b88240999ffc6bef6184c5a",
       "runnerPath": "scripts/run-cli-role.ps1",
-      "runnerSha256": "385830cc00bebca1541040dababf9496610064d94eb252a02c8de7d77cf6cea3",
+      "runnerSha256": "24e506043efab33f19ee00c8eea8e1ab6da7c72884078c4a0d16c072637c8993",
       "evidenceSchemaPath": "experiment/schemas/cli-supervision-evidence.schema.json",
       "evidenceSchemaSha256": "ef1711aab227a288ed9c71eae2343f9b3f2aae212bbdc4db72d5c196349b934e",
       "promptTemplateSha256": {
@@ -191,7 +193,7 @@
     "blindingClaim": "mapping-blinded single-package evaluation, not lineage-blinded inference",
     "sequenceRule": "randomize X/Y/Z order; use a fresh evaluator subprocess for one package; record mapping guess and integer confidence percentage from 0 through 100; score and seal before launching the next; prohibit revisions",
     "packageScriptPath": "scripts/package-blinded-snapshots.mjs",
-    "packageScriptSha256": "6c091f2f2103f90ab531d5f112b3723a4f4b9fbafa2b1a2d23eea171859db95d",
+    "packageScriptSha256": "98ef96dd16f37a14fa4a56b324a0274dd3aa29010d296244e695fe42663478d7",
     "packageManifestSchemaPath": "experiment/schemas/blinded-package-manifest.schema.json",
     "packageManifestSchemaSha256": "4d9d8397fc068cdf511e99bae6980ed2d2ef5410e5128385043f1c426cdb8bd5",
     "packageMappingSchemaPath": "experiment/schemas/blinded-package-mapping.schema.json",

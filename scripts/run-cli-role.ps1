@@ -23,6 +23,15 @@ function Invoke-NativeCapture([string]$FilePath, [string[]]$Arguments) {
   $stdoutTask = $process.StandardOutput.ReadToEndAsync(); $stderrTask = $process.StandardError.ReadToEndAsync(); $process.WaitForExit()
   return [pscustomobject]@{ ExitCode = $process.ExitCode; Stdout = $stdoutTask.GetAwaiter().GetResult(); Stderr = $stderrTask.GetAwaiter().GetResult() }
 }
+function Get-CanonicalPhysicalMap([string]$HelperPath, [System.Collections.Specialized.OrderedDictionary]$Paths) {
+  $result = Invoke-NativeCapture "node" (@($HelperPath) + @($Paths.Values))
+  if ($result.ExitCode -ne 0) { throw "Canonical path helper failed: $($result.Stderr.Trim())" }
+  $values = @(ConvertFrom-JsonLiteral $result.Stdout)
+  if ($values.Count -ne $Paths.Count) { throw "Canonical path helper returned the wrong path count" }
+  $mapped = @{}; $index = 0
+  foreach ($key in $Paths.Keys) { $mapped[$key] = [string]$values[$index]; $index++ }
+  return $mapped
+}
 function Assert-PowerShellHost($Lock) {
   $hostPath = [System.IO.Path]::GetFullPath([System.Environment]::ProcessPath)
   if (-not $hostPath.Equals([System.IO.Path]::GetFullPath($Lock.powerShellHostPath), [System.StringComparison]::OrdinalIgnoreCase) -or $PSVersionTable.PSVersion.ToString() -ne $Lock.powerShellVersion -or (Get-Sha256 $hostPath) -ne $Lock.powerShellHostSha256) { throw "PowerShell host path/version/hash mismatch" }
@@ -44,6 +53,21 @@ function Test-NestedOrEqual([string]$Left, [string]$Right) {
   $leftPath = [System.IO.Path]::GetFullPath($Left).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
   $rightPath = [System.IO.Path]::GetFullPath($Right).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
   return $leftPath.Equals($rightPath, [System.StringComparison]::OrdinalIgnoreCase) -or $leftPath.StartsWith($rightPath + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase) -or $rightPath.StartsWith($leftPath + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)
+}
+function Assert-NoReparseAncestors([string]$Path, [string]$Label) {
+  $cursor = [System.IO.Path]::GetFullPath($Path)
+  while (-not [System.IO.File]::Exists($cursor) -and -not [System.IO.Directory]::Exists($cursor)) {
+    $parent = [System.IO.Path]::GetDirectoryName($cursor)
+    if ([string]::IsNullOrEmpty($parent) -or $parent -eq $cursor) { throw "$Label has no existing physical ancestor" }
+    $cursor = $parent
+  }
+  while (-not [string]::IsNullOrEmpty($cursor)) {
+    $item = Get-Item -LiteralPath $cursor -Force
+    if (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { throw "$Label crosses a symlink, junction, or reparse point: $cursor" }
+    $parent = [System.IO.Path]::GetDirectoryName($cursor)
+    if ([string]::IsNullOrEmpty($parent) -or $parent -eq $cursor) { break }
+    $cursor = $parent
+  }
 }
 function Test-HasGitAncestor([string]$Candidate) {
   $cursor = [System.IO.DirectoryInfo]::new([System.IO.Path]::GetFullPath($Candidate))
@@ -71,9 +95,36 @@ if ((Get-Sha256 $lockPath) -ne $contract.lockSha256 -or (Get-Sha256 $schemaPath)
 Assert-JsonSchema $schemaPath $contractFullPath "Runtime contract"
 $lock = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $lockPath -Raw)
 Assert-PowerShellHost $lock
+$canonicalPathHelperPath = [System.IO.Path]::GetFullPath($contract.canonicalPathHelperPath)
+if ((Get-Sha256 $canonicalPathHelperPath) -ne $contract.canonicalPathHelperSha256 -or $contract.canonicalPathHelperSha256 -ne $lock.canonicalPathHelperSha256) { throw "Canonical path helper binding mismatch" }
+$pathsToCanonicalize = [ordered]@{
+  contract = $contractFullPath; lock = $lockPath; schema = $schemaPath; helper = $canonicalPathHelperPath
+  runner = $runnerPath; currentRunner = [System.IO.Path]::GetFullPath($PSCommandPath); evidenceSchema = $evidenceSchemaPath
+  promptTemplate = $promptTemplatePath; artifactSchema = $artifactSchemaPath; prompt = [System.IO.Path]::GetFullPath($contract.promptPath)
+  workdir = [System.IO.Path]::GetFullPath($contract.workdir); git = [System.IO.Path]::GetFullPath((Join-Path $contract.workdir ".git"))
+  evidenceRoot = [System.IO.Path]::GetFullPath($contract.evidenceRoot); finalPath = [System.IO.Path]::GetFullPath($contract.finalPath)
+  stdoutPath = [System.IO.Path]::GetFullPath($contract.stdoutPath); stderrPath = [System.IO.Path]::GetFullPath($contract.stderrPath)
+  evidencePath = [System.IO.Path]::GetFullPath($contract.evidencePath); tempRoot = [System.IO.Path]::GetFullPath($contract.tempRoot)
+  cacheRoot = [System.IO.Path]::GetFullPath($contract.cacheRoot); dependencyRoot = [System.IO.Path]::GetFullPath($contract.dependencyRoot)
+}
+foreach ($field in @("handoffPath", "packageManifestPath", "packageManifestSchemaPath", "packageScriptPath", "rubricPath", "hiddenSuitePath")) { if ($null -ne $contract.$field) { $pathsToCanonicalize[$field] = [System.IO.Path]::GetFullPath($contract.$field) } }
+if ($contract.role -eq "fixer") { $pathsToCanonicalize.findingsSubstitution = [System.IO.Path]::GetFullPath($contract.promptSubstitutions.FINDINGS_PATH) }
+if ($contract.role -eq "evaluator") {
+  $pathsToCanonicalize.packageSubstitution = [System.IO.Path]::GetFullPath($contract.promptSubstitutions.PACKAGE_PATH)
+  $pathsToCanonicalize.rubricSubstitution = [System.IO.Path]::GetFullPath($contract.promptSubstitutions.RUBRIC_PATH)
+  $pathsToCanonicalize.evaluationSchemaSubstitution = [System.IO.Path]::GetFullPath($contract.promptSubstitutions.EVALUATION_SCHEMA_PATH)
+  $pathsToCanonicalize.hiddenSuiteSubstitution = [System.IO.Path]::GetFullPath($contract.promptSubstitutions.HIDDEN_SUITE_PATH)
+}
+foreach ($rawPath in $pathsToCanonicalize.Values) { Assert-NoReparseAncestors $rawPath "Role runtime path" }
+$physical = Get-CanonicalPhysicalMap $canonicalPathHelperPath $pathsToCanonicalize
+$privatePathKeys = @("contract", "lock", "schema", "helper", "runner", "evidenceSchema", "promptTemplate", "artifactSchema", "prompt", "handoffPath", "packageManifestPath", "packageManifestSchemaPath", "packageScriptPath", "rubricPath", "hiddenSuitePath")
+foreach ($key in $privatePathKeys) {
+  if ($physical.ContainsKey($key) -and (Test-NestedOrEqual $physical[$key] $physical.workdir)) { throw "Private role runtime input must remain outside the role workdir" }
+  if ($physical.ContainsKey($key) -and (Test-NestedOrEqual $physical[$key] $physical.evidenceRoot)) { throw "Private role runtime input and evidence root must be separate and nonnested" }
+}
 $policy = $RolePolicy[$contract.role]
 if ($null -eq $policy) { throw "Unsupported model role" }
-if (-not $runnerPath.Equals([System.IO.Path]::GetFullPath($PSCommandPath), [System.StringComparison]::OrdinalIgnoreCase) -or $lock.cliBinarySha256 -ne $contract.cliSha256 -or $lock.roleRuntimeSchemaSha256 -ne $contract.contractSchemaSha256 -or $lock.roleRunnerSha256 -ne $contract.runnerSha256 -or $lock.supervisionEvidenceSchemaSha256 -ne $contract.evidenceSchemaSha256 -or $lock.($policy.PromptLock) -ne $contract.promptTemplateSha256 -or $lock.($policy.ArtifactLock) -ne $contract.artifactSchemaSha256) { throw "Role contract does not match frozen lock bindings" }
+if (-not $physical.runner.Equals($physical.currentRunner, [System.StringComparison]::OrdinalIgnoreCase) -or $lock.cliBinarySha256 -ne $contract.cliSha256 -or $lock.roleRuntimeSchemaSha256 -ne $contract.contractSchemaSha256 -or $lock.roleRunnerSha256 -ne $contract.runnerSha256 -or $lock.supervisionEvidenceSchemaSha256 -ne $contract.evidenceSchemaSha256 -or $lock.($policy.PromptLock) -ne $contract.promptTemplateSha256 -or $lock.($policy.ArtifactLock) -ne $contract.artifactSchemaSha256) { throw "Role contract does not match frozen lock bindings" }
 if ($contract.deadlineSeconds -lt 1 -or $contract.deadlineSeconds -gt $policy.Max) { throw "Invalid role deadline" }
 if ($contract.sandboxMode -ne $policy.Sandbox -or $contract.inputDisposition -ne $policy.Disposition) { throw "Role isolation policy mismatch" }
 if ((Get-Sha256 $contract.cliPath) -ne $contract.cliSha256) { throw "CLI binary hash mismatch" }
@@ -81,7 +132,7 @@ $versionResult = Invoke-NativeCapture $contract.cliPath @("--version")
 if ($versionResult.ExitCode -ne 0 -or $versionResult.Stdout.Trim() -ne $contract.cliVersion) { throw "CLI version mismatch" }
 $authResult = Invoke-NativeCapture $contract.cliPath @("login", "status")
 if ($authResult.ExitCode -ne 0 -or "$($authResult.Stdout)`n$($authResult.Stderr)".Trim() -notlike "*$($contract.authStatus)*") { throw "ChatGPT auth status mismatch" }
-$promptBytes = [System.IO.File]::ReadAllBytes([System.IO.Path]::GetFullPath($contract.promptPath))
+$promptBytes = [System.IO.File]::ReadAllBytes($physical.prompt)
 if ((Get-Sha256 $contract.promptPath) -ne $contract.promptSha256) { throw "Raw stdin prompt hash mismatch" }
 $renderedPrompt = [System.IO.File]::ReadAllText($promptTemplatePath)
 foreach ($substitution in $contract.promptSubstitutions.PSObject.Properties) {
@@ -90,26 +141,26 @@ foreach ($substitution in $contract.promptSubstitutions.PSObject.Properties) {
   $renderedPrompt = $renderedPrompt.Replace($token, [string]$substitution.Value)
 }
 if ($renderedPrompt -match '\{\{[A-Z0-9_]+\}\}' -or -not [System.Linq.Enumerable]::SequenceEqual([byte[]]$promptBytes, [byte[]][System.Text.Encoding]::UTF8.GetBytes($renderedPrompt))) { throw "Rendered prompt does not derive exactly from frozen template substitutions" }
-if ($contract.role -eq "fixer" -and (Get-Sha256 ([System.IO.Path]::GetFullPath($contract.handoffPath))) -ne $contract.handoffSha256) { throw "Fixer finding handoff hash mismatch" }
-$workdir = [System.IO.Path]::GetFullPath($contract.workdir).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
+if ($contract.role -eq "fixer" -and (Get-Sha256 $physical.handoffPath) -ne $contract.handoffSha256) { throw "Fixer finding handoff hash mismatch" }
+$workdir = $physical.workdir.TrimEnd([System.IO.Path]::DirectorySeparatorChar)
 if (-not [System.IO.Directory]::Exists($workdir)) { throw "Workdir must exist" }
 $substitutions = @{}; foreach ($property in $contract.promptSubstitutions.PSObject.Properties) { $substitutions[$property.Name] = [string]$property.Value; if ($substitutions[$property.Name] -match "[`r`n]" -or $substitutions[$property.Name] -match '\{\{') { throw "Prompt substitutions must be single-line literal values" } }
 $expectedSubstitutionKeys = if ($contract.role -eq "fixer") { @("CANDIDATE_LABEL", "CYCLE_NUMBER", "SNAPSHOT_COMMIT", "FINDINGS_PATH", "WALL_CLOCK_DEADLINE_ISO") } elseif ($contract.role -eq "evaluator") { @("PACKAGE_LABEL", "PACKAGE_PATH", "EVALUATION_SEQUENCE", "RUBRIC_PATH", "EVALUATION_SCHEMA_PATH", "HIDDEN_SUITE_PATH", "HIDDEN_SUITE_SHA256", "WALL_CLOCK_DEADLINE_ISO") } else { @("CANDIDATE_LABEL", "CYCLE_NUMBER", "SNAPSHOT_COMMIT", "WALL_CLOCK_DEADLINE_ISO") }
 if ((@($substitutions.Keys | Sort-Object) -join "`0") -ne (@($expectedSubstitutionKeys | Sort-Object) -join "`0") -or $substitutions.WALL_CLOCK_DEADLINE_ISO -notmatch '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$') { throw "Role prompt substitution keys or deadline are invalid" }
 if ($contract.role -eq "evaluator") {
-  if ($substitutions.PACKAGE_LABEL -ne $contract.packageLabel -or -not ([System.IO.Path]::GetFullPath($substitutions.PACKAGE_PATH).Equals($workdir, [System.StringComparison]::OrdinalIgnoreCase)) -or $substitutions.EVALUATION_SEQUENCE -ne [string]$contract.evaluationSequence -or -not ([System.IO.Path]::GetFullPath($substitutions.RUBRIC_PATH).Equals([System.IO.Path]::GetFullPath($contract.rubricPath), [System.StringComparison]::OrdinalIgnoreCase)) -or -not ([System.IO.Path]::GetFullPath($substitutions.EVALUATION_SCHEMA_PATH).Equals($artifactSchemaPath, [System.StringComparison]::OrdinalIgnoreCase)) -or -not ([System.IO.Path]::GetFullPath($substitutions.HIDDEN_SUITE_PATH).Equals([System.IO.Path]::GetFullPath($contract.hiddenSuitePath), [System.StringComparison]::OrdinalIgnoreCase)) -or $substitutions.HIDDEN_SUITE_SHA256 -ne $contract.hiddenSuiteSha256) { throw "Evaluator prompt substitutions diverge from contract inputs" }
+  if ($substitutions.PACKAGE_LABEL -ne $contract.packageLabel -or -not $physical.packageSubstitution.Equals($workdir, [System.StringComparison]::OrdinalIgnoreCase) -or $substitutions.EVALUATION_SEQUENCE -ne [string]$contract.evaluationSequence -or -not $physical.rubricSubstitution.Equals($physical.rubricPath, [System.StringComparison]::OrdinalIgnoreCase) -or -not $physical.evaluationSchemaSubstitution.Equals($physical.artifactSchema, [System.StringComparison]::OrdinalIgnoreCase) -or -not $physical.hiddenSuiteSubstitution.Equals($physical.hiddenSuitePath, [System.StringComparison]::OrdinalIgnoreCase) -or $substitutions.HIDDEN_SUITE_SHA256 -ne $contract.hiddenSuiteSha256) { throw "Evaluator prompt substitutions diverge from contract inputs" }
 } else {
   if ($substitutions.CANDIDATE_LABEL -ne $contract.candidateLabel -or $substitutions.CYCLE_NUMBER -ne [string]$contract.cycle -or $substitutions.SNAPSHOT_COMMIT -ne $contract.inputCommit) { throw "Role prompt substitutions diverge from candidate input" }
-  if ($contract.role -eq "fixer" -and -not ([System.IO.Path]::GetFullPath($substitutions.FINDINGS_PATH).Equals([System.IO.Path]::GetFullPath($contract.handoffPath), [System.StringComparison]::OrdinalIgnoreCase))) { throw "Fixer prompt handoff path diverges from contract" }
+  if ($contract.role -eq "fixer" -and -not $physical.findingsSubstitution.Equals($physical.handoffPath, [System.StringComparison]::OrdinalIgnoreCase)) { throw "Fixer prompt handoff path diverges from contract" }
 }
-$gitDirectory = Join-Path $workdir ".git"
+$gitDirectory = $physical.git
 if ($contract.role -eq "evaluator") {
   if (Test-HasGitAncestor $workdir) { throw "Evaluator package must be history-free and outside every Git worktree" }
-  $packageManifestPath = [System.IO.Path]::GetFullPath($contract.packageManifestPath)
-  $packageManifestSchemaPath = [System.IO.Path]::GetFullPath($contract.packageManifestSchemaPath)
-  $packageScriptPath = [System.IO.Path]::GetFullPath($contract.packageScriptPath)
-  $rubricPath = [System.IO.Path]::GetFullPath($contract.rubricPath)
-  $hiddenSuitePath = [System.IO.Path]::GetFullPath($contract.hiddenSuitePath)
+  $packageManifestPath = $physical.packageManifestPath
+  $packageManifestSchemaPath = $physical.packageManifestSchemaPath
+  $packageScriptPath = $physical.packageScriptPath
+  $rubricPath = $physical.rubricPath
+  $hiddenSuitePath = $physical.hiddenSuitePath
   if (Test-NestedOrEqual $packageManifestPath $workdir) { throw "Private package manifest must remain outside evaluator input" }
   if ((Get-Sha256 $packageManifestPath) -ne $contract.packageManifestSha256 -or (Get-Sha256 $packageManifestSchemaPath) -ne $contract.packageManifestSchemaSha256 -or (Get-Sha256 $packageScriptPath) -ne $contract.packageScriptSha256 -or (Get-Sha256 $rubricPath) -ne $contract.rubricSha256 -or (Get-Sha256 $hiddenSuitePath) -ne $contract.hiddenSuiteSha256) { throw "Evaluator package, rubric, hidden-suite, or packaging commitment mismatch" }
   if ($lock.blindedPackageSchemaSha256 -ne $contract.packageManifestSchemaSha256 -or $lock.blindedPackageScriptSha256 -ne $contract.packageScriptSha256 -or $lock.rubricSha256 -ne $contract.rubricSha256 -or $lock.hiddenSuiteId -ne $contract.hiddenSuiteId -or $lock.hiddenSuiteSha256 -ne $contract.hiddenSuiteSha256) { throw "Evaluator inputs do not match frozen lock" }
@@ -127,27 +178,27 @@ if ($contract.role -eq "evaluator") {
   if ((Invoke-Git $workdir @("rev-parse", "HEAD")) -ne $contract.inputCommit -or (Invoke-Git $workdir @("rev-parse", "HEAD^{tree}")) -ne $contract.inputTree) { throw "Role input commit/tree mismatch" }
   if ((Invoke-Git $workdir @("status", "--porcelain=v1")).Length -ne 0) { throw "Role clone must start clean" }
 }
-$evidenceRoot = [System.IO.Path]::GetFullPath($contract.evidenceRoot).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
-[void](Resolve-Beneath $evidenceRoot $contract.tempRoot); [void](Resolve-Beneath $evidenceRoot $contract.cacheRoot); [void](Resolve-Beneath $evidenceRoot $contract.dependencyRoot)
+$evidenceRoot = $physical.evidenceRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar)
+[void](Resolve-Beneath $evidenceRoot $physical.tempRoot); [void](Resolve-Beneath $evidenceRoot $physical.cacheRoot); [void](Resolve-Beneath $evidenceRoot $physical.dependencyRoot)
 if (Test-NestedOrEqual $evidenceRoot $workdir) { throw "Evidence root and role input must be separate and nonnested" }
 if ([System.IO.Directory]::Exists($evidenceRoot) -and $null -ne (Get-ChildItem -LiteralPath $evidenceRoot -Force | Select-Object -First 1)) { throw "Evidence root must be fresh and empty" }
 [System.IO.Directory]::CreateDirectory($evidenceRoot) | Out-Null
-$finalPath = Resolve-Beneath $evidenceRoot $contract.finalPath
-$stdoutPath = Resolve-Beneath $evidenceRoot $contract.stdoutPath
-$stderrPath = Resolve-Beneath $evidenceRoot $contract.stderrPath
-$evidencePath = Resolve-Beneath $evidenceRoot $contract.evidencePath
-$runtimePaths = @($finalPath, $stdoutPath, $stderrPath, $evidencePath, [System.IO.Path]::GetFullPath($contract.tempRoot), [System.IO.Path]::GetFullPath($contract.cacheRoot), [System.IO.Path]::GetFullPath($contract.dependencyRoot))
+$finalPath = Resolve-Beneath $evidenceRoot $physical.finalPath
+$stdoutPath = Resolve-Beneath $evidenceRoot $physical.stdoutPath
+$stderrPath = Resolve-Beneath $evidenceRoot $physical.stderrPath
+$evidencePath = Resolve-Beneath $evidenceRoot $physical.evidencePath
+$runtimePaths = @($finalPath, $stdoutPath, $stderrPath, $evidencePath, $physical.tempRoot, $physical.cacheRoot, $physical.dependencyRoot)
 if (($runtimePaths | ForEach-Object { $_.ToLowerInvariant() } | Select-Object -Unique).Count -ne $runtimePaths.Count) { throw "Role runtime paths must be distinct" }
 for ($left = 4; $left -lt $runtimePaths.Count; $left++) { for ($right = $left + 1; $right -lt $runtimePaths.Count; $right++) { if (Test-NestedOrEqual $runtimePaths[$left] $runtimePaths[$right]) { throw "Role temp, cache, and dependency roots must be nonnested" } } }
 foreach ($output in @($finalPath, $stdoutPath, $stderrPath, $evidencePath)) { [System.IO.Directory]::CreateDirectory((Split-Path -Parent $output)) | Out-Null }
-foreach ($runtimeRoot in @($contract.tempRoot, $contract.cacheRoot, $contract.dependencyRoot)) { [System.IO.Directory]::CreateDirectory([System.IO.Path]::GetFullPath($runtimeRoot)) | Out-Null }
+foreach ($runtimeRoot in @($physical.tempRoot, $physical.cacheRoot, $physical.dependencyRoot)) { [System.IO.Directory]::CreateDirectory($runtimeRoot) | Out-Null }
 $argv = @("-a", "never", "-m", "gpt-5.4", "-c", 'model_reasoning_effort="xhigh"', "exec", "--ephemeral", "--ignore-user-config", "--skip-git-repo-check", "--sandbox", $contract.sandboxMode, "--json", "-C", $workdir, "-o", $finalPath, "-")
 $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
 $startInfo.FileName = $contract.cliPath
 $startInfo.WorkingDirectory = $workdir
 $startInfo.UseShellExecute = $false; $startInfo.CreateNoWindow = $true
 $startInfo.RedirectStandardInput = $true; $startInfo.RedirectStandardOutput = $true; $startInfo.RedirectStandardError = $true
-$startInfo.Environment["TEMP"] = [System.IO.Path]::GetFullPath($contract.tempRoot); $startInfo.Environment["TMP"] = [System.IO.Path]::GetFullPath($contract.tempRoot); $startInfo.Environment["NPM_CONFIG_CACHE"] = [System.IO.Path]::GetFullPath($contract.cacheRoot); $startInfo.Environment["CODEX_DEPENDENCY_ROOT"] = [System.IO.Path]::GetFullPath($contract.dependencyRoot); $startInfo.Environment["PORT"] = [string]$contract.port
+$startInfo.Environment["TEMP"] = $physical.tempRoot; $startInfo.Environment["TMP"] = $physical.tempRoot; $startInfo.Environment["NPM_CONFIG_CACHE"] = $physical.cacheRoot; $startInfo.Environment["CODEX_DEPENDENCY_ROOT"] = $physical.dependencyRoot; $startInfo.Environment["PORT"] = [string]$contract.port
 foreach ($argument in $argv) { [void]$startInfo.ArgumentList.Add($argument) }
 $process = [System.Diagnostics.Process]::new(); $process.StartInfo = $startInfo
 $startedAt = [System.DateTimeOffset]::UtcNow; $started = $false; $startError = $null; $stdinDelivered = $false; $stdinError = $null; $timedOut = $false
