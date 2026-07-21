@@ -9,10 +9,10 @@ Treat this as an experimental protocol with no portability claim. Keep the root 
 
 ## Bind the public contract
 
-1. Read [artifact-contract.md](references/artifact-contract.md) and its bundled [canonical-contract.json](references/canonical-contract.json). Require canonical SHA-256 `89b0d3776f2e54f5fba87cb041b4fae0518dbfd51a4b63150dd52a6d4c6478c6`.
+1. Read [artifact-contract.md](references/artifact-contract.md) and its bundled [canonical-contract.json](references/canonical-contract.json). Require canonical SHA-256 `05a869d36aca6c9c146c56fa8f6432438d5c7e2c87fd944f822f660747e0d6f5`.
 2. Freeze the task, common start, preregistration lock, neutral prompt/config bytes, environment/model hashes, allowed implementation paths, safety limits, exact gates, hidden-suite commitment, and artifact paths. Read [isolation.md](references/isolation.md).
 3. Freeze one-turn wall budgets: builder 2400s, reviewer 900s, fixer 1500s, tester 900s, evaluator 1800s, unblinder 300s, and Git worker 600s. Record `maxTokens: null` with a nonempty unavailability reason; never invent a ceiling or telemetry.
-4. Have a delegated Git worker create two new isolated filesystems at the same common start. Send byte-identical neutral prompt/config bytes to two fresh builders. Do not expose this skill, assignment, comparison strategy, or the other candidate.
+4. Have a delegated Git worker create two new isolated filesystems at the same common start. Send byte-identical neutral prompt/config bytes to two fresh builders. Require prompt SHA-256 `7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82` and config SHA-256 `caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b` against both the canonical contract and lock commitments. Do not expose this skill, assignment, comparison strategy, or the other candidate.
 5. Freeze both initial snapshots and canonical evidence. Only afterward draw exactly 32 OS-CSPRNG bytes once and apply the registered assignment bytes to map one candidate to baseline and the other to treatment.
 
 ## Run the registered arms
@@ -37,6 +37,7 @@ In one fresh evaluator turn, verify commitments; run `npm run test:public` and `
 - Canonicalize with `utf8-sorted-json-v1`: domain-separated SHA-256, UTF-8 byte-sorted object keys, order-preserving arrays, safe integers, JSON string escaping, and no whitespace or trailing newline.
 - Start evidence sequence at 0 with `previousSha256: null`; each later predecessor equals the prior `artifactSha256`. Never mutate emitted evidence.
 - Keep immutable gate/hidden commitments, raw output hashes, prompt/config hashes, snapshots, artifacts, worker IDs, costs, and invalidations. Record unavailable transcripts and telemetry as JSON `null`, never estimates.
+- A completed run has only `status: "valid"` or `status: "invalid"`. A valid run requires `activeInvalidation: null`, exactly three evaluations, and a scored outcome; preserved `invalidAttempts` remain allowed and validated. An invalid run requires structured `activeInvalidation` evidence and null evaluations/outcome. Never attach a score to an active invalidation.
 - Have a delegated validator run `python scripts/validate_artifacts.py RUN.json --mode execution`. Use `--expect-golden` only for the bundled conformance fixture. Template mode is non-executable; execution mode rejects zero hashes/seeds and sentinel/provisional values.
 - Delegate final Git packaging. Do not open/merge a PR, publish, deploy, tag, release, or change repository settings without separate authorization.
 

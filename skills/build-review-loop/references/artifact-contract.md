@@ -1,6 +1,6 @@
 # Public protocol-v2 artifact contract
 
-Treat bundled [canonical-contract.json](canonical-contract.json) as authoritative. Its domain-separated canonical SHA-256 is `89b0d3776f2e54f5fba87cb041b4fae0518dbfd51a4b63150dd52a6d4c6478c6`. Use bundled `../tests/fixtures/golden-run.json` as the byte-identical integrated execution example; its canonical SHA-256 is `c92b1d1fcf4a45886580965c2ef6d81219ae16760e43b8e3f32420849412e0a8`. Do not invent alternate field names or layouts.
+Treat bundled [canonical-contract.json](canonical-contract.json) as authoritative. Its domain-separated canonical SHA-256 is `05a869d36aca6c9c146c56fa8f6432438d5c7e2c87fd944f822f660747e0d6f5`. Use bundled `../tests/fixtures/golden-run.json` as the byte-identical valid-with-history execution example; its canonical SHA-256 is `e53d8ecffdd1717e369acf312b2ba649726c511d7d31b1a58346cf734b7ffc69`. The byte-identical `../tests/fixtures/invalid-current.json` example has canonical SHA-256 `2911016d16fca74949d93f1b9488d0d09013ac4658f412d3b8d4789e2f7969ff`. Do not invent alternate field names or layouts.
 
 ## Frozen bindings and costs
 
@@ -23,6 +23,8 @@ hidden SHA-256: a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b
 ```
 
 Freeze one turn and wall maxima: builder 2400, reviewer 900, fixer 1500, tester 900, evaluator 1800, unblinder 300, Git worker 600 seconds. Every cost record binds `environmentSha256`; model roles bind `modelConfigSha256`, while deterministic unblinder/Git roles may use null only with a reason. Require `maxTokens: null` and a nonempty `maxTokensUnavailableReason`. Use provider-reported nonnegative totals when available; otherwise keep `totalTokens` and `usd` null with `source: "unavailable"`.
+
+Every builder freeze must bind prompt SHA-256 `7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82` and config SHA-256 `caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b`. Each value must equal both the canonical commitment and its corresponding preregistration lock commitment; equality between builders alone is insufficient.
 
 ## Assignment and stopping
 
@@ -79,9 +81,13 @@ Canonical JSON accepts null, booleans, safe integers, strings, arrays, and objec
 
 Evidence sequence begins at 0; first `previousSha256` is null; each later predecessor is the prior `artifactSha256`; every artifact hash uses the canonical algorithm. Execution mode rejects zero 40/64-character hashes or seeds, template/sentinel/placeholder/required-at-run strings, provisional locks, duplicate invocation IDs, and any public-contract divergence. Template mode is never executable.
 
+Completed status is exactly `valid` or `invalid`. Valid records require `activeInvalidation: null`, exactly three evaluations, and a scored outcome. Their `invalidAttempts` array may be empty or retain prior structured attempts. Invalid current records require a structured `activeInvalidation` with ID, scope, code, reason, timestamp, evidence SHA-256, and preserved-artifact SHA-256; both `evaluations` and `outcome` must be null. Preserved attempts use the corresponding `attemptId` and `invalidatedAt` fields. All evidence hashes are nonzero.
+
 Validate an integrated run:
 
 ```text
 python scripts/validate_artifacts.py RUN.json --mode execution
 python scripts/validate_artifacts.py tests/fixtures/golden-run.json --mode execution --expect-golden
+python scripts/validate_artifacts.py tests/fixtures/invalid-current.json --mode execution
+python scripts/validate_artifacts.py TEMPLATE.json --mode template
 ```

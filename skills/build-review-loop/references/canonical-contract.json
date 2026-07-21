@@ -1,6 +1,6 @@
 {
-  "contractVersion": "1.0.0",
-  "protocolVersion": "2.1.0",
+  "contractVersion": "1.1.0",
+  "protocolVersion": "2.2.0",
   "normativeSource": "experiment/protocol.md",
   "canonicalJson": {
     "id": "utf8-sorted-json-v1",
@@ -29,6 +29,11 @@
     ],
     "severities": ["critical", "high", "medium", "low"],
     "idPattern": "^cycle-[1-5]-reviewer-[0-9]{2}$"
+  },
+  "builderFreeze": {
+    "promptSha256": "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82",
+    "configSha256": "caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b",
+    "rule": "every builder freeze must equal both canonical hashes and the corresponding lock commitments"
   },
   "stopping": {
     "baselineStopReason": "baseline-zero-cycles",
@@ -156,5 +161,28 @@
   "validationModes": {
     "template": "allows documented template-only sentinel values and is never executable",
     "execution": "rejects zero hashes, zero seeds, sentinel IDs or snapshots, required-at-run text, duplicate worker IDs, template equality, provisional locks, and any contract divergence"
+  },
+  "invalidation": {
+    "completedStatuses": ["valid", "invalid"],
+    "activeInvalidationFields": [
+      "invalidationId",
+      "scope",
+      "code",
+      "reason",
+      "detectedAt",
+      "evidenceSha256",
+      "preservedArtifactSha256"
+    ],
+    "invalidAttemptFields": [
+      "attemptId",
+      "scope",
+      "code",
+      "reason",
+      "invalidatedAt",
+      "evidenceSha256",
+      "preservedArtifactSha256"
+    ],
+    "validRule": "activeInvalidation is null; evaluations and scored outcome are required; invalidAttempts may be empty or preserved",
+    "invalidRule": "activeInvalidation is required; evaluations and scored outcome are null; invalidAttempts may be empty or preserved"
   }
 }

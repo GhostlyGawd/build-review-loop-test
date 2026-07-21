@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 import validate_artifacts as validator
@@ -18,6 +19,7 @@ import validate_artifacts as validator
 class ProtocolV2ValidatorTests(unittest.TestCase):
     def setUp(self) -> None:
         self.golden = validator.load_json(validator.GOLDEN_PATH)
+        self.invalid = validator.load_json(validator.INVALID_PATH)
 
     def errors(self, value: object, mode: str = "execution",
                expect_golden: bool = False) -> list[str]:
@@ -27,15 +29,18 @@ class ProtocolV2ValidatorTests(unittest.TestCase):
         errors = self.errors(value)
         self.assertTrue(any(fragment in error for error in errors), errors)
 
-    def test_bundled_contract_and_golden_raw_and_canonical_hashes(self) -> None:
+    def test_bundled_contract_and_fixtures_raw_and_canonical_hashes(self) -> None:
         self.assertEqual([], validator.validate_bundles())
         contract = validator.load_json(validator.CONTRACT_PATH)
         self.assertEqual(validator.CONTRACT_CANONICAL_SHA256, validator.canonical_hash(contract))
         self.assertEqual(validator.GOLDEN_CANONICAL_SHA256, validator.canonical_hash(self.golden))
+        self.assertEqual(validator.INVALID_CANONICAL_SHA256, validator.canonical_hash(self.invalid))
         self.assertEqual(validator.CONTRACT_RAW_SHA256,
                          hashlib.sha256(validator.CONTRACT_PATH.read_bytes()).hexdigest())
         self.assertEqual(validator.GOLDEN_RAW_SHA256,
                          hashlib.sha256(validator.GOLDEN_PATH.read_bytes()).hexdigest())
+        self.assertEqual(validator.INVALID_RAW_SHA256,
+                         hashlib.sha256(validator.INVALID_PATH.read_bytes()).hexdigest())
 
     def test_exact_golden_validates_in_execution_mode(self) -> None:
         self.assertEqual([], validator.validate_path(
@@ -50,6 +55,91 @@ class ProtocolV2ValidatorTests(unittest.TestCase):
         )
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertIn("canonically valid", result.stdout)
+
+    def test_exact_invalid_current_validates_in_execution_mode(self) -> None:
+        self.assertEqual([], validator.validate_path(validator.INVALID_PATH, "execution"))
+
+    def test_exact_invalid_current_validates_through_cli(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(Path(validator.__file__)),
+             str(validator.INVALID_PATH), "--mode", "execution"],
+            check=False, capture_output=True, text=True,
+        )
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def test_template_mode_cli_smoke(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(Path(validator.__file__)),
+             str(validator.INVALID_PATH), "--mode", "template"],
+            check=False, capture_output=True, text=True,
+        )
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def test_valid_fixture_preserves_invalid_attempt_history(self) -> None:
+        self.assertEqual("rehearsal-001", self.golden["invalidAttempts"][0]["attemptId"])
+        self.assertEqual([], self.errors(self.golden))
+
+    def test_rejects_prompt_drift_even_when_builders_match_each_other(self) -> None:
+        value = copy.deepcopy(self.golden)
+        for freeze in value["builderFreezes"].values():
+            freeze["promptSha256"] = "f" * 64
+        self.assert_error(value, "prompt commitment drift from canonical contract and lock")
+
+    def test_rejects_config_drift_even_when_builders_match_each_other(self) -> None:
+        value = copy.deepcopy(self.golden)
+        for freeze in value["builderFreezes"].values():
+            freeze["configSha256"] = "f" * 64
+        self.assert_error(value, "config commitment drift from canonical contract and lock")
+
+    def test_rejects_prompt_drift_from_lock_commitment(self) -> None:
+        with mock.patch.object(validator, "LOCK_PROMPT_SHA256", "f" * 64):
+            self.assert_error(self.golden, "prompt commitment drift from canonical contract and lock")
+
+    def test_rejects_config_drift_from_lock_commitment(self) -> None:
+        with mock.patch.object(validator, "LOCK_CONFIG_SHA256", "f" * 64):
+            self.assert_error(self.golden, "config commitment drift from canonical contract and lock")
+
+    def test_rejects_arbitrary_completed_status(self) -> None:
+        value = copy.deepcopy(self.golden)
+        value["status"] = "complete"
+        self.assert_error(value, "completed status must be valid or invalid")
+
+    def test_rejects_valid_status_with_active_invalidation(self) -> None:
+        value = copy.deepcopy(self.golden)
+        value["activeInvalidation"] = copy.deepcopy(self.invalid["activeInvalidation"])
+        self.assert_error(value, "valid status requires activeInvalidation null")
+
+    def test_rejects_valid_status_without_outcome(self) -> None:
+        value = copy.deepcopy(self.golden)
+        value["outcome"] = None
+        self.assert_error(value, "valid status requires a scored outcome")
+
+    def test_rejects_invalid_status_without_active_invalidation(self) -> None:
+        value = copy.deepcopy(self.invalid)
+        value["activeInvalidation"] = None
+        self.assert_error(value, "activeInvalidation: must be an object")
+
+    def test_rejects_invalid_status_with_outcome(self) -> None:
+        value = copy.deepcopy(self.invalid)
+        value["outcome"] = {"score": 100}
+        errors = self.errors(value)
+        self.assertTrue(any("invalid status requires outcome null" in error for error in errors), errors)
+        self.assertTrue(any("active invalidation forbids a scored outcome" in error for error in errors), errors)
+
+    def test_rejects_invalid_status_with_evaluations(self) -> None:
+        value = copy.deepcopy(self.invalid)
+        value["evaluations"] = []
+        self.assert_error(value, "invalid status requires evaluations null")
+
+    def test_rejects_malformed_active_invalidation_evidence(self) -> None:
+        value = copy.deepcopy(self.invalid)
+        value["activeInvalidation"]["evidenceSha256"] = "0" * 64
+        self.assert_error(value, "activeInvalidation.evidenceSha256: nonzero SHA-256 required")
+
+    def test_rejects_malformed_preserved_invalid_attempt(self) -> None:
+        value = copy.deepcopy(self.golden)
+        value["invalidAttempts"][0]["reason"] = ""
+        self.assert_error(value, "invalidAttempts[0].reason: nonempty string required")
 
     def test_canonical_json_uses_utf8_key_order_and_domain(self) -> None:
         value = {"é": 2, "z": 1}

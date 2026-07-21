@@ -1,8 +1,21 @@
 {
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-conformance",
-  "protocolVersion": "2.1.0",
-  "canonicalContractSha256": "89b0d3776f2e54f5fba87cb041b4fae0518dbfd51a4b63150dd52a6d4c6478c6",
+  "protocolVersion": "2.2.0",
+  "canonicalContractSha256": "05a869d36aca6c9c146c56fa8f6432438d5c7e2c87fd944f822f660747e0d6f5",
+  "status": "valid",
+  "activeInvalidation": null,
+  "invalidAttempts": [
+    {
+      "attemptId": "rehearsal-001",
+      "scope": "dry-run",
+      "code": "REHEARSAL_ONLY",
+      "reason": "Synthetic invalid rehearsal preserved without candidate contents",
+      "invalidatedAt": "2026-07-19T23:50:00Z",
+      "evidenceSha256": "4ed9e9cbdba7becab220ed3f802c03b7bb86648a242b55c63b6793718cd2a320",
+      "preservedArtifactSha256": "cc8e04b3d8629a04500b91e9e4db2ce52ef71137f803787f974430017213384d"
+    }
+  ],
   "bindings": {
     "commonStartCommit": "79454a133f990982253744a85ccb8516d62f5a19",
     "preregistrationLockCommit": "7443e27c48488e269e9fb7ad28b308a1313e5703",
@@ -67,7 +80,7 @@
       "candidateLabel": "candidate-a",
       "workerId": "worker-01-builder-a-7b4c",
       "promptSha256": "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82",
-      "configSha256": "60c5969f08108a9763868f9917eebe4e9b14dfbc98dc717502e1d4056a63c535",
+      "configSha256": "caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b",
       "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
       "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
       "sealedAt": "2026-07-20T01:00:00Z"
@@ -76,7 +89,7 @@
       "candidateLabel": "candidate-b",
       "workerId": "worker-02-builder-b-91e2",
       "promptSha256": "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82",
-      "configSha256": "60c5969f08108a9763868f9917eebe4e9b14dfbc98dc717502e1d4056a63c535",
+      "configSha256": "caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b",
       "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
       "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
       "sealedAt": "2026-07-20T01:00:00Z"
@@ -84,8 +97,8 @@
   },
   "assignment": {
     "frozenInitialEvidenceHashes": {
-      "candidate-a": "233e05a3e0b5991bf7f2904ae6d1897df0f5eb294c280e398db02dff0e0a12a2",
-      "candidate-b": "19c43e1b0384dc3265776e0c86376ca2d91ca700fe2685a0ec28e4814d83d0b3"
+      "candidate-a": "25f6a62ab957db146334fbbe7adbc51d26f4871c2f764c39b6425efb1b88436d",
+      "candidate-b": "dd367bdc9f4a6e888c2edb612c5ab8c507f40628c6957c0c8a7af964d30d9e0d"
     },
     "seedHex": "4f8c49a049cdb2bef7fed4950c9bbe8127160599d5b72c549b6d2878e4706b02",
     "digestSha256": "aec4dcdcdefeae6fdda5dccb89d0cf2203e4d9ae200cb7f48650b8cea64f748e",
@@ -879,26 +892,26 @@
     {
       "sequence": 0,
       "artifactKey": "builderFreezes.candidate-a",
-      "artifactSha256": "233e05a3e0b5991bf7f2904ae6d1897df0f5eb294c280e398db02dff0e0a12a2",
+      "artifactSha256": "25f6a62ab957db146334fbbe7adbc51d26f4871c2f764c39b6425efb1b88436d",
       "previousSha256": null
     },
     {
       "sequence": 1,
       "artifactKey": "builderFreezes.candidate-b",
-      "artifactSha256": "19c43e1b0384dc3265776e0c86376ca2d91ca700fe2685a0ec28e4814d83d0b3",
-      "previousSha256": "233e05a3e0b5991bf7f2904ae6d1897df0f5eb294c280e398db02dff0e0a12a2"
+      "artifactSha256": "dd367bdc9f4a6e888c2edb612c5ab8c507f40628c6957c0c8a7af964d30d9e0d",
+      "previousSha256": "25f6a62ab957db146334fbbe7adbc51d26f4871c2f764c39b6425efb1b88436d"
     },
     {
       "sequence": 2,
       "artifactKey": "assignment",
-      "artifactSha256": "9806af75148f168c4e7f441ab5678824f2470b26c0c8ca0c0512574fc5b98dd3",
-      "previousSha256": "19c43e1b0384dc3265776e0c86376ca2d91ca700fe2685a0ec28e4814d83d0b3"
+      "artifactSha256": "003bdc23da9a9ab4588fd28b400882281f6406c2a2308458a680fa7f26816a75",
+      "previousSha256": "dd367bdc9f4a6e888c2edb612c5ab8c507f40628c6957c0c8a7af964d30d9e0d"
     },
     {
       "sequence": 3,
       "artifactKey": "reviews.0",
       "artifactSha256": "e18d3960d1bea8be590499a40934e9b07824abdc391ba17b8b9ba9af85788267",
-      "previousSha256": "9806af75148f168c4e7f441ab5678824f2470b26c0c8ca0c0512574fc5b98dd3"
+      "previousSha256": "003bdc23da9a9ab4588fd28b400882281f6406c2a2308458a680fa7f26816a75"
     },
     {
       "sequence": 4,

@@ -1,0 +1,18 @@
+{
+  "fixtureVersion": "1.0.0",
+  "fixtureKind": "prospective-invalid-current",
+  "protocolVersion": "2.2.0",
+  "status": "invalid",
+  "activeInvalidation": {
+    "invalidationId": "invalidation-001",
+    "scope": "experiment",
+    "code": "FREEZE_MISMATCH",
+    "reason": "Synthetic current-run invalidation fixture",
+    "detectedAt": "2026-07-20T02:00:00Z",
+    "evidenceSha256": "84e43d9fe2575fc1113d4d9b7633b74e8f23452de136a45f3bce68b9008bc15f",
+    "preservedArtifactSha256": "b39a8c77f94df14b1df27fb64693f2bb37e5975746b14a73389df719899a2744"
+  },
+  "invalidAttempts": [],
+  "evaluations": null,
+  "outcome": null
+}

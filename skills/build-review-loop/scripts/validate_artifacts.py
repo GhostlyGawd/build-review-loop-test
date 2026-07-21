@@ -15,10 +15,17 @@ from typing import Any
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = SKILL_ROOT / "references" / "canonical-contract.json"
 GOLDEN_PATH = SKILL_ROOT / "tests" / "fixtures" / "golden-run.json"
-CONTRACT_CANONICAL_SHA256 = "89b0d3776f2e54f5fba87cb041b4fae0518dbfd51a4b63150dd52a6d4c6478c6"
-GOLDEN_CANONICAL_SHA256 = "c92b1d1fcf4a45886580965c2ef6d81219ae16760e43b8e3f32420849412e0a8"
-CONTRACT_RAW_SHA256 = "984541ff7a9c947fe4236a13e308eacfabac892834c1175e674d4f8805406408"
-GOLDEN_RAW_SHA256 = "474a29066b8235a65d24c268e18dfba73fe6df649cebcdba8f7f98b9526ff5f0"
+INVALID_PATH = SKILL_ROOT / "tests" / "fixtures" / "invalid-current.json"
+CONTRACT_CANONICAL_SHA256 = "05a869d36aca6c9c146c56fa8f6432438d5c7e2c87fd944f822f660747e0d6f5"
+GOLDEN_CANONICAL_SHA256 = "e53d8ecffdd1717e369acf312b2ba649726c511d7d31b1a58346cf734b7ffc69"
+INVALID_CANONICAL_SHA256 = "2911016d16fca74949d93f1b9488d0d09013ac4658f412d3b8d4789e2f7969ff"
+CONTRACT_RAW_SHA256 = "199eb11d2350ee002c6e8811996c5c5368ec01dce9614df45d7118d328667d3f"
+GOLDEN_RAW_SHA256 = "fa17e10644d5d5d2958b040e4aca30348d3be737570a30f54aee985bb95f7869"
+INVALID_RAW_SHA256 = "ee2583b65c2961121cd2ac2fdb81657ace1de826a8bd71b7df62e48a05cd2db3"
+BUILDER_PROMPT_SHA256 = "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82"
+BUILDER_CONFIG_SHA256 = "caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b"
+LOCK_PROMPT_SHA256 = "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82"
+LOCK_CONFIG_SHA256 = "caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b"
 CANONICAL_DOMAIN = b"permissions-playground/canonical-json-v1\0"
 ASSIGNMENT_DOMAIN = b"build-review-loop-assignment-v2\0"
 EVALUATION_DOMAIN = "permissions-playground/protocol-v2/evaluation\n"
@@ -178,6 +185,7 @@ def validate_bundles() -> list[str]:
     for path, raw_expected, canonical_expected, label in (
         (CONTRACT_PATH, CONTRACT_RAW_SHA256, CONTRACT_CANONICAL_SHA256, "canonical contract"),
         (GOLDEN_PATH, GOLDEN_RAW_SHA256, GOLDEN_CANONICAL_SHA256, "golden fixture"),
+        (INVALID_PATH, INVALID_RAW_SHA256, INVALID_CANONICAL_SHA256, "invalid-current fixture"),
     ):
         try:
             raw = path.read_bytes()
@@ -221,6 +229,24 @@ def validate_contract(contract: Any) -> list[str]:
     require(contract.get("costPolicy", {}).get("maxTokens") is None and
             contract.get("costPolicy", {}).get("maxTokensUnavailableReasonRequired") is True,
             "canonical nullable maxTokens policy diverges", errors)
+    require(contract.get("builderFreeze") == {
+        "promptSha256": BUILDER_PROMPT_SHA256,
+        "configSha256": BUILDER_CONFIG_SHA256,
+        "rule": "every builder freeze must equal both canonical hashes and the corresponding lock commitments",
+    }, "canonical builder prompt/config commitments diverge", errors)
+    require(contract.get("invalidation") == {
+        "completedStatuses": ["valid", "invalid"],
+        "activeInvalidationFields": [
+            "invalidationId", "scope", "code", "reason", "detectedAt",
+            "evidenceSha256", "preservedArtifactSha256",
+        ],
+        "invalidAttemptFields": [
+            "attemptId", "scope", "code", "reason", "invalidatedAt",
+            "evidenceSha256", "preservedArtifactSha256",
+        ],
+        "validRule": "activeInvalidation is null; evaluations and scored outcome are required; invalidAttempts may be empty or preserved",
+        "invalidRule": "activeInvalidation is required; evaluations and scored outcome are null; invalidAttempts may be empty or preserved",
+    }, "canonical invalidation state contract diverges", errors)
     gates = contract.get("gates", {})
     require(gates.get("testerCommand") == TESTER_COMMAND and
             gates.get("evaluatorPublicCommand") == EVALUATOR_PUBLIC_COMMAND and
@@ -387,6 +413,60 @@ def resolve_artifact(value: Any, key: str) -> Any:
     return current
 
 
+ACTIVE_INVALIDATION_FIELDS = (
+    "invalidationId", "scope", "code", "reason", "detectedAt",
+    "evidenceSha256", "preservedArtifactSha256",
+)
+INVALID_ATTEMPT_FIELDS = (
+    "attemptId", "scope", "code", "reason", "invalidatedAt",
+    "evidenceSha256", "preservedArtifactSha256",
+)
+
+
+def validate_invalidation(value: Any, fields: tuple[str, ...], timestamp_field: str,
+                          location: str, errors: list[str]) -> None:
+    if not exact_fields(value, fields, location, errors):
+        return
+    for field in fields[:4]:
+        require(nonempty(value.get(field)), f"{location}.{field}: nonempty string required", errors)
+    parse_time(value.get(timestamp_field), f"{location}.{timestamp_field}", errors)
+    for field in ("evidenceSha256", "preservedArtifactSha256"):
+        digest = value.get(field)
+        require(valid_hash(digest) and digest != "0" * 64,
+                f"{location}.{field}: nonzero SHA-256 required", errors)
+
+
+def validate_conclusion(fixture: dict[str, Any], errors: list[str]) -> None:
+    status = fixture.get("status")
+    require(status in {"valid", "invalid"},
+            "run: completed status must be valid or invalid", errors)
+    attempts = fixture.get("invalidAttempts")
+    require(isinstance(attempts, list), "run: invalidAttempts must be an array", errors)
+    if isinstance(attempts, list):
+        for index, attempt in enumerate(attempts):
+            validate_invalidation(attempt, INVALID_ATTEMPT_FIELDS, "invalidatedAt",
+                                  f"invalidAttempts[{index}]", errors)
+    if status == "valid":
+        require(fixture.get("activeInvalidation") is None,
+                "run: valid status requires activeInvalidation null", errors)
+        require(isinstance(fixture.get("evaluations"), list) and
+                len(fixture["evaluations"]) == 3,
+                "run: valid status requires exactly three evaluations", errors)
+        require(isinstance(fixture.get("outcome"), dict),
+                "run: valid status requires a scored outcome", errors)
+    elif status == "invalid":
+        validate_invalidation(fixture.get("activeInvalidation"),
+                              ACTIVE_INVALIDATION_FIELDS, "detectedAt",
+                              "activeInvalidation", errors)
+        require(fixture.get("evaluations") is None,
+                "run: invalid status requires evaluations null", errors)
+        require(fixture.get("outcome") is None,
+                "run: invalid status requires outcome null", errors)
+    if fixture.get("activeInvalidation") is not None:
+        require(fixture.get("outcome") is None,
+                "run: active invalidation forbids a scored outcome", errors)
+
+
 def validate_execution(fixture: Any) -> list[str]:
     errors = validate_artifact_mode(fixture, "execution")
     try:
@@ -394,17 +474,31 @@ def validate_execution(fixture: Any) -> list[str]:
     except (TypeError, UnicodeError) as exc:
         errors.append(f"run: not canonicalizable under utf8-sorted-json-v1: {exc}")
         return sorted(set(errors))
+    if not isinstance(fixture, dict):
+        errors.append("run: must be an object")
+        return sorted(set(errors))
+    validate_conclusion(fixture, errors)
+    require(fixture.get("fixtureVersion") == "1.0.0", "run: fixtureVersion diverges", errors)
+    require(fixture.get("protocolVersion") == "2.2.0", "run: protocolVersion diverges", errors)
+    if fixture.get("status") == "invalid":
+        invalid_fields = {
+            "fixtureVersion", "fixtureKind", "protocolVersion", "status",
+            "activeInvalidation", "invalidAttempts", "evaluations", "outcome",
+        }
+        exact_fields(fixture, invalid_fields, "run", errors)
+        require(fixture.get("fixtureKind") == "prospective-invalid-current",
+                "run: invalid fixtureKind diverges", errors)
+        return sorted(set(errors))
     top_fields = {
         "fixtureVersion", "fixtureKind", "protocolVersion", "canonicalContractSha256",
+        "status", "activeInvalidation", "invalidAttempts",
         "bindings", "environment", "workers", "builderFreezes", "assignment",
         "evaluationRandomization", "runs", "reviews", "fixes", "tests", "packages",
         "evaluations", "outcome", "costs", "evidenceChain",
     }
     if not exact_fields(fixture, top_fields, "run", errors):
         return sorted(set(errors))
-    require(fixture.get("fixtureVersion") == "1.0.0", "run: fixtureVersion diverges", errors)
     require(fixture.get("fixtureKind") == "prospective-conformance", "run: fixtureKind diverges", errors)
-    require(fixture.get("protocolVersion") == "2.1.0", "run: protocolVersion diverges", errors)
     require(fixture.get("canonicalContractSha256") == CONTRACT_CANONICAL_SHA256,
             "run: canonical contract binding diverges", errors)
 
@@ -468,6 +562,12 @@ def validate_execution(fixture: Any) -> list[str]:
                     f"{location}: worker is not a builder", errors)
             for field in ("promptSha256", "configSha256", "treeSha256"):
                 require(valid_hash(freeze.get(field)), f"{location}: {field} invalid", errors)
+            require(freeze.get("promptSha256") == BUILDER_PROMPT_SHA256 and
+                    freeze.get("promptSha256") == LOCK_PROMPT_SHA256,
+                    f"{location}: prompt commitment drift from canonical contract and lock", errors)
+            require(freeze.get("configSha256") == BUILDER_CONFIG_SHA256 and
+                    freeze.get("configSha256") == LOCK_CONFIG_SHA256,
+                    f"{location}: config commitment drift from canonical contract and lock", errors)
             require(valid_hash(freeze.get("commit"), HEX40), f"{location}: commit invalid", errors)
             parsed = parse_time(freeze.get("sealedAt"), f"{location}.sealedAt", errors)
             if parsed:
