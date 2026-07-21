@@ -7,6 +7,7 @@
   "started": false,
   "startedAt": "2026-07-20T00:00:00Z",
   "completedAt": "2026-07-20T00:00:00Z",
+  "completionObservedAt": "2026-07-20T00:00:00Z",
   "absoluteDeadline": "2026-07-20T00:15:00Z",
   "startError": null,
   "stdinDelivered": false,

@@ -57,6 +57,7 @@
     "started": { "type": "boolean" },
     "startedAt": { "type": "string", "format": "date-time" },
     "completedAt": { "type": "string", "format": "date-time" },
+    "completionObservedAt": { "type": "string", "format": "date-time" },
     "absoluteDeadline": { "type": "string", "format": "date-time" },
     "startError": { "type": ["string", "null"] },
     "stdinDelivered": { "type": "boolean" },
@@ -129,9 +130,10 @@
       "then": {
         "properties": {
           "completedAt": true,
+          "completionObservedAt": true,
           "absoluteDeadline": true
         },
-        "required": ["completedAt", "absoluteDeadline"]
+        "required": ["completedAt", "completionObservedAt", "absoluteDeadline"]
       }
     }
   ],

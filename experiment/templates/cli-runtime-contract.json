@@ -52,9 +52,9 @@
       "stderrPath": "C:\\absolute\\isolated-evidence-root\\a-stderr.txt",
       "evidencePath": "C:\\absolute\\isolated-evidence-root\\a-evidence.json",
       "postStatePath": "C:\\absolute\\isolated-evidence-root\\a-post-state.json",
-      "tempRoot": "C:\\absolute\\isolated-evidence-root\\a-temp",
-      "cacheRoot": "C:\\absolute\\isolated-evidence-root\\a-cache",
-      "dependencyRoot": "C:\\absolute\\isolated-evidence-root\\a-deps",
+      "tempRoot": "C:\\absolute\\isolated-runtime-a\\temp",
+      "cacheRoot": "C:\\absolute\\isolated-runtime-a\\cache",
+      "dependencyRoot": "C:\\absolute\\isolated-runtime-a\\deps",
       "port": 41001
     },
     {
@@ -65,9 +65,9 @@
       "stderrPath": "C:\\absolute\\isolated-evidence-root\\b-stderr.txt",
       "evidencePath": "C:\\absolute\\isolated-evidence-root\\b-evidence.json",
       "postStatePath": "C:\\absolute\\isolated-evidence-root\\b-post-state.json",
-      "tempRoot": "C:\\absolute\\isolated-evidence-root\\b-temp",
-      "cacheRoot": "C:\\absolute\\isolated-evidence-root\\b-cache",
-      "dependencyRoot": "C:\\absolute\\isolated-evidence-root\\b-deps",
+      "tempRoot": "C:\\absolute\\isolated-runtime-b\\temp",
+      "cacheRoot": "C:\\absolute\\isolated-runtime-b\\cache",
+      "dependencyRoot": "C:\\absolute\\isolated-runtime-b\\deps",
       "port": 41002
     }
   ]

@@ -55,6 +55,9 @@ function Test-NestedOrEqual([string]$Left, [string]$Right) {
   $rightPath = [System.IO.Path]::GetFullPath($Right).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
   return $leftPath.Equals($rightPath, [System.StringComparison]::OrdinalIgnoreCase) -or $leftPath.StartsWith($rightPath + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase) -or $rightPath.StartsWith($leftPath + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)
 }
+function Assert-PathsSeparate([string]$Left, [string]$Right, [string]$Label) {
+  if (Test-NestedOrEqual $Left $Right) { throw "$Label must be physically distinct and nonnested" }
+}
 function Assert-NoReparseAncestors([string]$Path, [string]$Label) {
   $cursor = [System.IO.Path]::GetFullPath($Path)
   while (-not [System.IO.File]::Exists($cursor) -and -not [System.IO.Directory]::Exists($cursor)) {
@@ -119,9 +122,33 @@ if ($contract.role -eq "evaluator") {
 foreach ($rawPath in $pathsToCanonicalize.Values) { Assert-NoReparseAncestors $rawPath "Role runtime path" }
 $physical = Get-CanonicalPhysicalMap $canonicalPathHelperPath $pathsToCanonicalize
 $privatePathKeys = @("contract", "lock", "schema", "helper", "runner", "evidenceSchema", "promptTemplate", "artifactSchema", "prompt", "handoffPath", "packageManifestPath", "packageManifestSchemaPath", "packageScriptPath", "rubricPath", "hiddenSuitePath")
-foreach ($key in $privatePathKeys) {
-  if ($physical.ContainsKey($key) -and (Test-NestedOrEqual $physical[$key] $physical.workdir)) { throw "Private role runtime input must remain outside the role workdir" }
-  if ($physical.ContainsKey($key) -and (Test-NestedOrEqual $physical[$key] $physical.evidenceRoot)) { throw "Private role runtime input and evidence root must be separate and nonnested" }
+$workdir = $physical.workdir.TrimEnd([System.IO.Path]::DirectorySeparatorChar)
+$evidenceRoot = $physical.evidenceRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar)
+$authoritativeOutputKeys = @("finalPath", "stdoutPath", "stderrPath", "evidencePath")
+$runtimeRootKeys = @("tempRoot", "cacheRoot", "dependencyRoot")
+Assert-PathsSeparate $evidenceRoot $workdir "Role evidence root and workdir"
+foreach ($key in $authoritativeOutputKeys) {
+  $parent = [System.IO.Path]::GetDirectoryName($physical[$key]).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
+  if (-not $parent.Equals($evidenceRoot, [System.StringComparison]::OrdinalIgnoreCase)) { throw "Role authoritative outputs must be direct children of evidenceRoot" }
+  Assert-PathsSeparate $physical[$key] $workdir "Role authoritative output and workdir"
+}
+for ($left = 0; $left -lt $authoritativeOutputKeys.Count; $left++) {
+  for ($right = $left + 1; $right -lt $authoritativeOutputKeys.Count; $right++) { Assert-PathsSeparate $physical[$authoritativeOutputKeys[$left]] $physical[$authoritativeOutputKeys[$right]] "Role authoritative outputs" }
+}
+for ($left = 0; $left -lt $runtimeRootKeys.Count; $left++) {
+  $runtimeRoot = $physical[$runtimeRootKeys[$left]]
+  Assert-PathsSeparate $runtimeRoot $evidenceRoot "Role runtime root and evidence root"
+  Assert-PathsSeparate $runtimeRoot $workdir "Role runtime root and workdir"
+  foreach ($outputKey in $authoritativeOutputKeys) { Assert-PathsSeparate $runtimeRoot $physical[$outputKey] "Role runtime root and authoritative output" }
+  for ($right = $left + 1; $right -lt $runtimeRootKeys.Count; $right++) { Assert-PathsSeparate $runtimeRoot $physical[$runtimeRootKeys[$right]] "Role runtime roots" }
+}
+foreach ($privateKey in $privatePathKeys) {
+  if (-not $physical.ContainsKey($privateKey)) { continue }
+  $privatePath = $physical[$privateKey]
+  Assert-PathsSeparate $privatePath $workdir "Private role runtime input and workdir"
+  Assert-PathsSeparate $privatePath $evidenceRoot "Private role runtime input and evidence root"
+  foreach ($outputKey in $authoritativeOutputKeys) { Assert-PathsSeparate $privatePath $physical[$outputKey] "Private role runtime input and authoritative output" }
+  foreach ($runtimeKey in $runtimeRootKeys) { Assert-PathsSeparate $privatePath $physical[$runtimeKey] "Private role runtime input and runtime root" }
 }
 $policy = $RolePolicy[$contract.role]
 if ($null -eq $policy) { throw "Unsupported model role" }
@@ -143,7 +170,6 @@ foreach ($substitution in $contract.promptSubstitutions.PSObject.Properties) {
 }
 if ($renderedPrompt -match '\{\{[A-Z0-9_]+\}\}' -or -not [System.Linq.Enumerable]::SequenceEqual([byte[]]$promptBytes, [byte[]][System.Text.Encoding]::UTF8.GetBytes($renderedPrompt))) { throw "Rendered prompt does not derive exactly from frozen template substitutions" }
 if ($contract.role -eq "fixer" -and (Get-Sha256 $physical.handoffPath) -ne $contract.handoffSha256) { throw "Fixer finding handoff hash mismatch" }
-$workdir = $physical.workdir.TrimEnd([System.IO.Path]::DirectorySeparatorChar)
 if (-not [System.IO.Directory]::Exists($workdir)) { throw "Workdir must exist" }
 $substitutions = @{}; foreach ($property in $contract.promptSubstitutions.PSObject.Properties) { $substitutions[$property.Name] = [string]$property.Value; if ($substitutions[$property.Name] -match "[`r`n]" -or $substitutions[$property.Name] -match '\{\{') { throw "Prompt substitutions must be single-line literal values" } }
 $expectedSubstitutionKeys = if ($contract.role -eq "fixer") { @("CANDIDATE_LABEL", "CYCLE_NUMBER", "SNAPSHOT_COMMIT", "FINDINGS_PATH", "WALL_CLOCK_DEADLINE_ISO") } elseif ($contract.role -eq "evaluator") { @("PACKAGE_LABEL", "PACKAGE_PATH", "EVALUATION_SEQUENCE", "RUBRIC_PATH", "EVALUATION_SCHEMA_PATH", "HIDDEN_SUITE_PATH", "HIDDEN_SUITE_SHA256", "WALL_CLOCK_DEADLINE_ISO") } else { @("CANDIDATE_LABEL", "CYCLE_NUMBER", "SNAPSHOT_COMMIT", "WALL_CLOCK_DEADLINE_ISO") }
@@ -182,16 +208,10 @@ if ($contract.role -eq "evaluator") {
   if ((Invoke-Git $workdir @("rev-parse", "HEAD")) -ne $contract.inputCommit -or (Invoke-Git $workdir @("rev-parse", "HEAD^{tree}")) -ne $contract.inputTree) { throw "Role input commit/tree mismatch" }
   if ((Invoke-Git $workdir @("status", "--porcelain=v1")).Length -ne 0) { throw "Role clone must start clean" }
 }
-$evidenceRoot = $physical.evidenceRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar)
-[void](Resolve-Beneath $evidenceRoot $physical.tempRoot); [void](Resolve-Beneath $evidenceRoot $physical.cacheRoot); [void](Resolve-Beneath $evidenceRoot $physical.dependencyRoot)
-if (Test-NestedOrEqual $evidenceRoot $workdir) { throw "Evidence root and role input must be separate and nonnested" }
 $finalPath = Resolve-Beneath $evidenceRoot $physical.finalPath
 $stdoutPath = Resolve-Beneath $evidenceRoot $physical.stdoutPath
 $stderrPath = Resolve-Beneath $evidenceRoot $physical.stderrPath
 $evidencePath = Resolve-Beneath $evidenceRoot $physical.evidencePath
-$runtimePaths = @($finalPath, $stdoutPath, $stderrPath, $evidencePath, $physical.tempRoot, $physical.cacheRoot, $physical.dependencyRoot)
-if (($runtimePaths | ForEach-Object { $_.ToLowerInvariant() } | Select-Object -Unique).Count -ne $runtimePaths.Count) { throw "Role runtime paths must be distinct" }
-for ($left = 4; $left -lt $runtimePaths.Count; $left++) { for ($right = $left + 1; $right -lt $runtimePaths.Count; $right++) { if (Test-NestedOrEqual $runtimePaths[$left] $runtimePaths[$right]) { throw "Role temp, cache, and dependency roots must be nonnested" } } }
 if ([System.IO.Directory]::Exists($evidenceRoot) -and $null -ne (Get-ChildItem -LiteralPath $evidenceRoot -Force | Select-Object -First 1)) { throw "Evidence root must be fresh and empty" }
 $argv = @("-a", "never", "-m", "gpt-5.4", "-c", 'model_reasoning_effort="xhigh"', "exec", "--ephemeral", "--ignore-user-config", "--skip-git-repo-check", "--sandbox", $contract.sandboxMode, "--json", "-C", $workdir, "-o", $finalPath, "-")
 $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
@@ -205,6 +225,8 @@ $process = [System.Diagnostics.Process]::new(); $process.StartInfo = $startInfo
 $startedAt = [System.DateTimeOffset]::UtcNow
 if ($absoluteDeadline -le $startedAt) { throw "Role prompt absolute deadline is expired" }
 if ($absoluteDeadline -gt $startedAt.AddSeconds($contract.deadlineSeconds)) { throw "Role prompt absolute deadline exceeds deadlineSeconds from supervisor start" }
+$deadlineBudgetMilliseconds = [System.Math]::Floor(($absoluteDeadline - $startedAt).TotalMilliseconds)
+$deadlineStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 [System.IO.Directory]::CreateDirectory($evidenceRoot) | Out-Null
 foreach ($output in @($finalPath, $stdoutPath, $stderrPath, $evidencePath)) { [System.IO.Directory]::CreateDirectory((Split-Path -Parent $output)) | Out-Null }
 foreach ($runtimeRoot in @($physical.tempRoot, $physical.cacheRoot, $physical.dependencyRoot)) { [System.IO.Directory]::CreateDirectory($runtimeRoot) | Out-Null }
@@ -214,10 +236,12 @@ $stdoutTask = if ($started) { $process.StandardOutput.ReadToEndAsync() } else { 
 $stderrTask = if ($started) { $process.StandardError.ReadToEndAsync() } else { $null }
 if ($started) {
   try { $process.StandardInput.BaseStream.Write($promptBytes, 0, $promptBytes.Length); $process.StandardInput.Close(); $stdinDelivered = $true } catch { $stdinError = $_.Exception.ToString(); try { $process.StandardInput.Close() } catch {} }
-  $remainingMilliseconds = [int][System.Math]::Max(0, [System.Math]::Ceiling(($absoluteDeadline - [System.DateTimeOffset]::UtcNow).TotalMilliseconds))
+  $remainingMilliseconds = [int][System.Math]::Max(0, [System.Math]::Floor($deadlineBudgetMilliseconds - $deadlineStopwatch.Elapsed.TotalMilliseconds))
   if ($remainingMilliseconds -eq 0 -or -not $process.WaitForExit($remainingMilliseconds)) { $timedOut = $true; $process.Kill($true); $process.WaitForExit() }
 }
-$completedAt = [System.DateTimeOffset]::UtcNow
+$deadlineStopwatch.Stop()
+$completionObservedAt = [System.DateTimeOffset]::UtcNow
+$completedAt = if ($started -and $process.HasExited) { [System.DateTimeOffset]::new($process.ExitTime.ToUniversalTime()) } else { $completionObservedAt }
 $stdout = if ($started) { $stdoutTask.GetAwaiter().GetResult() } else { "" }
 $stderr = if ($started) { $stderrTask.GetAwaiter().GetResult() } else { "" }
 [System.IO.File]::WriteAllText($stdoutPath, $stdout, $Utf8NoBom); [System.IO.File]::WriteAllText($stderrPath, $stderr, $Utf8NoBom)
@@ -257,7 +281,7 @@ if ($null -ne $finalSha256) {
     $artifactStartedAt = if ($contract.role -eq "evaluator") { $artifact.evaluatedAt } else { $artifact.startedAt }
     $artifactCompletedAt = if ($contract.role -eq "evaluator") { $artifact.sealedAt } else { $artifact.completedAt }
     $expectedArtifactStart = if ($contract.role -eq "evaluator") { $completedAt.ToString("o") } else { $startedAt.ToString("o") }
-    $runtimeChronologyValid = $artifactStartedAt -eq $expectedArtifactStart -and $artifactCompletedAt -eq $completedAt.ToString("o") -and $completedAt -ge $startedAt -and $completedAt -le $absoluteDeadline.AddSeconds($DeadlineObservationToleranceSeconds)
+    $runtimeChronologyValid = $artifactStartedAt -eq $expectedArtifactStart -and $artifactCompletedAt -eq $completedAt.ToString("o") -and $completedAt -ge $startedAt -and $completedAt -le $absoluteDeadline
     $runtimeIdentityValid = $runtimeIdentityValid -and $runtimeChronologyValid
     if ($contract.role -eq "reviewer") { $artifactBindingValid = $runtimeIdentityValid -and $artifact.snapshotCommit -eq $contract.inputCommit }
     elseif ($contract.role -eq "fixer") { $finalCommit = Invoke-Git $workdir @("rev-parse", "HEAD"); $commitLine = (Invoke-Git $workdir @("rev-list", "--parents", "-n", "1", "HEAD")) -split " "; $artifactBindingValid = $runtimeIdentityValid -and $artifact.startCommit -eq $contract.inputCommit -and $artifact.finalCommit -eq $finalCommit -and $commitLine.Count -eq 2 -and $commitLine[1] -eq $contract.inputCommit }
@@ -266,7 +290,7 @@ if ($null -ne $finalSha256) {
   }
 }
 $result = [ordered]@{
-  role = $contract.role; invocationId = $contract.invocationId; contractSha256 = Get-Sha256 $contractFullPath; artifactSchemaSha256 = $contract.artifactSchemaSha256; processId = if ($started) { $process.Id } else { $null }; started = $started; startedAt = $startedAt.ToString("o"); completedAt = $completedAt.ToString("o"); absoluteDeadline = $absoluteDeadline.ToString("o"); startError = $startError
+  role = $contract.role; invocationId = $contract.invocationId; contractSha256 = Get-Sha256 $contractFullPath; artifactSchemaSha256 = $contract.artifactSchemaSha256; processId = if ($started) { $process.Id } else { $null }; started = $started; startedAt = $startedAt.ToString("o"); completedAt = $completedAt.ToString("o"); completionObservedAt = $completionObservedAt.ToString("o"); absoluteDeadline = $absoluteDeadline.ToString("o"); startError = $startError
   stdinDelivered = $stdinDelivered; stdinError = $stdinError; exitCode = if ($started) { $process.ExitCode } else { $null }; timedOut = $timedOut; argv = $argv; argvSha256 = Get-TextSha256 ($argv -join "`0"); promptSha256 = $contract.promptSha256
   stdoutPath = $stdoutPath; stderrPath = $stderrPath; finalPath = $finalPath; finalSha256 = $finalSha256; finalSchemaValid = $finalSchemaValid; artifactBindingValid = $artifactBindingValid; threadIds = $threadIds; turnCompleted = $turnEvents.Count -eq 1; rawJsonlValid = $rawJsonlValid; unauthorizedToolOrWriteDetected = $null; unauthorizedToolOrWriteUnavailableReason = "runner cannot observe every external tool or write; scoped input checks are enforced separately"; sandboxMode = $contract.sandboxMode; inputDisposition = $contract.inputDisposition; isolationEnforcedBy = "audited-procedural-boundary-plus-cli-sandbox"
   usage = $usage; usageUnavailableReason = if ($null -eq $usage) { "turn.completed did not expose usage" } else { $null }
@@ -274,7 +298,11 @@ $result = [ordered]@{
   stdoutSha256 = Get-Sha256 $stdoutPath; stderrSha256 = Get-Sha256 $stderrPath
 }
 [System.IO.File]::WriteAllText($evidencePath, ($result | ConvertTo-Json -Depth 10), $Utf8NoBom)
-$valid = $result.started -and $result.stdinDelivered -and -not $result.timedOut -and $result.exitCode -eq 0 -and $result.threadIds.Count -eq 1 -and $result.turnCompleted -and $result.rawJsonlValid -and $result.finalSchemaValid -and $result.artifactBindingValid -and $completedAt -ge $startedAt -and $completedAt -le $absoluteDeadline.AddSeconds($DeadlineObservationToleranceSeconds)
+$allowedEvidenceFiles = @($authoritativeOutputKeys | ForEach-Object { $physical[$_].ToLowerInvariant() } | Sort-Object -Unique)
+$actualEvidenceFiles = @((Get-ChildItem -LiteralPath $evidenceRoot -File -Recurse -Force | ForEach-Object { $_.FullName.ToLowerInvariant() }) | Sort-Object -Unique)
+$actualEvidenceDirectories = @(Get-ChildItem -LiteralPath $evidenceRoot -Directory -Recurse -Force)
+$evidenceShapeValid = ($allowedEvidenceFiles -join "`0") -eq ($actualEvidenceFiles -join "`0") -and $actualEvidenceDirectories.Count -eq 0 -and (Get-ChildItem -LiteralPath $evidenceRoot -Recurse -Force | Where-Object { ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0 } | Measure-Object).Count -eq 0
+$valid = $result.started -and $result.stdinDelivered -and -not $result.timedOut -and $result.exitCode -eq 0 -and $result.threadIds.Count -eq 1 -and $result.turnCompleted -and $result.rawJsonlValid -and $result.finalSchemaValid -and $result.artifactBindingValid -and $completedAt -ge $startedAt -and $completedAt -le $absoluteDeadline -and $completionObservedAt -ge $completedAt -and $completionObservedAt -le $absoluteDeadline.AddSeconds($DeadlineObservationToleranceSeconds) -and $evidenceShapeValid
 if ($contract.role -in @("reviewer", "fixer") -and (Invoke-Git $workdir @("status", "--porcelain=v1")).Length -ne 0) { $valid = $false }
 if ($contract.role -eq "reviewer" -and ((Invoke-Git $workdir @("rev-parse", "HEAD")) -ne $contract.inputCommit -or (Invoke-Git $workdir @("rev-parse", "HEAD^{tree}")) -ne $contract.inputTree)) { $valid = $false }
 if ($contract.role -eq "tester" -and ((Invoke-Git $workdir @("status", "--porcelain=v1")).Length -ne 0 -or (Invoke-Git $workdir @("rev-parse", "HEAD")) -ne $contract.inputCommit -or (Invoke-Git $workdir @("rev-parse", "HEAD^{tree}")) -ne $contract.inputTree)) { $valid = $false }

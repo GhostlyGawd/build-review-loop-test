@@ -493,6 +493,36 @@ const cliTail = (invocation) => [
   "-",
 ];
 
+const resolveWindowsPath = (value) =>
+  path.win32.resolve(value ?? "").toLowerCase();
+const windowsPathBeneath = (rootPath, candidatePath) => {
+  const relative = path.win32.relative(rootPath, candidatePath);
+  return (
+    relative !== "" &&
+    !relative.startsWith("..") &&
+    !path.win32.isAbsolute(relative)
+  );
+};
+const windowsPathsOverlap = (left, right) =>
+  left === right ||
+  windowsPathBeneath(left, right) ||
+  windowsPathBeneath(right, left);
+const overlappingWindowsPaths = (entries) => {
+  const overlaps = [];
+  for (let leftIndex = 0; leftIndex < entries.length; leftIndex += 1)
+    for (
+      let rightIndex = leftIndex + 1;
+      rightIndex < entries.length;
+      rightIndex += 1
+    )
+      if (windowsPathsOverlap(entries[leftIndex][1], entries[rightIndex][1]))
+        overlaps.push([entries[leftIndex][0], entries[rightIndex][0]]);
+  return overlaps;
+};
+
+export const remainingRoleWaitMilliseconds = (budgetMs, elapsedMs) =>
+  Math.max(0, Math.floor(budgetMs - elapsedMs));
+
 export function validateCliRuntimeContract(
   contract,
   lock = readJson("experiment/lock.json"),
@@ -565,41 +595,87 @@ export function validateCliRuntimeContract(
     if (new Set(values).size !== 2)
       failures.push(`CLI invocations duplicate ${field}`);
   }
-  const roots = contract.invocations.map(({ workdir }) =>
-    path.win32.resolve(workdir),
-  );
-  const evidenceRoot = path.win32.resolve(contract.evidenceRoot ?? "");
-  const beneath = (rootPath, candidate) => {
-    const relative = path.win32.relative(rootPath, candidate);
-    return (
-      relative !== "" &&
-      !relative.startsWith("..") &&
-      !path.win32.isAbsolute(relative)
-    );
-  };
-  if (beneath(roots[0], roots[1]) || beneath(roots[1], roots[0]))
+  const workdirs = contract.invocations.map(({ workdir }, index) => [
+    `invocations[${index}].workdir`,
+    resolveWindowsPath(workdir),
+  ]);
+  const evidenceRoot = resolveWindowsPath(contract.evidenceRoot);
+  if (windowsPathsOverlap(workdirs[0][1], workdirs[1][1]))
     failures.push("CLI workdirs must be nonnested independent clones");
+  const outputFields = [
+    "finalPath",
+    "stdoutPath",
+    "stderrPath",
+    "evidencePath",
+    "postStatePath",
+  ];
+  const runtimeFields = ["tempRoot", "cacheRoot", "dependencyRoot"];
+  const outputs = contract.invocations.flatMap((invocation, index) =>
+    outputFields.map((field) => [
+      `invocations[${index}].${field}`,
+      resolveWindowsPath(invocation[field]),
+    ]),
+  );
+  const runtimeRoots = contract.invocations.flatMap((invocation, index) =>
+    runtimeFields.map((field) => [
+      `invocations[${index}].${field}`,
+      resolveWindowsPath(invocation[field]),
+    ]),
+  );
+  const privateFields = [
+    "lockPath",
+    "contractSchemaPath",
+    "canonicalPathHelperPath",
+    "builderInputManifestPath",
+    "builderInputManifestSchemaPath",
+    "builderInputAllowlistPath",
+    "builderInputPreparationScriptPath",
+    "promptPath",
+  ];
+  const privateInputs = privateFields.map((field) => [
+    field,
+    resolveWindowsPath(contract[field]),
+  ]);
   for (const [index, invocation] of contract.invocations.entries()) {
-    if (
-      beneath(roots[index], evidenceRoot) ||
-      beneath(evidenceRoot, roots[index])
-    )
+    if (windowsPathsOverlap(workdirs[index][1], evidenceRoot))
       failures.push(
         `CLI invocation ${index} evidence/workdir roots are nested`,
       );
-    for (const field of [
-      "finalPath",
-      "stdoutPath",
-      "stderrPath",
-      "evidencePath",
-      "postStatePath",
-      "tempRoot",
-      "cacheRoot",
-      "dependencyRoot",
-    ])
-      if (!beneath(evidenceRoot, path.win32.resolve(invocation[field] ?? "")))
+    for (const field of outputFields)
+      if (
+        !windowsPathBeneath(evidenceRoot, resolveWindowsPath(invocation[field]))
+      )
         failures.push(`CLI invocation ${index} ${field} escapes evidenceRoot`);
   }
+  if (overlappingWindowsPaths(outputs).length > 0)
+    failures.push("CLI authoritative outputs must be distinct and nonnested");
+  const mutableRoots = [
+    ["evidenceRoot", evidenceRoot],
+    ...workdirs,
+    ...outputs,
+  ];
+  if (
+    runtimeRoots.some(([, runtimeRoot]) =>
+      mutableRoots.some(([, mutableRoot]) =>
+        windowsPathsOverlap(runtimeRoot, mutableRoot),
+      ),
+    ) ||
+    overlappingWindowsPaths(runtimeRoots).length > 0
+  )
+    failures.push(
+      "CLI runtime roots must be distinct and nonnested from evidence, workdirs, outputs, and each other",
+    );
+  const allMutable = [...mutableRoots, ...runtimeRoots];
+  if (
+    privateInputs.some(([, privateInput]) =>
+      allMutable.some(([, mutableRoot]) =>
+        windowsPathsOverlap(privateInput, mutableRoot),
+      ),
+    )
+  )
+    failures.push(
+      "CLI private inputs must be distinct and nonnested from every mutable root and output",
+    );
   return failures;
 }
 
@@ -778,6 +854,75 @@ export function validateRoleRuntimeContract(
     failures.push("role prompt-template lock mismatch");
   if (contract.artifactSchemaSha256 !== artifactLocks[contract.role])
     failures.push("role artifact-schema lock mismatch");
+  const workdir = resolveWindowsPath(contract.workdir);
+  const evidenceRoot = resolveWindowsPath(contract.evidenceRoot);
+  const outputFields = [
+    "finalPath",
+    "stdoutPath",
+    "stderrPath",
+    "evidencePath",
+  ];
+  const outputs = outputFields.map((field) => [
+    field,
+    resolveWindowsPath(contract[field]),
+  ]);
+  const runtimeRoots = ["tempRoot", "cacheRoot", "dependencyRoot"].map(
+    (field) => [field, resolveWindowsPath(contract[field])],
+  );
+  const privateFields = [
+    "lockPath",
+    "contractSchemaPath",
+    "canonicalPathHelperPath",
+    "runnerPath",
+    "evidenceSchemaPath",
+    "promptTemplatePath",
+    "artifactSchemaPath",
+    "promptPath",
+    "packageManifestPath",
+    "handoffPath",
+    "rubricPath",
+    "hiddenSuitePath",
+    "packageManifestSchemaPath",
+    "packageScriptPath",
+  ];
+  const privateInputs = privateFields
+    .filter((field) => contract[field] != null)
+    .map((field) => [field, resolveWindowsPath(contract[field])]);
+  if (windowsPathsOverlap(workdir, evidenceRoot))
+    failures.push(
+      "role workdir and evidenceRoot must be distinct and nonnested",
+    );
+  for (const [field, output] of outputs)
+    if (path.win32.dirname(output).toLowerCase() !== evidenceRoot.toLowerCase())
+      failures.push(`role ${field} must be a direct child of evidenceRoot`);
+  if (overlappingWindowsPaths(outputs).length > 0)
+    failures.push("role authoritative outputs must be distinct and nonnested");
+  const mutableRoots = [
+    ["workdir", workdir],
+    ["evidenceRoot", evidenceRoot],
+    ...outputs,
+  ];
+  if (
+    runtimeRoots.some(([, runtimeRoot]) =>
+      mutableRoots.some(([, mutableRoot]) =>
+        windowsPathsOverlap(runtimeRoot, mutableRoot),
+      ),
+    ) ||
+    overlappingWindowsPaths(runtimeRoots).length > 0
+  )
+    failures.push(
+      "role runtime roots must be distinct and nonnested from evidence, workdir, outputs, and each other",
+    );
+  if (
+    privateInputs.some(([, privateInput]) =>
+      [...mutableRoots, ...runtimeRoots].some(([, mutableRoot]) =>
+        windowsPathsOverlap(privateInput, mutableRoot),
+      ),
+    )
+  )
+    failures.push(
+      "role private inputs must be distinct and nonnested from every mutable root and output",
+    );
   return failures;
 }
 
@@ -840,6 +985,7 @@ export function validateRoleSupervisionEvidence(
     failures.push("role result lifecycle invalid");
   const startedAt = Date.parse(result.startedAt);
   const completedAt = Date.parse(result.completedAt);
+  const completionObservedAt = Date.parse(result.completionObservedAt);
   const absoluteDeadline = Date.parse(result.absoluteDeadline);
   const contractedDeadline = Date.parse(
     contract.promptSubstitutions?.WALL_CLOCK_DEADLINE_ISO,
@@ -847,13 +993,16 @@ export function validateRoleSupervisionEvidence(
   if (
     !Number.isFinite(startedAt) ||
     !Number.isFinite(completedAt) ||
+    !Number.isFinite(completionObservedAt) ||
     !Number.isFinite(absoluteDeadline) ||
     !Number.isFinite(contractedDeadline) ||
     absoluteDeadline !== contractedDeadline ||
     startedAt >= absoluteDeadline ||
     absoluteDeadline - startedAt > contract.deadlineSeconds * 1000 ||
     completedAt < startedAt ||
-    completedAt > absoluteDeadline + 2000
+    completedAt > absoluteDeadline ||
+    completionObservedAt < completedAt ||
+    completionObservedAt > absoluteDeadline + 2000
   )
     failures.push("role result observed chronology/deadline binding invalid");
   if (result.argvSha256 !== sha256(result.argv.join("\0")))
@@ -1174,6 +1323,8 @@ export function validateCanonicalContract(contract) {
       JSON.stringify(cliInvariantArgv) ||
     JSON.stringify(contract.cliRuntime?.perInvocationArgv) !==
       JSON.stringify(["-C", "<workdir>", "-o", "<final-path>", "-"]) ||
+    contract.cliRuntime?.containmentGraphPolicy !==
+      "before evidence or runtime directory creation and before model launch, canonicalize existing and prospective paths through their nearest existing physical parents; require independent nonnested workdirs, authoritative outputs contained only by evidenceRoot and pairwise nonnested, temp/cache/dependency roots external to and nonnested with evidenceRoot/workdirs/outputs/each other across invocations, and every private input external to every mutable root and output; after execution evidenceRoot contains exactly the authoritative outputs and their necessary parent directories with no reparse points" ||
     contract.cliRuntime?.v4Evidence?.contractSha256 !==
       "d1a47087dc0bfcf85638e6c9faef4c7399c98626556747f1fda31e0a67e0645d"
   )
@@ -1191,11 +1342,11 @@ export function validateCanonicalContract(contract) {
     contract.cliRuntime?.roleRuntime?.evidenceSchemaSha256 !==
       lock.supervisionEvidenceSchemaSha256 ||
     contract.cliRuntime?.roleRuntime?.deadlinePolicy !==
-      "before evidence creation, strict-parse WALL_CLOCK_DEADLINE_ISO as UTC, capture supervisor start, require start < absolute deadline <= start + deadlineSeconds with zero scheduling tolerance, wait only for the remaining absolute interval, and allow two seconds solely for completion observation or process-tree termination" ||
+      "before evidence creation, strict-parse WALL_CLOCK_DEADLINE_ISO as UTC, capture supervisor start, require start < absolute deadline <= start + deadlineSeconds with zero scheduling tolerance, compute monotonic elapsed time from a floor-truncated absolute budget, pass floor(remaining) to WaitForExit, treat less than one millisecond as zero, require actual OS exit completedAt <= absoluteDeadline, and allow two seconds solely for completionObservedAt or process-tree termination" ||
     contract.cliRuntime?.roleRuntime?.pathMutationPolicy !==
-      "complete every physical containment, equality, distinctness, and nonnesting check before creating evidenceRoot or any runtime output directory" ||
+      "before evidence or runtime directory creation and model launch, canonicalize prospective paths and require evidenceRoot/workdir separation, four pairwise-nonnested authoritative direct-child outputs, external pairwise-nonnested temp/cache/dependency roots, and every private input separate from every mutable root and output; afterward require exactly four evidence files, no subdirectories, and no reparse points" ||
     contract.cliRuntime?.roleRuntime?.outputSchemaPolicy !==
-      "codex exec supports --output-schema, but authoritative final schemas require supervisor-observed runtime identity and chronology; omit the flag until distinct frozen pre-injection schemas exist, then inject identity, overwrite role artifact chronology with observed start/end, and validate the authoritative final schema" ||
+      "codex exec supports --output-schema, but authoritative final schemas require supervisor-observed runtime identity and chronology; omit the flag until distinct frozen pre-injection schemas exist, then inject identity, overwrite role artifact chronology with actual OS exit time, record completion observation separately, and validate the authoritative final schema" ||
     contract.evaluation?.packageScriptSha256 !==
       fileSha256("scripts/package-blinded-snapshots.mjs") ||
     contract.evaluation?.packageScriptSha256 !==

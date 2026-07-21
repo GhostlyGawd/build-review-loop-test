@@ -18,6 +18,7 @@ import { describe, it } from "node:test";
 import {
   canonicalHash,
   readJson,
+  remainingRoleWaitMilliseconds,
   root,
   validateArtifactMode,
   validateCliRuntimeContract,
@@ -242,6 +243,7 @@ const createBuilderRunnerFixture = () => {
   const shadowLockPath = path.join(temporaryRoot, "private", "lock.json");
   writeFileSync(shadowLockPath, `${JSON.stringify(lock, null, 2)}\n`);
   const evidenceRoot = path.join(temporaryRoot, "evidence");
+  const runtimeRoot = path.join(temporaryRoot, "runtime");
   const contract = clone(
     readJson("experiment/golden-run/golden-run.json").cliRuntimeContract,
   );
@@ -290,9 +292,9 @@ const createBuilderRunnerFixture = () => {
       stderrPath: path.join(output, "stderr.txt"),
       evidencePath: path.join(output, "evidence.json"),
       postStatePath: path.join(output, "post-state.json"),
-      tempRoot: path.join(output, "temp"),
-      cacheRoot: path.join(output, "cache"),
-      dependencyRoot: path.join(output, "deps"),
+      tempRoot: path.join(runtimeRoot, index === 0 ? "a-temp" : "b-temp"),
+      cacheRoot: path.join(runtimeRoot, index === 0 ? "a-cache" : "b-cache"),
+      dependencyRoot: path.join(runtimeRoot, index === 0 ? "a-deps" : "b-deps"),
       port: 43001 + index,
     });
   }
@@ -368,6 +370,7 @@ const createRoleRunnerFixture = () => {
   const promptPath = path.join(privateRoot, "reviewer-prompt.md");
   writeFileSync(promptPath, rendered);
   const evidenceRoot = path.join(temporaryRoot, "evidence");
+  const runtimeRoot = path.join(temporaryRoot, "role-runtime");
   const contract = clone(
     readJson("experiment/templates/role-runtime-contract.json"),
   );
@@ -409,9 +412,9 @@ const createRoleRunnerFixture = () => {
     stdoutPath: path.join(evidenceRoot, "stdout.jsonl"),
     stderrPath: path.join(evidenceRoot, "stderr.txt"),
     evidencePath: path.join(evidenceRoot, "evidence.json"),
-    tempRoot: path.join(evidenceRoot, "temp"),
-    cacheRoot: path.join(evidenceRoot, "cache"),
-    dependencyRoot: path.join(evidenceRoot, "deps"),
+    tempRoot: path.join(runtimeRoot, "temp"),
+    cacheRoot: path.join(runtimeRoot, "cache"),
+    dependencyRoot: path.join(runtimeRoot, "deps"),
     deadlineSeconds: 60,
   });
   const run = () => {
@@ -584,7 +587,7 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       assert.notEqual(result.status, 0);
       assert.match(
         `${result.stdout}\n${result.stderr}`,
-        /private runtime input must remain outside/i,
+        /private builder input and workdir.*physically distinct and nonnested/i,
       );
       assert.equal(existsSync(fixture.evidenceRoot), false);
       const runnerSource = readFileSync(
@@ -592,12 +595,119 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
         "utf8",
       );
       assert.ok(
-        runnerSource.indexOf("Private runtime input must remain outside") <
+        runnerSource.indexOf("Private builder input and workdir") <
           runnerSource.indexOf("$started = $process.Start()"),
         "alias rejection gate must execute before the model process start",
       );
     } finally {
       rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects every schema-valid builder containment overlap before evidence or model launch", () => {
+    const cases = [
+      [
+        "duplicate outputs",
+        (contract) => {
+          contract.invocations[1].stdoutPath =
+            contract.invocations[0].stdoutPath;
+        },
+      ],
+      [
+        "nested outputs",
+        (contract) => {
+          contract.invocations[1].stdoutPath = path.join(
+            contract.invocations[0].finalPath,
+            "nested.jsonl",
+          );
+        },
+      ],
+      [
+        "runtime under output",
+        (contract) => {
+          contract.invocations[0].tempRoot = path.join(
+            contract.invocations[0].finalPath,
+            "temp",
+          );
+        },
+      ],
+      [
+        "output under runtime",
+        (contract) => {
+          contract.invocations[0].finalPath = path.join(
+            contract.invocations[0].tempRoot,
+            "final.json",
+          );
+        },
+      ],
+      [
+        "runtime under evidence",
+        (contract) => {
+          contract.invocations[0].tempRoot = path.join(
+            contract.evidenceRoot,
+            "temp",
+          );
+        },
+      ],
+      [
+        "nested cross-builder runtime",
+        (contract) => {
+          contract.invocations[1].cacheRoot = path.join(
+            contract.invocations[0].tempRoot,
+            "nested-cache",
+          );
+        },
+      ],
+      [
+        "runtime under other workdir",
+        (contract) => {
+          contract.invocations[1].dependencyRoot = path.join(
+            contract.invocations[0].workdir,
+            "deps",
+          );
+        },
+      ],
+      [
+        "duplicate cross-builder workdir",
+        (contract) => {
+          contract.invocations[1].workdir = contract.invocations[0].workdir;
+        },
+      ],
+    ];
+    for (const [label, mutate] of cases) {
+      const fixture = createBuilderRunnerFixture();
+      try {
+        mutate(fixture.contract);
+        const result = fixture.run();
+        const diagnostic = `${result.stdout}\n${result.stderr}`;
+        assert.notEqual(result.status, 0, label);
+        assert.match(
+          diagnostic,
+          /physically distinct and nonnested|beneath evidenceRoot/i,
+          label,
+        );
+        assert.doesNotMatch(diagnostic, /thread\.started/i, label);
+        assert.equal(existsSync(fixture.evidenceRoot), false, label);
+      } finally {
+        rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+      }
+    }
+    const source = readFileSync(
+      path.join(root, "scripts/run-cli-builders.ps1"),
+      "utf8",
+    );
+    for (const gate of [
+      "Assert-PathsSeparate $workdirPaths[0] $workdirPaths[1]",
+      "Assert-PathsSeparate $authoritativeOutputPaths[$left] $authoritativeOutputPaths[$right]",
+      "Assert-PathsSeparate $runtimeRoot $runtimeRootPaths[$right]",
+      "Assert-PathsSeparate $privatePath $runtimeRoot",
+    ]) {
+      assert.ok(
+        source.indexOf(gate) < source.indexOf("CreateDirectory($evidenceRoot)"),
+      );
+      assert.ok(
+        source.indexOf(gate) < source.indexOf("$started = $process.Start()"),
+      );
     }
   });
 
@@ -656,7 +766,7 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       assert.notEqual(result.status, 0);
       assert.match(
         `${result.stdout}\n${result.stderr}`,
-        /private runtime input must remain outside/i,
+        /private builder input and workdir.*physically distinct and nonnested/i,
       );
       assert.equal(existsSync(fixture.evidenceRoot), false);
       const runnerSource = readFileSync(
@@ -664,7 +774,7 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
         "utf8",
       );
       assert.ok(
-        runnerSource.indexOf("Private runtime input must remain outside") <
+        runnerSource.indexOf("Private builder input and workdir") <
           runnerSource.indexOf("$started = $process.Start()"),
         "8.3 alias rejection gate must execute before model process start",
       );
@@ -716,7 +826,7 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       assert.notEqual(result.status, 0);
       assert.match(
         `${result.stdout}\n${result.stderr}`,
-        /private role runtime input must remain outside/i,
+        /private role runtime input and workdir.*physically distinct and nonnested/i,
       );
       assert.equal(existsSync(fixture.evidenceRoot), false);
       const runnerSource = readFileSync(
@@ -724,7 +834,7 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
         "utf8",
       );
       assert.ok(
-        runnerSource.indexOf("Private role runtime input must remain outside") <
+        runnerSource.indexOf("Private role runtime input and workdir") <
           runnerSource.indexOf("$started = $process.Start()"),
         "role alias rejection gate must execute before the model process start",
       );
@@ -763,24 +873,70 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
     );
   });
 
-  it("rejects duplicate and nested role runtime paths before evidence or model launch", () => {
-    for (const mutate of [
-      (contract) => {
-        contract.stdoutPath = contract.finalPath;
-      },
-      (contract) => {
-        contract.tempRoot = path.join(contract.cacheRoot, "nested-temp");
-      },
-    ]) {
+  it("rejects every schema-valid role containment overlap before evidence or model launch", () => {
+    const cases = [
+      [
+        "duplicate outputs",
+        (contract) => {
+          contract.stdoutPath = contract.finalPath;
+        },
+      ],
+      [
+        "nested outputs",
+        (contract) => {
+          contract.stdoutPath = path.join(contract.finalPath, "nested.jsonl");
+        },
+      ],
+      [
+        "runtime under output",
+        (contract) => {
+          contract.tempRoot = path.join(contract.finalPath, "temp");
+        },
+      ],
+      [
+        "output under runtime",
+        (contract) => {
+          contract.finalPath = path.join(contract.tempRoot, "final.json");
+        },
+      ],
+      [
+        "runtime under evidence",
+        (contract) => {
+          contract.tempRoot = path.join(contract.evidenceRoot, "temp");
+        },
+      ],
+      [
+        "nested runtime roots",
+        (contract) => {
+          contract.tempRoot = path.join(contract.cacheRoot, "nested-temp");
+        },
+      ],
+      [
+        "runtime under workdir",
+        (contract) => {
+          contract.dependencyRoot = path.join(contract.workdir, "deps");
+        },
+      ],
+      [
+        "evidence under output",
+        (contract) => {
+          contract.evidenceRoot = path.join(contract.finalPath, "evidence");
+        },
+      ],
+    ];
+    for (const [label, mutate] of cases) {
       const fixture = createRoleRunnerFixture();
       try {
         mutate(fixture.contract);
         const result = fixture.run();
+        const diagnostic = `${result.stdout}\n${result.stderr}`;
         assert.notEqual(result.status, 0);
         assert.match(
-          `${result.stdout}\n${result.stderr}`,
-          /runtime paths must be distinct|roots must be nonnested/i,
+          diagnostic,
+          /physically distinct and nonnested|direct children/i,
+          label,
         );
+        assert.doesNotMatch(diagnostic, /thread\.started/i, label);
         assert.equal(existsSync(fixture.evidenceRoot), false);
       } finally {
         rmSync(fixture.temporaryRoot, { recursive: true, force: true });
@@ -791,14 +947,20 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       "utf8",
     );
     assert.ok(
-      runnerSource.indexOf("Role runtime paths must be distinct") <
+      runnerSource.indexOf("Assert-PathsSeparate $evidenceRoot $workdir") <
         runnerSource.indexOf("CreateDirectory($evidenceRoot)"),
     );
     assert.ok(
       runnerSource.indexOf(
-        "Role temp, cache, and dependency roots must be nonnested",
+        "Assert-PathsSeparate $runtimeRoot $physical[$runtimeRootKeys[$right]]",
       ) < runnerSource.indexOf("$started = $process.Start()"),
     );
+  });
+
+  it("floors the monotonic remaining deadline interval and never rounds a sub-millisecond remainder up", () => {
+    assert.equal(remainingRoleWaitMilliseconds(10, 8.001), 1);
+    assert.equal(remainingRoleWaitMilliseconds(10, 9.001), 0);
+    assert.equal(remainingRoleWaitMilliseconds(10, 10.001), 0);
   });
 
   it("accepts the prospective scaffold and seeded assignment algorithms", () => {
@@ -1380,6 +1542,25 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
     assert.deepEqual(
       validateRoleSupervisionEvidence(result, contract, raw),
       [],
+    );
+    const exitAfterDeadline = clone(result);
+    exitAfterDeadline.completedAt = "2026-07-20T00:15:00.001Z";
+    exitAfterDeadline.completionObservedAt = "2026-07-20T00:15:00.001Z";
+    assert.match(
+      validateRoleSupervisionEvidence(exitAfterDeadline, contract, raw).join(
+        "\n",
+      ),
+      /chronology\/deadline/i,
+    );
+    const observationAfterTolerance = clone(result);
+    observationAfterTolerance.completionObservedAt = "2026-07-20T00:15:02.001Z";
+    assert.match(
+      validateRoleSupervisionEvidence(
+        observationAfterTolerance,
+        contract,
+        raw,
+      ).join("\n"),
+      /chronology\/deadline/i,
     );
     result.unauthorizedToolOrWriteDetected = true;
     result.finalSchemaValid = false;

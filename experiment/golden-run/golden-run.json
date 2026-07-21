@@ -2,7 +2,7 @@
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-conformance",
   "protocolVersion": "2.4.0",
-  "canonicalContractSha256": "e85e12cf635d9d18f840c8b4852d4721b4fe62bc7288c23bb9d757d7ba9db205",
+  "canonicalContractSha256": "d68f035b56f9e5c6b3013d5a5608b859e93011c667533033f53b59800929ad64",
   "status": "valid",
   "activeInvalidation": null,
   "invalidAttempts": [
@@ -131,9 +131,9 @@
         "stderrPath": "C:\\synthetic\\evidence\\a\\stderr.txt",
         "evidencePath": "C:\\synthetic\\evidence\\a\\evidence.json",
         "postStatePath": "C:\\synthetic\\evidence\\a\\post-state.json",
-        "tempRoot": "C:\\synthetic\\evidence\\a\\temp",
-        "cacheRoot": "C:\\synthetic\\evidence\\a\\cache",
-        "dependencyRoot": "C:\\synthetic\\evidence\\a\\deps",
+        "tempRoot": "C:\\synthetic\\runtime\\a\\temp",
+        "cacheRoot": "C:\\synthetic\\runtime\\a\\cache",
+        "dependencyRoot": "C:\\synthetic\\runtime\\a\\deps",
         "port": 41001
       },
       {
@@ -144,9 +144,9 @@
         "stderrPath": "C:\\synthetic\\evidence\\b\\stderr.txt",
         "evidencePath": "C:\\synthetic\\evidence\\b\\evidence.json",
         "postStatePath": "C:\\synthetic\\evidence\\b\\post-state.json",
-        "tempRoot": "C:\\synthetic\\evidence\\b\\temp",
-        "cacheRoot": "C:\\synthetic\\evidence\\b\\cache",
-        "dependencyRoot": "C:\\synthetic\\evidence\\b\\deps",
+        "tempRoot": "C:\\synthetic\\runtime\\b\\temp",
+        "cacheRoot": "C:\\synthetic\\runtime\\b\\cache",
+        "dependencyRoot": "C:\\synthetic\\runtime\\b\\deps",
         "port": 41002
       }
     ]

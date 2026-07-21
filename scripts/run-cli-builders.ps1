@@ -85,6 +85,9 @@ function Test-PathsNestedOrEqual([string]$Left, [string]$Right) {
   $rightPath = [System.IO.Path]::GetFullPath($Right).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
   return $leftPath.Equals($rightPath, [System.StringComparison]::OrdinalIgnoreCase) -or (Test-PathBeneath $leftPath $rightPath) -or (Test-PathBeneath $rightPath $leftPath)
 }
+function Assert-PathsSeparate([string]$Left, [string]$Right, [string]$Label) {
+  if (Test-PathsNestedOrEqual $Left $Right) { throw "$Label must be physically distinct and nonnested" }
+}
 
 function Assert-NoReparseAncestors([string]$Path, [string]$Label) {
   $cursor = [System.IO.Path]::GetFullPath($Path)
@@ -191,33 +194,53 @@ if ([System.IO.Directory]::Exists($evidenceRoot) -and $null -ne (Get-ChildItem -
 
 $ids = @($contract.invocations | ForEach-Object { $_.invocationId })
 if (($ids | Select-Object -Unique).Count -ne 2) { throw "Opaque invocation IDs must be distinct" }
-$variablePaths = @()
+$workdirPaths = @()
+$authoritativeOutputPaths = @()
+$runtimeRootPaths = @()
+$authoritativeOutputFields = @("finalPath", "stdoutPath", "stderrPath", "evidencePath", "postStatePath")
+$runtimeRootFields = @("tempRoot", "cacheRoot", "dependencyRoot")
 foreach ($spec in $contract.invocations) {
   $prefix = $spec.invocationId
   $workdir = $physical["$prefix.workdir"].TrimEnd([System.IO.Path]::DirectorySeparatorChar)
-  $variablePaths += @($workdir) + @(@("finalPath", "stdoutPath", "stderrPath", "evidencePath", "postStatePath", "tempRoot", "cacheRoot", "dependencyRoot") | ForEach-Object { $physical["$prefix.$_"] })
+  $workdirPaths += $workdir
   Assert-NoReparseAncestors ([System.IO.Path]::GetFullPath($spec.workdir)) "Builder workdir"
   Assert-NoReparseAncestors ([System.IO.Path]::GetFullPath((Join-Path $spec.workdir ".git"))) "Builder Git directory"
   if (-not [System.IO.Directory]::Exists($workdir)) { throw "Workdir must exist" }
-  if (Test-PathsNestedOrEqual $workdir $evidenceRoot) { throw "Evidence root and candidate clone must be separate and nonnested" }
-  foreach ($field in @("finalPath", "stdoutPath", "stderrPath", "evidencePath", "postStatePath", "tempRoot", "cacheRoot", "dependencyRoot")) {
-    $outputPath = $spec.$field
+  Assert-PathsSeparate $workdir $evidenceRoot "Builder evidence root and workdir"
+  foreach ($field in $authoritativeOutputFields) {
     $resolvedOutput = $physical["$prefix.$field"]
-    Assert-NoReparseAncestors ([System.IO.Path]::GetFullPath($outputPath)) "Runtime output"
+    $authoritativeOutputPaths += $resolvedOutput
+    Assert-NoReparseAncestors ([System.IO.Path]::GetFullPath($spec.$field)) "Authoritative output"
     if (-not $resolvedOutput.StartsWith($evidenceRoot + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) { throw "Every output path must resolve beneath evidenceRoot" }
-    if (Test-PathBeneath $workdir $resolvedOutput) { throw "Runtime output may not be inside a candidate clone" }
+  }
+  foreach ($field in $runtimeRootFields) {
+    $runtimeRoot = $physical["$prefix.$field"]
+    $runtimeRootPaths += $runtimeRoot
+    Assert-NoReparseAncestors ([System.IO.Path]::GetFullPath($spec.$field)) "Builder runtime root"
   }
 }
 $privateInputPaths = @($physical.contract, $physical.lock, $physical.schema, $physical.helper, $physical.manifest, $physical.manifestSchema, $physical.allowlist, $physical.preparationScript, $physical.prompt)
 $privateInputRawPaths = @($contractFullPath, $lockPath, $schemaPath, $canonicalPathHelperPath, $builderManifestPath, $builderManifestSchemaPath, $builderAllowlistPath, $builderPreparationScriptPath, [System.IO.Path]::GetFullPath($contract.promptPath))
 foreach ($privatePath in $privateInputRawPaths) { Assert-NoReparseAncestors $privatePath "Private runtime input" }
-foreach ($privatePath in $privateInputPaths) {
-  if (Test-PathsNestedOrEqual $privatePath $evidenceRoot) { throw "Private runtime input and evidence root must be separate and nonnested" }
-  foreach ($invocation in $contract.invocations) { if (Test-PathsNestedOrEqual $privatePath $physical["$($invocation.invocationId).workdir"]) { throw "Private runtime input must remain outside every builder workdir" } }
+Assert-PathsSeparate $workdirPaths[0] $workdirPaths[1] "Builder workdirs"
+for ($left = 0; $left -lt $authoritativeOutputPaths.Count; $left++) {
+  foreach ($workdir in $workdirPaths) { Assert-PathsSeparate $authoritativeOutputPaths[$left] $workdir "Builder authoritative output and workdir" }
+  for ($right = $left + 1; $right -lt $authoritativeOutputPaths.Count; $right++) { Assert-PathsSeparate $authoritativeOutputPaths[$left] $authoritativeOutputPaths[$right] "Builder authoritative outputs" }
 }
-if ((Test-PathBeneath $physical["$($contract.invocations[0].invocationId).workdir"] $physical["$($contract.invocations[1].invocationId).workdir"]) -or (Test-PathBeneath $physical["$($contract.invocations[1].invocationId).workdir"] $physical["$($contract.invocations[0].invocationId).workdir"])) { throw "Candidate clones must be nonnested" }
+for ($left = 0; $left -lt $runtimeRootPaths.Count; $left++) {
+  $runtimeRoot = $runtimeRootPaths[$left]
+  Assert-PathsSeparate $runtimeRoot $evidenceRoot "Builder runtime root and evidence root"
+  foreach ($workdir in $workdirPaths) { Assert-PathsSeparate $runtimeRoot $workdir "Builder runtime root and workdir" }
+  foreach ($outputPath in $authoritativeOutputPaths) { Assert-PathsSeparate $runtimeRoot $outputPath "Builder runtime root and authoritative output" }
+  for ($right = $left + 1; $right -lt $runtimeRootPaths.Count; $right++) { Assert-PathsSeparate $runtimeRoot $runtimeRootPaths[$right] "Builder runtime roots" }
+}
+foreach ($privatePath in $privateInputPaths) {
+  Assert-PathsSeparate $privatePath $evidenceRoot "Private builder input and evidence root"
+  foreach ($workdir in $workdirPaths) { Assert-PathsSeparate $privatePath $workdir "Private builder input and workdir" }
+  foreach ($outputPath in $authoritativeOutputPaths) { Assert-PathsSeparate $privatePath $outputPath "Private builder input and authoritative output" }
+  foreach ($runtimeRoot in $runtimeRootPaths) { Assert-PathsSeparate $privatePath $runtimeRoot "Private builder input and runtime root" }
+}
 if (($contract.invocations.port | Select-Object -Unique).Count -ne 2) { throw "Candidate ports must be distinct" }
-if (($variablePaths | ForEach-Object { $_.ToLowerInvariant() } | Select-Object -Unique).Count -ne $variablePaths.Count) { throw "Runtime paths must be distinct" }
 
 foreach ($spec in $contract.invocations) {
   $workdir = $physical["$($spec.invocationId).workdir"].TrimEnd([System.IO.Path]::DirectorySeparatorChar)
@@ -346,7 +369,17 @@ foreach ($run in $runs) {
 }
 
 $threadIds = @($results | ForEach-Object { $_.threadIds })
-$valid = ($results | Where-Object { -not $_.started -or -not $_.stdinDelivered -or $_.timedOut -or $_.exitCode -ne 0 -or $_.threadIds.Count -ne 1 -or -not $_.turnCompleted -or -not $_.rawJsonlValid -or $null -eq $_.finalSha256 -or $_.sandboxMode -ne "workspace-write" }).Count -eq 0 -and ($threadIds | Select-Object -Unique).Count -eq 2
+$allowedEvidenceFiles = @($authoritativeOutputPaths | ForEach-Object { $_.ToLowerInvariant() } | Sort-Object -Unique)
+$actualEvidenceFiles = @((Get-ChildItem -LiteralPath $evidenceRoot -File -Recurse -Force | ForEach-Object { $_.FullName.ToLowerInvariant() }) | Sort-Object -Unique)
+$allowedEvidenceDirectories = @()
+foreach ($outputPath in $authoritativeOutputPaths) {
+  $cursor = [System.IO.Path]::GetDirectoryName($outputPath)
+  while (-not $cursor.Equals($evidenceRoot, [System.StringComparison]::OrdinalIgnoreCase)) { $allowedEvidenceDirectories += $cursor.ToLowerInvariant(); $cursor = [System.IO.Path]::GetDirectoryName($cursor) }
+}
+$allowedEvidenceDirectories = @($allowedEvidenceDirectories | Sort-Object -Unique)
+$actualEvidenceDirectories = @((Get-ChildItem -LiteralPath $evidenceRoot -Directory -Recurse -Force | ForEach-Object { $_.FullName.ToLowerInvariant() }) | Sort-Object -Unique)
+$evidenceShapeValid = ($allowedEvidenceFiles -join "`0") -eq ($actualEvidenceFiles -join "`0") -and ($allowedEvidenceDirectories -join "`0") -eq ($actualEvidenceDirectories -join "`0") -and (Get-ChildItem -LiteralPath $evidenceRoot -Recurse -Force | Where-Object { ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0 } | Measure-Object).Count -eq 0
+$valid = ($results | Where-Object { -not $_.started -or -not $_.stdinDelivered -or $_.timedOut -or $_.exitCode -ne 0 -or $_.threadIds.Count -ne 1 -or -not $_.turnCompleted -or -not $_.rawJsonlValid -or $null -eq $_.finalSha256 -or $_.sandboxMode -ne "workspace-write" }).Count -eq 0 -and ($threadIds | Select-Object -Unique).Count -eq 2 -and $evidenceShapeValid
 foreach ($run in $runs) { if ($run.started -and ((Invoke-Git $physical["$($run.spec.invocationId).workdir"] @("status", "--porcelain=v1")).Length -ne 0)) { $valid = $false } }
 $summary = [ordered]@{
   contractSha256 = Get-Sha256 $contractFullPath; runnerMode = if ($contract.smokeMode) { "smoke" } else { "builder" }
