@@ -20,12 +20,15 @@ const canonicalDomain = Buffer.from(
 const compareUtf8 = (left, right) =>
   Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
 const frozenGatePaths = [
-  "docs/permissions-playground-spec.md",
-  "docs/public-test-contract.md",
-  "tests/public",
-  "scripts/run-public-tests.mjs",
-  "package.json",
-  "package-lock.json",
+  [
+    "docs/permissions-playground-spec.md",
+    "docs/permissions-playground-spec.md",
+  ],
+  ["docs/public-test-contract.md", "docs/public-test-contract.md"],
+  ["tests/public", "tests/public"],
+  ["scripts/run-public-tests.mjs", "scripts/run-public-tests.mjs"],
+  ["experiment/builder-package.json", "package.json"],
+  ["package-lock.json", "package-lock.json"],
 ];
 export function frozenGateSetHash(base = root) {
   const records = [];
@@ -35,8 +38,8 @@ export function frozenGateSetHash(base = root) {
         add(path.join(absolute, name), `${relative}/${name}`);
     } else records.push([relative, sha256Bytes(readFileSync(absolute))]);
   };
-  for (const relative of frozenGatePaths)
-    add(path.join(base, relative), relative);
+  for (const [source, destination] of frozenGatePaths)
+    add(path.join(base, source), destination);
   records.sort(([left], [right]) => compareUtf8(left, right));
   return sha256(
     records.map(([name, digest]) => `${name}\0${digest}\n`).join(""),

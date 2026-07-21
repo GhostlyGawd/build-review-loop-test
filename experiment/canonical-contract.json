@@ -198,7 +198,7 @@
     "packageMappingSchemaSha256": "2d0a96f27d43f511c26b57a49dfef5c05acfe0f5dfb1f8419f724d524513fb74",
     "packageInputRule": "exact X/Y/Z randomized order and B0/T0/Tfinal set; core.autocrlf=false clean full-clone sources must match exact refs, committed Git commit/tree, one frozen public-gate-set hash, and schema-bound private provenance markers; source, output, mapping, and private manifest paths remain separate and nonnested; evaluator-facing manifests omit source role/ref/commit/tree",
     "rubricSha256": "f0f4b5b918a9a50183455bf237a90706dcac58ce3cf708996bdc9ceb3b0978ef",
-    "frozenGateSetSha256": "b3d6f38a6b8f9350213d17c26fa891dfc4cfab52231d8277398b726cf294984c",
+    "frozenGateSetSha256": "af8a2d6f7a29ff3dcbc1ca4240361e6bdbba520078a0cd39dbd0f4e4ba0f7930",
     "rubricItems": [
       {
         "id": "A1",

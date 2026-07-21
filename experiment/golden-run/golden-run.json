@@ -2,7 +2,7 @@
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-conformance",
   "protocolVersion": "2.4.0",
-  "canonicalContractSha256": "280a895bdcd00664bc8afb303fe119aff295d01e09c5a74f47b56e5d4271ad1e",
+  "canonicalContractSha256": "10d9f1327e37310393e3224057687a2b97dd61b23e695b1638192b76585537cd",
   "status": "valid",
   "activeInvalidation": null,
   "invalidAttempts": [
@@ -550,7 +550,7 @@
     "manifestVersion": "1.0.0",
     "mappingSeedSha256": "84e09f0fb1fddf4d5a0f58bb5e459f9e8e83e266f4b9567192ab42012376ce2f",
     "randomizedOrder": ["X", "Y", "Z"],
-    "frozenGateSetSha256": "b3d6f38a6b8f9350213d17c26fa891dfc4cfab52231d8277398b726cf294984c",
+    "frozenGateSetSha256": "af8a2d6f7a29ff3dcbc1ca4240361e6bdbba520078a0cd39dbd0f4e4ba0f7930",
     "packages": [
       {
         "packageLabel": "X",
