@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/builder-input-manifest.schema.json",
+  "title": "Sanitized builder input projection manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sourceCommit",
+    "sourceTree",
+    "allowlistSha256",
+    "projectionSha256",
+    "projectionCommit",
+    "projectionTree",
+    "files"
+  ],
+  "properties": {
+    "version": { "const": "1.0.0" },
+    "sourceCommit": { "$ref": "#/$defs/sha1" },
+    "sourceTree": { "$ref": "#/$defs/sha1" },
+    "allowlistSha256": { "$ref": "#/$defs/sha256" },
+    "projectionSha256": { "$ref": "#/$defs/sha256" },
+    "projectionCommit": { "$ref": "#/$defs/sha1" },
+    "projectionTree": { "$ref": "#/$defs/sha1" },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "bytes"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.git(?:/|$))(?!.*\\.\\.)[^\\\\]+$"
+          },
+          "sha256": { "$ref": "#/$defs/sha256" },
+          "bytes": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

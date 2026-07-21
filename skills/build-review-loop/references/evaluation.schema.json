@@ -1,0 +1,419 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/evaluation.schema.json",
+  "title": "History-free blinded X/Y/Z rubric evaluation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "packageLabel",
+    "packageSha256",
+    "evaluatorWorkerId",
+    "runtimeInvocationId",
+    "runtimeProcessId",
+    "runtimeThreadId",
+    "evaluationSequence",
+    "revisionAllowed",
+    "mappingGuess",
+    "mappingGuessConfidence",
+    "mappingGuessEvidence",
+    "evaluatedAt",
+    "sealedAt",
+    "publicTests",
+    "hiddenTests",
+    "items",
+    "sectionTotals",
+    "uncappedTotal",
+    "capConditions",
+    "capsApplied",
+    "finalTotal",
+    "uncertainties",
+    "evidenceHash"
+  ],
+  "properties": {
+    "packageLabel": { "enum": ["X", "Y", "Z"] },
+    "packageSha256": { "$ref": "#/$defs/sha256" },
+    "evaluatorWorkerId": { "type": "string", "minLength": 8 },
+    "runtimeInvocationId": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "runtimeProcessId": { "type": "integer", "minimum": 1 },
+    "runtimeThreadId": { "type": "string", "minLength": 1 },
+    "evaluationSequence": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "revisionAllowed": { "const": false },
+    "mappingGuess": { "enum": ["B0", "T0", "Tfinal", "unknown"] },
+    "mappingGuessConfidence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "mappingGuessEvidence": { "type": "string", "minLength": 1 },
+    "evaluatedAt": { "type": "string", "format": "date-time" },
+    "sealedAt": { "type": "string", "format": "date-time" },
+    "publicTests": { "$ref": "#/$defs/testResult" },
+    "hiddenTests": { "$ref": "#/$defs/testResult" },
+    "items": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": false,
+      "prefixItems": [
+        { "$ref": "#/$defs/A1" },
+        { "$ref": "#/$defs/A2" },
+        { "$ref": "#/$defs/A3" },
+        { "$ref": "#/$defs/A4" },
+        { "$ref": "#/$defs/A5" },
+        { "$ref": "#/$defs/A6" },
+        { "$ref": "#/$defs/A7" },
+        { "$ref": "#/$defs/B1" },
+        { "$ref": "#/$defs/B2" },
+        { "$ref": "#/$defs/B3" },
+        { "$ref": "#/$defs/C1" },
+        { "$ref": "#/$defs/C2" },
+        { "$ref": "#/$defs/C3" },
+        { "$ref": "#/$defs/D1" },
+        { "$ref": "#/$defs/D2" },
+        { "$ref": "#/$defs/D3" },
+        { "$ref": "#/$defs/E1" },
+        { "$ref": "#/$defs/E2" },
+        { "$ref": "#/$defs/E3" },
+        { "$ref": "#/$defs/E4" }
+      ]
+    },
+    "sectionTotals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "functional",
+        "robustnessSecurity",
+        "accessibilityUsability",
+        "testEffectiveness",
+        "maintainabilityDocs"
+      ],
+      "properties": {
+        "functional": { "type": "integer", "minimum": 0, "maximum": 50 },
+        "robustnessSecurity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "accessibilityUsability": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "testEffectiveness": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "maintainabilityDocs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        }
+      }
+    },
+    "uncappedTotal": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "capConditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "buildFailedOrCannotRender",
+        "defaultAllow",
+        "executableInjectionOrUnexpectedNetwork"
+      ],
+      "properties": {
+        "buildFailedOrCannotRender": { "type": "boolean" },
+        "defaultAllow": { "type": "boolean" },
+        "executableInjectionOrUnexpectedNetwork": { "type": "boolean" }
+      }
+    },
+    "capsApplied": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "functional-section-10",
+          "default-allow-A2-A3-combined-4",
+          "overall-security-50"
+        ]
+      }
+    },
+    "finalTotal": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "uncertainties": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "evidenceHash": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "testResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed",
+        "failed",
+        "command",
+        "exitCode",
+        "rawOutputSha256"
+      ],
+      "properties": {
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "command": { "type": "string", "minLength": 1 },
+        "exitCode": { "type": "integer" },
+        "rawOutputSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "score", "maximum", "evidence", "rationale"],
+      "properties": {
+        "id": { "type": "string" },
+        "score": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "maximum": { "type": "integer", "minimum": 2, "maximum": 10 },
+        "evidence": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "A1": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "A1" },
+            "score": { "enum": [0, 3, 6] },
+            "maximum": { "const": 6 }
+          }
+        }
+      ]
+    },
+    "A2": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "A2" },
+            "score": { "enum": [0, 4, 8] },
+            "maximum": { "const": 8 }
+          }
+        }
+      ]
+    },
+    "A3": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "A3" },
+            "score": { "enum": [0, 4, 7, 10] },
+            "maximum": { "const": 10 }
+          }
+        }
+      ]
+    },
+    "A4": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "A4" },
+            "score": { "enum": [0, 4, 7, 10] },
+            "maximum": { "const": 10 }
+          }
+        }
+      ]
+    },
+    "A5": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "A5" },
+            "score": { "enum": [0, 4, 7] },
+            "maximum": { "const": 7 }
+          }
+        }
+      ]
+    },
+    "A6": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "A6" },
+            "score": { "enum": [0, 4, 7] },
+            "maximum": { "const": 7 }
+          }
+        }
+      ]
+    },
+    "A7": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "A7" },
+            "score": { "enum": [0, 1, 2] },
+            "maximum": { "const": 2 }
+          }
+        }
+      ]
+    },
+    "B1": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "B1" },
+            "score": { "enum": [0, 3, 5] },
+            "maximum": { "const": 5 }
+          }
+        }
+      ]
+    },
+    "B2": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "B2" },
+            "score": { "enum": [0, 3, 5] },
+            "maximum": { "const": 5 }
+          }
+        }
+      ]
+    },
+    "B3": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "B3" },
+            "score": { "enum": [0, 3, 5] },
+            "maximum": { "const": 5 }
+          }
+        }
+      ]
+    },
+    "C1": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "C1" },
+            "score": { "enum": [0, 3, 6] },
+            "maximum": { "const": 6 }
+          }
+        }
+      ]
+    },
+    "C2": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "C2" },
+            "score": { "enum": [0, 2, 4] },
+            "maximum": { "const": 4 }
+          }
+        }
+      ]
+    },
+    "C3": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "C3" },
+            "score": { "enum": [0, 3, 5] },
+            "maximum": { "const": 5 }
+          }
+        }
+      ]
+    },
+    "D1": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "D1" },
+            "score": { "enum": [0, 2, 4] },
+            "maximum": { "const": 4 }
+          }
+        }
+      ]
+    },
+    "D2": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "D2" },
+            "score": { "enum": [0, 2, 4] },
+            "maximum": { "const": 4 }
+          }
+        }
+      ]
+    },
+    "D3": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "D3" },
+            "score": { "enum": [0, 1, 2] },
+            "maximum": { "const": 2 }
+          }
+        }
+      ]
+    },
+    "E1": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "E1" },
+            "score": { "enum": [0, 1, 2, 3] },
+            "maximum": { "const": 3 }
+          }
+        }
+      ]
+    },
+    "E2": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "E2" },
+            "score": { "enum": [0, 1, 2, 3] },
+            "maximum": { "const": 3 }
+          }
+        }
+      ]
+    },
+    "E3": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "E3" },
+            "score": { "enum": [0, 1, 2] },
+            "maximum": { "const": 2 }
+          }
+        }
+      ]
+    },
+    "E4": {
+      "allOf": [
+        { "$ref": "#/$defs/item" },
+        {
+          "properties": {
+            "id": { "const": "E4" },
+            "score": { "enum": [0, 1, 2] },
+            "maximum": { "const": 2 }
+          }
+        }
+      ]
+    }
+  }
+}
