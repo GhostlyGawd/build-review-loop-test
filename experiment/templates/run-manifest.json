@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "2.3.0",
+  "protocolVersion": "2.4.0",
   "candidateLabel": "candidate-a",
   "bindings": {
     "commonStartCommit": "0000000000000000000000000000000000000000",
@@ -11,9 +11,8 @@
   "builderWorkerId": "template-builder-worker-id",
   "assignedArm": null,
   "assignmentRecordHash": null,
-  "assignmentEnvelopePath": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-builder-assignments\\template_task.json",
-  "assignmentEnvelopeSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-  "assignmentEnvelopeSchemaSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "runtimeInvocationId": "00000000000000000000000000000000",
+  "runtimeEvidenceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "neutralPromptSha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "neutralConfigSha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "initialSnapshot": null,

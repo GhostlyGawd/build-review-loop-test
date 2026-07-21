@@ -1,5 +1,5 @@
 {
-  "name": "permissions-playground-experiment",
+  "name": "permissions-playground",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -15,10 +15,7 @@
     "format:check": "prettier --check .",
     "test": "npm run test:public",
     "test:public": "node scripts/run-public-tests.mjs",
-    "test:public:if-implemented": "node scripts/run-public-tests.mjs --allow-absent",
-    "test:protocol": "node --test scripts/validate-scaffold.test.mjs",
-    "validate:scaffold": "node scripts/validate-scaffold.mjs",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run validate:scaffold && npm run test:protocol && npm run test:public:if-implemented && npm run build"
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test:public && npm run build"
   },
   "dependencies": {
     "react": "19.2.7",
@@ -33,7 +30,6 @@
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.3",
-    "ajv": "8.20.0",
     "eslint": "10.7.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-react-refresh": "0.5.3",

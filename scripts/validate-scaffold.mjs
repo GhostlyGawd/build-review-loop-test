@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
@@ -19,6 +19,32 @@ const canonicalDomain = Buffer.from(
 );
 const compareUtf8 = (left, right) =>
   Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
+const frozenGatePaths = [
+  [
+    "docs/permissions-playground-spec.md",
+    "docs/permissions-playground-spec.md",
+  ],
+  ["docs/public-test-contract.md", "docs/public-test-contract.md"],
+  ["tests/public", "tests/public"],
+  ["scripts/run-public-tests.mjs", "scripts/run-public-tests.mjs"],
+  ["experiment/builder-package.json", "package.json"],
+  ["package-lock.json", "package-lock.json"],
+];
+export function frozenGateSetHash(base = root) {
+  const records = [];
+  const add = (absolute, relative) => {
+    if (statSync(absolute).isDirectory()) {
+      for (const name of readdirSync(absolute).sort(compareUtf8))
+        add(path.join(absolute, name), `${relative}/${name}`);
+    } else records.push([relative, sha256Bytes(readFileSync(absolute))]);
+  };
+  for (const [source, destination] of frozenGatePaths)
+    add(path.join(base, source), destination);
+  records.sort(([left], [right]) => compareUtf8(left, right));
+  return sha256(
+    records.map(([name, digest]) => `${name}\0${digest}\n`).join(""),
+  );
+}
 
 export function canonicalJson(value) {
   if (value === null || typeof value === "boolean" || typeof value === "string")
@@ -42,6 +68,129 @@ export const canonicalHash = (value) =>
   sha256Bytes(
     Buffer.concat([canonicalDomain, Buffer.from(canonicalJson(value), "utf8")]),
   );
+const preflightAggregateDomain = Buffer.from(
+  "permissions-playground/protocol-lock-preflight-v1\0",
+  "ascii",
+);
+export const preflightAggregateHash = (evidence) => {
+  const payload = structuredClone(evidence);
+  delete payload.gateAggregateSha256;
+  return sha256Bytes(
+    Buffer.concat([
+      preflightAggregateDomain,
+      Buffer.from(canonicalJson(payload), "utf8"),
+    ]),
+  );
+};
+
+const administrativeParityExceptions = new Set([
+  "experiment/lock.json",
+  "experiment/protocol.md",
+  "experiment/schemas/experiment-lock.schema.json",
+]);
+
+export function validateFinalLockEvidence(evidence, inventory, lock) {
+  const failures = [];
+  const expectedParentCommit = "f957cdf3054b8055a3d4b90d7cae0fbb8c79394c";
+  const expectedParentTree = "23c9c1005efa704d42e79fe8b80f3dc33aa5ab17";
+  if (
+    evidence.supersedesFinalizationCommit !==
+      "a37774cf25821103861ed94c261ac5db4f433860" ||
+    evidence.supersedesFinalizationCommit !== lock.supersedesFinalizationCommit
+  )
+    failures.push("final-lock superseded-finalization binding mismatch");
+  if (preflightAggregateHash(evidence) !== evidence.gateAggregateSha256)
+    failures.push("final-lock preflight aggregate hash mismatch");
+  if (evidence.gateAggregateSha256 !== lock.gateAggregateSha256)
+    failures.push("final-lock preflight aggregate diverges from lock");
+  if (
+    evidence.protocolParent.commit !== expectedParentCommit ||
+    evidence.protocolParent.tree !== expectedParentTree ||
+    evidence.protocolParent.lockSha256 !== lock.lockParentLockSha256
+  )
+    failures.push("final-lock preflight parent binding mismatch");
+  if (
+    evidence.treatmentSkill.commit !== lock.treatmentSkillCommit ||
+    evidence.treatmentSkill.tree !== lock.treatmentSkillTree ||
+    evidence.treatmentSkill.manifestFile !== lock.treatmentSkillManifestFile ||
+    evidence.treatmentSkill.manifestSha256 !==
+      lock.treatmentSkillManifestSha256 ||
+    evidence.treatmentSkill.manifestEntryCount !==
+      lock.treatmentSkillManifestEntryCount ||
+    evidence.treatmentSkill.manifestCommentLineCount !==
+      lock.treatmentSkillManifestCommentLineCount ||
+    evidence.treatmentSkill.manifestPhysicalLineCount !==
+      lock.treatmentSkillManifestPhysicalLineCount ||
+    evidence.treatmentSkill.manifestByteSource !==
+      lock.treatmentSkillManifestByteSource ||
+    evidence.treatmentSkill.manifestToolSha256 !==
+      lock.treatmentSkillManifestToolSha256 ||
+    evidence.treatmentSkill.attributesSha256 !==
+      lock.treatmentSkillAttributesSha256 ||
+    evidence.treatmentSkill.sourceParitySha256 !==
+      lock.treatmentSkillSourceParitySha256 ||
+    evidence.treatmentSkill.sourceParityFileCount !== 41 ||
+    evidence.treatmentSkill.sourceParityAllMatch !== true
+  )
+    failures.push("final-lock treatment-skill binding mismatch");
+  if (
+    canonicalHash(evidence.gates) !==
+    "65f600fc7e320bcf43750b36bb6ce512dcc32157e912168f87c40537ec917022"
+  )
+    failures.push("final-lock A/B/C gate facts changed");
+  for (const gate of ["A", "B", "C"])
+    if (
+      evidence.gates[gate].attestationSha256 !==
+      lock[`gate${gate}AttestationSha256`]
+    )
+      failures.push(`final-lock gate ${gate} attestation binding mismatch`);
+
+  const serialized = JSON.stringify(evidence);
+  if (
+    /(?:[A-Za-z]:\\\\|processId|threadId|startedAt|exitedAt|deadline|candidateId|runId)/u.test(
+      serialized,
+    )
+  )
+    failures.push(
+      "final-lock preflight evidence contains prohibited local metadata",
+    );
+
+  if (
+    inventory.protocolCommit !== expectedParentCommit ||
+    inventory.protocolTree !== expectedParentTree ||
+    inventory.fileCount !== 41 ||
+    inventory.allMatch !== true ||
+    !Array.isArray(inventory.files) ||
+    inventory.files.length !== 41
+  )
+    failures.push("operational parent inventory header mismatch");
+  const seen = new Set();
+  for (const record of inventory.files ?? []) {
+    if (
+      typeof record.source !== "string" ||
+      seen.has(record.source) ||
+      record.gitBlob !== record.bundledBlob ||
+      record.match !== true ||
+      !/^[0-9a-f]{40}$/u.test(record.gitBlob ?? "") ||
+      !/^[0-9a-f]{64}$/u.test(record.sha256 ?? "")
+    ) {
+      failures.push("operational parent inventory record is malformed");
+      continue;
+    }
+    seen.add(record.source);
+    if (!administrativeParityExceptions.has(record.source)) {
+      const absolute = path.join(root, ...record.source.split("/"));
+      if (
+        !existsSync(absolute) ||
+        sha256Bytes(readFileSync(absolute)) !== record.sha256
+      )
+        failures.push(
+          `operational byte diverges from parent inventory: ${record.source}`,
+        );
+    }
+  }
+  return failures;
+}
 const uint64be = (value) => {
   const buffer = Buffer.alloc(8);
   buffer.writeBigUInt64BE(BigInt(value));
@@ -242,6 +391,22 @@ export function validateRunManifestSemantics(run) {
 
 export function validateEvaluationSemantics(evaluation) {
   const failures = [];
+  if (
+    evaluation.mappingGuess === "unknown" &&
+    evaluation.mappingGuessConfidence !== 0
+  )
+    failures.push("unknown mapping guess requires zero confidence");
+  if (
+    typeof evaluation.mappingGuessEvidence !== "string" ||
+    evaluation.mappingGuessEvidence.length === 0
+  )
+    failures.push("mapping guess requires observable diagnostic evidence");
+  if (
+    Number.isNaN(Date.parse(evaluation.evaluatedAt)) ||
+    Number.isNaN(Date.parse(evaluation.sealedAt)) ||
+    Date.parse(evaluation.sealedAt) < Date.parse(evaluation.evaluatedAt)
+  )
+    failures.push("evaluation seal must be at or after evaluation completion");
   const ids = Object.keys(rubricMaxima);
   if (evaluation.items.map(({ id }) => id).join(",") !== ids.join(","))
     failures.push("evaluation items must contain each rubric ID once in order");
@@ -348,8 +513,8 @@ export function validateCostSemantics(cost) {
     cost.cycle !== null
   )
     failures.push("non-cycle role cost must have a null cycle");
-  if (cost.role === "evaluator" && cost.packageLabel !== null)
-    failures.push("one evaluator turn covers all X/Y/Z packages");
+  if (cost.role === "evaluator" && cost.packageLabel === null)
+    failures.push("each evaluator turn must name exactly one package");
   if (cost.maxTokens !== null || !cost.maxTokensUnavailableReason)
     failures.push("unavailable maxTokens must be null with a reason");
   if (!cost.environmentSha256)
@@ -416,44 +581,508 @@ const exactKeys = (value, expected) =>
   JSON.stringify(Object.keys(value).sort(compareUtf8)) ===
     JSON.stringify([...expected].sort(compareUtf8));
 
-export const assignmentEnvelopeFields = [
-  "schemaVersion",
-  "opaqueWorkerKey",
-  "opaqueCandidateId",
-  "absoluteWorktreePath",
-  "buildBranch",
-  "baseBranch",
-  "commonStartCommit",
-  "commonStartTree",
-  "promptSha256",
-  "configSha256",
-  "envelopeSchemaSha256",
+export function validateNeutralBuilderPrompt(promptText) {
+  const required = [
+    "The operator writes this entire file byte-for-byte to raw standard input for each fresh CLI execution.",
+    "The CLI `-C` argument supplies the isolated checkout and is not model context.",
+    "You are a neutral builder. Implement the Permissions Playground defined by `docs/permissions-playground-spec.md` and `docs/public-test-contract.md`.",
+    "This repository is a source-history-free neutral product task projection containing only the files you are permitted to inspect.",
+  ];
+  return required
+    .filter((clause) => !promptText.includes(clause))
+    .map((clause) => `neutral builder assignment prose missing: ${clause}`);
+}
+
+export const cliInvariantArgv = [
+  "-a",
+  "never",
+  "-m",
+  "gpt-5.4",
+  "-c",
+  'model_reasoning_effort="xhigh"',
+  "exec",
+  "--ephemeral",
+  "--ignore-user-config",
+  "--skip-git-repo-check",
+  "--sandbox",
+  "workspace-write",
+  "--json",
 ];
-export const assignmentCoordinationDirectory = String.raw`C:\Users\rhenm\Documents\Codex\2026-07-20\pilot-002-builder-assignments`;
-export const assignmentWorkspaceRoot = String.raw`C:\Users\rhenm\Documents\Codex\2026-07-20`;
-const assignmentPairDifferences = [
-  "opaqueWorkerKey",
-  "opaqueCandidateId",
-  "absoluteWorktreePath",
-  "buildBranch",
-  "baseBranch",
+const cliTail = (invocation) => [
+  "-C",
+  invocation.workdir,
+  "-o",
+  invocation.finalPath,
+  "-",
 ];
-const assignmentAttestationFields = ["opaqueCandidateId", "envelopeSha256"];
-const lowerWinPath = (value) => path.win32.normalize(value).toLowerCase();
-const isNestedWinPath = (parent, candidate) => {
-  const relative = path.win32.relative(parent, candidate);
+
+const resolveWindowsPath = (value) =>
+  path.win32.resolve(value ?? "").toLowerCase();
+const windowsPathBeneath = (rootPath, candidatePath) => {
+  const relative = path.win32.relative(rootPath, candidatePath);
   return (
-    relative.length > 0 &&
+    relative !== "" &&
     !relative.startsWith("..") &&
     !path.win32.isAbsolute(relative)
   );
 };
+const windowsPathsOverlap = (left, right) =>
+  left === right ||
+  windowsPathBeneath(left, right) ||
+  windowsPathBeneath(right, left);
+const overlappingWindowsPaths = (entries) => {
+  const overlaps = [];
+  for (let leftIndex = 0; leftIndex < entries.length; leftIndex += 1)
+    for (
+      let rightIndex = leftIndex + 1;
+      rightIndex < entries.length;
+      rightIndex += 1
+    )
+      if (windowsPathsOverlap(entries[leftIndex][1], entries[rightIndex][1]))
+        overlaps.push([entries[leftIndex][0], entries[rightIndex][0]]);
+  return overlaps;
+};
 
-export function validateAssignmentEnvelope(
-  envelope,
+export const remainingRoleWaitMilliseconds = (budgetMs, elapsedMs) =>
+  Math.max(0, Math.floor(budgetMs - elapsedMs));
+export const roleWaitFromAbsoluteDeadline = (
+  absoluteDeadlineMs,
+  supervisorStartedAtMs,
+  monotonicElapsedMs,
+) =>
+  remainingRoleWaitMilliseconds(
+    Math.floor(absoluteDeadlineMs - supervisorStartedAtMs),
+    monotonicElapsedMs,
+  );
+
+export function validateCliRuntimeContract(
+  contract,
   lock = readJson("experiment/lock.json"),
-  sourcePath = null,
 ) {
+  const failures = [];
+  const ajv = new Ajv2020({
+    allErrors: true,
+    strict: true,
+    strictTypes: false,
+  });
+  const validate = ajv.compile(
+    readJson("experiment/schemas/cli-runtime-contract.schema.json"),
+  );
+  if (!validate(contract))
+    failures.push(
+      `CLI runtime contract schema failure: ${ajv.errorsText(validate.errors)}`,
+    );
+  if (
+    JSON.stringify(contract.invariantArgv) !== JSON.stringify(cliInvariantArgv)
+  )
+    failures.push("CLI invariant argv or global-before-exec ordering mismatch");
+  if (
+    !contract.invariantArgv?.includes("--ephemeral") ||
+    contract.invariantArgv?.includes("resume")
+  )
+    failures.push("CLI runtime must be ephemeral and never resumed");
+  if (
+    contract.cliPath !== lock.cliBinaryPath ||
+    contract.cliVersion !== lock.cliVersion ||
+    contract.cliSha256 !== lock.cliBinarySha256
+  )
+    failures.push("CLI binary path/version/hash commitment mismatch");
+  const expectedPromptSha256 = contract.smokeMode
+    ? lock.runnerSmokePromptSha256
+    : lock.neutralBuilderPromptSha256;
+  if (contract.promptSha256 !== expectedPromptSha256)
+    failures.push("CLI raw stdin prompt commitment mismatch");
+  if (contract.authStatus !== "Logged in using ChatGPT")
+    failures.push("CLI ChatGPT auth attestation mismatch");
+  if (contract.contractSchemaSha256 !== lock.cliRuntimeSchemaSha256)
+    failures.push("CLI contract schema does not match frozen lock");
+  if (contract.canonicalPathHelperSha256 !== lock.canonicalPathHelperSha256)
+    failures.push("CLI canonical path helper does not match frozen lock");
+  if (
+    contract.builderInputManifestSchemaSha256 !==
+      lock.builderInputManifestSchemaSha256 ||
+    contract.builderInputAllowlistSha256 !== lock.builderInputAllowlistSha256 ||
+    contract.builderInputPreparationScriptSha256 !==
+      lock.builderInputPreparationScriptSha256
+  )
+    failures.push("CLI builder-input projection commitments mismatch");
+  if (!Array.isArray(contract.invocations) || contract.invocations.length !== 2)
+    return [...failures, "CLI runtime requires exactly two invocations"];
+  for (const field of [
+    "invocationId",
+    "workdir",
+    "finalPath",
+    "stdoutPath",
+    "stderrPath",
+    "evidencePath",
+    "postStatePath",
+    "tempRoot",
+    "cacheRoot",
+    "dependencyRoot",
+    "port",
+  ]) {
+    const values = contract.invocations.map(
+      (entry) => entry[field]?.toLowerCase?.() ?? entry[field],
+    );
+    if (new Set(values).size !== 2)
+      failures.push(`CLI invocations duplicate ${field}`);
+  }
+  const workdirs = contract.invocations.map(({ workdir }, index) => [
+    `invocations[${index}].workdir`,
+    resolveWindowsPath(workdir),
+  ]);
+  const evidenceRoot = resolveWindowsPath(contract.evidenceRoot);
+  if (windowsPathsOverlap(workdirs[0][1], workdirs[1][1]))
+    failures.push("CLI workdirs must be nonnested independent clones");
+  const outputFields = [
+    "finalPath",
+    "stdoutPath",
+    "stderrPath",
+    "evidencePath",
+    "postStatePath",
+  ];
+  const runtimeFields = ["tempRoot", "cacheRoot", "dependencyRoot"];
+  const outputs = contract.invocations.flatMap((invocation, index) =>
+    outputFields.map((field) => [
+      `invocations[${index}].${field}`,
+      resolveWindowsPath(invocation[field]),
+    ]),
+  );
+  const runtimeRoots = contract.invocations.flatMap((invocation, index) =>
+    runtimeFields.map((field) => [
+      `invocations[${index}].${field}`,
+      resolveWindowsPath(invocation[field]),
+    ]),
+  );
+  const privateFields = [
+    "lockPath",
+    "contractSchemaPath",
+    "canonicalPathHelperPath",
+    "builderInputManifestPath",
+    "builderInputManifestSchemaPath",
+    "builderInputAllowlistPath",
+    "builderInputPreparationScriptPath",
+    "promptPath",
+  ];
+  const privateInputs = privateFields.map((field) => [
+    field,
+    resolveWindowsPath(contract[field]),
+  ]);
+  for (const [index, invocation] of contract.invocations.entries()) {
+    if (windowsPathsOverlap(workdirs[index][1], evidenceRoot))
+      failures.push(
+        `CLI invocation ${index} evidence/workdir roots are nested`,
+      );
+    for (const field of outputFields)
+      if (
+        !windowsPathBeneath(evidenceRoot, resolveWindowsPath(invocation[field]))
+      )
+        failures.push(`CLI invocation ${index} ${field} escapes evidenceRoot`);
+  }
+  if (overlappingWindowsPaths(outputs).length > 0)
+    failures.push("CLI authoritative outputs must be distinct and nonnested");
+  const mutableRoots = [
+    ["evidenceRoot", evidenceRoot],
+    ...workdirs,
+    ...outputs,
+  ];
+  if (
+    runtimeRoots.some(([, runtimeRoot]) =>
+      mutableRoots.some(([, mutableRoot]) =>
+        windowsPathsOverlap(runtimeRoot, mutableRoot),
+      ),
+    ) ||
+    overlappingWindowsPaths(runtimeRoots).length > 0
+  )
+    failures.push(
+      "CLI runtime roots must be distinct and nonnested from evidence, workdirs, outputs, and each other",
+    );
+  const allMutable = [...mutableRoots, ...runtimeRoots];
+  if (
+    privateInputs.some(([, privateInput]) =>
+      allMutable.some(([, mutableRoot]) =>
+        windowsPathsOverlap(privateInput, mutableRoot),
+      ),
+    )
+  )
+    failures.push(
+      "CLI private inputs must be distinct and nonnested from every mutable root and output",
+    );
+  return failures;
+}
+
+export function validateCliSupervisionEvidence(
+  evidence,
+  contract,
+  rawStdoutByInvocation = null,
+) {
+  const failures = [];
+  if (!Array.isArray(evidence.results) || evidence.results.length !== 2)
+    return ["CLI supervision requires exactly two results"];
+  const threadIds = [];
+  const processIds = [];
+  evidence.results.forEach((result, index) => {
+    const invocation = contract.invocations[index];
+    const expectedArgv = [...cliInvariantArgv, ...cliTail(invocation)];
+    if (JSON.stringify(result.argv) !== JSON.stringify(expectedArgv))
+      failures.push(`CLI result ${index} argv differs or is reordered`);
+    if (result.invocationId !== invocation.invocationId)
+      failures.push(`CLI result ${index} invocation ID mismatch`);
+    if (!nonzeroSha256(result.contractSha256))
+      failures.push(`CLI result ${index} contract hash missing`);
+    if (!nonzeroSha256(result.finalSha256))
+      failures.push(`CLI result ${index} final artifact hash missing`);
+    if (result.postStatePath !== invocation.postStatePath)
+      failures.push(`CLI result ${index} post-state path mismatch`);
+    if (!nonzeroSha256(result.postStateSha256))
+      failures.push(`CLI result ${index} post-state hash missing`);
+    if (result.argvSha256 !== sha256(result.argv.join("\0")))
+      failures.push(`CLI result ${index} argv hash mismatch`);
+    if (result.promptSha256 !== contract.promptSha256)
+      failures.push(`CLI result ${index} prompt differs`);
+    if (!result.started || !result.stdinDelivered)
+      failures.push(`CLI result ${index} did not start with raw stdin`);
+    if (result.timedOut) failures.push(`CLI result ${index} timed out`);
+    if (result.exitCode !== 0)
+      failures.push(`CLI result ${index} exit was nonzero`);
+    if (result.unauthorizedToolOrWriteDetected === true)
+      failures.push(
+        `CLI result ${index} detected an unauthorized tool or write`,
+      );
+    if (
+      result.unauthorizedToolOrWriteDetected == null &&
+      !result.unauthorizedToolOrWriteUnavailableReason
+    )
+      failures.push(
+        `CLI result ${index} lacks unauthorized-write absence reason`,
+      );
+    if (!result.turnCompleted)
+      failures.push(`CLI result ${index} lacks turn.completed`);
+    if (!result.rawJsonlValid)
+      failures.push(`CLI result ${index} contains malformed JSONL`);
+    if (!Array.isArray(result.threadIds) || result.threadIds.length !== 1)
+      failures.push(
+        `CLI result ${index} must have exactly one thread.started ID`,
+      );
+    else threadIds.push(result.threadIds[0]);
+    if (result.processId == null)
+      failures.push(`CLI result ${index} lacks process ID`);
+    else processIds.push(result.processId);
+    if (
+      result.sandboxMode !== "workspace-write" ||
+      result.inputDisposition !== "authorized-worktree-write"
+    )
+      failures.push(`CLI result ${index} isolation policy mismatch`);
+    if (result.usage == null && !result.usageUnavailableReason)
+      failures.push(`CLI result ${index} missing usage and unavailable reason`);
+    if (result.usage != null && result.usageUnavailableReason != null)
+      failures.push(`CLI result ${index} usage has a false unavailable reason`);
+    const raw = rawStdoutByInvocation?.[result.invocationId];
+    if (raw == null) {
+      failures.push(
+        `CLI result ${index} raw JSONL is required for reconciliation`,
+      );
+    } else {
+      if (result.stdoutSha256 !== sha256(raw))
+        failures.push(`CLI result ${index} stdout hash mismatch`);
+      const events = [];
+      for (const line of raw.split(/\r?\n/u).filter((value) => value.trim())) {
+        try {
+          events.push(JSON.parse(line));
+        } catch {
+          failures.push(`CLI result ${index} malformed raw JSONL`);
+        }
+      }
+      const rawThreads = events
+        .filter(({ type }) => type === "thread.started")
+        .map(({ thread_id: id }) => id);
+      const turnEvents = events.filter(({ type }) => type === "turn.completed");
+      if (JSON.stringify(rawThreads) !== JSON.stringify(result.threadIds))
+        failures.push(
+          `CLI result ${index} thread IDs do not reconcile to raw JSONL`,
+        );
+      if ((turnEvents.length === 1) !== result.turnCompleted)
+        failures.push(
+          `CLI result ${index} lifecycle does not reconcile to raw JSONL`,
+        );
+      if (
+        turnEvents.length === 1 &&
+        JSON.stringify(turnEvents[0].usage ?? null) !==
+          JSON.stringify(result.usage)
+      )
+        failures.push(
+          `CLI result ${index} usage does not reconcile to turn.completed`,
+        );
+    }
+    for (const field of [
+      "runtimeModel",
+      "runtimeProvider",
+      "reasoningSetting",
+    ]) {
+      if (result[field] == null && !result[`${field}UnavailableReason`])
+        failures.push(
+          `CLI result ${index} null ${field} lacks unavailable reason`,
+        );
+      if (result[field] != null && result.metadataSource !== "trusted-jsonl")
+        failures.push(
+          `CLI result ${index} ${field} is not trusted JSONL metadata`,
+        );
+    }
+  });
+  if (new Set(threadIds).size !== 2)
+    failures.push("CLI thread.started IDs must be distinct");
+  if (new Set(processIds).size !== 2)
+    failures.push("CLI OS process IDs must be distinct");
+  if (evidence.valid !== (failures.length === 0))
+    failures.push("CLI supervision valid flag disagrees with evidence");
+  return failures;
+}
+
+export function validateRoleRuntimeContract(
+  contract,
+  lock = readJson("experiment/lock.json"),
+) {
+  const failures = [];
+  const ajv = new Ajv2020({
+    allErrors: true,
+    strict: true,
+    strictTypes: false,
+  });
+  const validate = ajv.compile(
+    readJson("experiment/schemas/role-runtime-contract.schema.json"),
+  );
+  if (!validate(contract))
+    failures.push(
+      `role runtime contract schema failure: ${ajv.errorsText(validate.errors)}`,
+    );
+  if (
+    contract.cliPath !== lock.cliBinaryPath ||
+    contract.cliVersion !== lock.cliVersion ||
+    contract.cliSha256 !== lock.cliBinarySha256
+  )
+    failures.push("role runtime CLI binding mismatch");
+  if (contract.contractSchemaSha256 !== lock.roleRuntimeSchemaSha256)
+    failures.push("role runtime schema lock mismatch");
+  if (contract.canonicalPathHelperSha256 !== lock.canonicalPathHelperSha256)
+    failures.push("role canonical path helper lock mismatch");
+  if (
+    contract.runnerSha256 !== lock.roleRunnerSha256 ||
+    contract.evidenceSchemaSha256 !== lock.supervisionEvidenceSchemaSha256
+  )
+    failures.push("role runner/evidence schema lock mismatch");
+  const promptLocks = {
+    reviewer: lock.reviewerPromptTemplateSha256,
+    fixer: lock.fixerPromptTemplateSha256,
+    tester: lock.testerPromptTemplateSha256,
+    evaluator: lock.evaluatorPromptTemplateSha256,
+  };
+  const artifactLocks = {
+    reviewer: lock.reviewArtifactSchemaSha256,
+    fixer: lock.fixArtifactSchemaSha256,
+    tester: lock.testArtifactSchemaSha256,
+    evaluator: lock.evaluationArtifactSchemaSha256,
+  };
+  if (contract.promptTemplateSha256 !== promptLocks[contract.role])
+    failures.push("role prompt-template lock mismatch");
+  if (contract.artifactSchemaSha256 !== artifactLocks[contract.role])
+    failures.push("role artifact-schema lock mismatch");
+  const workdir = resolveWindowsPath(contract.workdir);
+  const evidenceRoot = resolveWindowsPath(contract.evidenceRoot);
+  const outputFields = [
+    "finalPath",
+    "stdoutPath",
+    "stderrPath",
+    "evidencePath",
+  ];
+  const outputs = outputFields.map((field) => [
+    field,
+    resolveWindowsPath(contract[field]),
+  ]);
+  const runtimeRoots = ["tempRoot", "cacheRoot", "dependencyRoot"].map(
+    (field) => [field, resolveWindowsPath(contract[field])],
+  );
+  const privateFields = [
+    "lockPath",
+    "contractSchemaPath",
+    "canonicalPathHelperPath",
+    "runnerPath",
+    "evidenceSchemaPath",
+    "promptTemplatePath",
+    "artifactSchemaPath",
+    "promptPath",
+    "packageManifestPath",
+    "handoffPath",
+    "rubricPath",
+    "hiddenSuitePath",
+    "packageManifestSchemaPath",
+    "packageScriptPath",
+  ];
+  const privateInputs = privateFields
+    .filter((field) => contract[field] != null)
+    .map((field) => [field, resolveWindowsPath(contract[field])]);
+  if (windowsPathsOverlap(workdir, evidenceRoot))
+    failures.push(
+      "role workdir and evidenceRoot must be distinct and nonnested",
+    );
+  for (const [field, output] of outputs)
+    if (path.win32.dirname(output).toLowerCase() !== evidenceRoot.toLowerCase())
+      failures.push(`role ${field} must be a direct child of evidenceRoot`);
+  if (overlappingWindowsPaths(outputs).length > 0)
+    failures.push("role authoritative outputs must be distinct and nonnested");
+  const mutableRoots = [
+    ["workdir", workdir],
+    ["evidenceRoot", evidenceRoot],
+    ...outputs,
+  ];
+  if (
+    runtimeRoots.some(([, runtimeRoot]) =>
+      mutableRoots.some(([, mutableRoot]) =>
+        windowsPathsOverlap(runtimeRoot, mutableRoot),
+      ),
+    ) ||
+    overlappingWindowsPaths(runtimeRoots).length > 0
+  )
+    failures.push(
+      "role runtime roots must be distinct and nonnested from evidence, workdir, outputs, and each other",
+    );
+  if (
+    privateInputs.some(([, privateInput]) =>
+      [...mutableRoots, ...runtimeRoots].some(([, mutableRoot]) =>
+        windowsPathsOverlap(privateInput, mutableRoot),
+      ),
+    )
+  )
+    failures.push(
+      "role private inputs must be distinct and nonnested from every mutable root and output",
+    );
+  return failures;
+}
+
+export function validateRoleSupervisionEvidence(
+  result,
+  contract,
+  rawStdout = null,
+) {
+  const expected = [
+    "-a",
+    "never",
+    "-m",
+    "gpt-5.4",
+    "-c",
+    'model_reasoning_effort="xhigh"',
+    "exec",
+    "--ephemeral",
+    "--ignore-user-config",
+    "--skip-git-repo-check",
+    "--sandbox",
+    contract.sandboxMode,
+    "--json",
+    "-C",
+    contract.workdir,
+    "-o",
+    contract.finalPath,
+    "-",
+  ];
   const failures = [];
   const ajv = new Ajv2020({
     allErrors: true,
@@ -462,137 +1091,141 @@ export function validateAssignmentEnvelope(
     validateFormats: false,
   });
   const validate = ajv.compile(
-    readJson("experiment/schemas/assignment-envelope.schema.json"),
+    readJson("experiment/schemas/cli-supervision-evidence.schema.json"),
   );
-  if (!validate(envelope))
+  if (!validate(result))
     failures.push(
-      `assignment envelope schema failure: ${ajv.errorsText(validate.errors)}`,
+      `role evidence schema failure: ${ajv.errorsText(validate.errors)}`,
     );
-  if (!exactKeys(envelope, assignmentEnvelopeFields))
-    failures.push("assignment envelope must contain only the canonical fields");
-  if (envelope.promptSha256 !== lock.neutralBuilderPromptSha256)
-    failures.push("assignment envelope prompt commitment mismatch");
-  if (envelope.configSha256 !== lock.neutralBuilderConfigSha256)
-    failures.push("assignment envelope config commitment mismatch");
-  if (envelope.envelopeSchemaSha256 !== lock.assignmentEnvelopeSchemaSha256)
-    failures.push("assignment envelope schema commitment mismatch");
-
-  const worktree = envelope.absoluteWorktreePath;
-  if (typeof worktree === "string") {
-    const normalized = path.win32.normalize(worktree);
-    const relative = path.win32.relative(assignmentWorkspaceRoot, normalized);
-    if (
-      !path.win32.isAbsolute(worktree) ||
-      normalized !== worktree ||
-      relative.length === 0 ||
-      relative.startsWith("..") ||
-      path.win32.isAbsolute(relative) ||
-      isNestedWinPath(assignmentCoordinationDirectory, normalized) ||
-      lowerWinPath(normalized) === lowerWinPath(assignmentCoordinationDirectory)
-    )
-      failures.push(
-        "assignment envelope worktree path is not a safe canonical absolute path",
-      );
-  }
-
-  if (sourcePath !== null) {
-    const normalizedSource = path.win32.normalize(sourcePath);
-    const leaf = path.win32.basename(normalizedSource, ".json");
-    if (
-      lowerWinPath(path.win32.dirname(normalizedSource)) !==
-        lowerWinPath(assignmentCoordinationDirectory) ||
-      path.win32.extname(normalizedSource) !== ".json" ||
-      !/^[a-z0-9_]+$/.test(leaf)
-    )
-      failures.push(
-        "assignment file violates the frozen task-leaf path convention",
-      );
-  }
-  return failures;
-}
-
-export function validateAssignmentEnvelopePair(
-  envelopes,
-  attestations,
-  lock = readJson("experiment/lock.json"),
-  sourcePaths = [],
-) {
-  const failures = [];
-  if (!Array.isArray(envelopes) || envelopes.length !== 2)
-    return ["assignment envelope pair must contain exactly two envelopes"];
-  envelopes.forEach((envelope, index) =>
-    failures.push(
-      ...validateAssignmentEnvelope(envelope, lock, sourcePaths[index] ?? null),
-    ),
-  );
-  const [left, right] = envelopes;
-  for (const field of assignmentEnvelopeFields.filter(
-    (field) => !assignmentPairDifferences.includes(field),
-  )) {
-    if (left[field] !== right[field])
-      failures.push(`assignment envelope pair mismatch at ${field}`);
-  }
-  for (const field of ["opaqueWorkerKey", "opaqueCandidateId"]) {
-    if (left[field] === right[field])
-      failures.push(`assignment envelope pair duplicates ${field}`);
-  }
-  const worktrees = envelopes.map(({ absoluteWorktreePath }) =>
-    typeof absoluteWorktreePath === "string"
-      ? lowerWinPath(absoluteWorktreePath)
-      : null,
+  if (JSON.stringify(result.argv) !== JSON.stringify(expected))
+    failures.push("role result argv differs or is reordered");
+  if (
+    result.role !== contract.role ||
+    result.invocationId !== contract.invocationId
+  )
+    failures.push("role result identity mismatch");
+  if (
+    !result.started ||
+    !result.stdinDelivered ||
+    result.timedOut ||
+    result.exitCode !== 0 ||
+    !result.turnCompleted ||
+    !result.rawJsonlValid ||
+    result.threadIds?.length !== 1 ||
+    !result.processId
+  )
+    failures.push("role result lifecycle invalid");
+  const startedAt = Date.parse(result.startedAt);
+  const completedAt = Date.parse(result.completedAt);
+  const completionObservedAt = Date.parse(result.completionObservedAt);
+  const absoluteDeadline = Date.parse(result.absoluteDeadline);
+  const contractedDeadline = Date.parse(
+    contract.promptSubstitutions?.WALL_CLOCK_DEADLINE_ISO,
   );
   if (
-    worktrees.every((worktree) => worktree !== null) &&
-    (worktrees[0] === worktrees[1] ||
-      isNestedWinPath(worktrees[0], worktrees[1]) ||
-      isNestedWinPath(worktrees[1], worktrees[0]))
+    !Number.isFinite(startedAt) ||
+    !Number.isFinite(completedAt) ||
+    !Number.isFinite(completionObservedAt) ||
+    !Number.isFinite(absoluteDeadline) ||
+    !Number.isFinite(contractedDeadline) ||
+    absoluteDeadline !== contractedDeadline ||
+    startedAt >= absoluteDeadline ||
+    absoluteDeadline - startedAt > contract.deadlineSeconds * 1000 ||
+    completedAt < startedAt ||
+    completedAt > absoluteDeadline ||
+    completionObservedAt < completedAt ||
+    completionObservedAt > absoluteDeadline + 2000
   )
-    failures.push(
-      "assignment envelope worktree paths must be distinct and nonnested",
-    );
-  const branches = envelopes.flatMap(({ buildBranch, baseBranch }) => [
-    buildBranch,
-    baseBranch,
-  ]);
-  if (new Set(branches).size !== branches.length)
-    failures.push(
-      "assignment envelope build/base branches must all be distinct",
-    );
-
-  if (!Array.isArray(attestations) || attestations.length !== 2)
-    failures.push("assignment envelopes require two separate attestations");
+    failures.push("role result observed chronology/deadline binding invalid");
+  if (result.argvSha256 !== sha256(result.argv.join("\0")))
+    failures.push("role result argv hash mismatch");
+  if (result.promptSha256 !== contract.promptSha256)
+    failures.push("role result prompt mismatch");
+  if (
+    !nonzeroSha256(result.contractSha256) ||
+    result.artifactSchemaSha256 !== contract.artifactSchemaSha256 ||
+    !nonzeroSha256(result.finalSha256) ||
+    result.finalSchemaValid !== true ||
+    result.artifactBindingValid !== true
+  )
+    failures.push("role result artifact/contract binding invalid");
+  if (
+    result.sandboxMode !== contract.sandboxMode ||
+    result.inputDisposition !== contract.inputDisposition
+  )
+    failures.push("role result isolation mismatch");
+  if (result.usage == null && !result.usageUnavailableReason)
+    failures.push("role result missing usage reason");
+  if (result.usage != null && result.usageUnavailableReason != null)
+    failures.push("role result usage has a false unavailable reason");
+  if (result.unauthorizedToolOrWriteDetected)
+    failures.push("role result detected an unauthorized tool or write");
+  if (
+    result.unauthorizedToolOrWriteDetected == null &&
+    !result.unauthorizedToolOrWriteUnavailableReason
+  )
+    failures.push("role result lacks unauthorized-write absence reason");
+  for (const field of ["runtimeModel", "runtimeProvider", "reasoningSetting"]) {
+    if (result[field] == null && !result[`${field}UnavailableReason`])
+      failures.push(`role result null ${field} lacks unavailable reason`);
+    if (result[field] != null && result.metadataSource !== "trusted-jsonl")
+      failures.push(`role result ${field} is not trusted JSONL metadata`);
+  }
+  if (rawStdout == null)
+    failures.push("role raw JSONL is required for reconciliation");
   else {
-    const attestedCandidates = new Set();
-    attestations.forEach((attestation) => {
-      if (!exactKeys(attestation, assignmentAttestationFields))
-        failures.push("assignment attestation fields diverge");
-      const envelope = envelopes.find(
-        ({ opaqueCandidateId }) =>
-          opaqueCandidateId === attestation.opaqueCandidateId,
-      );
-      if (!envelope || attestation.envelopeSha256 !== canonicalHash(envelope))
-        failures.push("assignment envelope attestation hash mismatch");
-      if (attestedCandidates.has(attestation.opaqueCandidateId))
-        failures.push(
-          "assignment envelope candidate is attested more than once",
-        );
-      attestedCandidates.add(attestation.opaqueCandidateId);
-    });
+    if (result.stdoutSha256 !== sha256(rawStdout))
+      failures.push("role result stdout hash mismatch");
+    const lines = rawStdout.split(/\r?\n/u).filter((line) => line.trim());
+    const events = [];
+    for (const line of lines) {
+      try {
+        events.push(JSON.parse(line));
+      } catch {
+        failures.push("role raw JSONL malformed");
+      }
+    }
+    const threads = events
+      .filter(({ type }) => type === "thread.started")
+      .map(({ thread_id: id }) => id);
+    const turns = events.filter(({ type }) => type === "turn.completed");
+    if (
+      JSON.stringify(threads) !== JSON.stringify(result.threadIds) ||
+      turns.length !== 1
+    )
+      failures.push("role raw lifecycle reconciliation failed");
+    if (
+      turns.length === 1 &&
+      JSON.stringify(turns[0].usage ?? null) !== JSON.stringify(result.usage)
+    )
+      failures.push("role usage reconciliation failed");
   }
   return failures;
 }
 
-export function validateNeutralBuilderPrompt(promptText) {
-  const required = [
-    "No placeholder substitution, prefix, suffix, candidate label, deadline timestamp, per-builder path wrapper, or added guidance is permitted.",
-    "Read exactly that one assignment file by its direct path.",
-    "You MUST NOT list or enumerate the coordination directory, and you MUST NOT read any sibling assignment file.",
-    "Listing the directory or reading a sibling assignment is an experiment invalidation.",
-    "After validation, use only `absoluteWorktreePath` for every repository read, write, command, and Git operation.",
-  ];
-  return required
-    .filter((clause) => !promptText.includes(clause))
-    .map((clause) => `neutral builder assignment prose missing: ${clause}`);
+export function validateRoleArtifactChronology(artifact, evidence) {
+  const evaluatorArtifact = artifact?.evaluatedAt != null;
+  const artifactStart = Date.parse(
+    evaluatorArtifact ? artifact?.evaluatedAt : artifact?.startedAt,
+  );
+  const artifactEnd = Date.parse(
+    evaluatorArtifact ? artifact?.sealedAt : artifact?.completedAt,
+  );
+  const evidenceStart = Date.parse(evidence?.startedAt);
+  const evidenceEnd = Date.parse(evidence?.completedAt);
+  if (
+    !Number.isFinite(artifactStart) ||
+    !Number.isFinite(artifactEnd) ||
+    !Number.isFinite(evidenceStart) ||
+    !Number.isFinite(evidenceEnd) ||
+    (evaluatorArtifact
+      ? artifactStart < evidenceStart || artifactStart > evidenceEnd
+      : artifactStart !== evidenceStart) ||
+    artifactEnd !== evidenceEnd ||
+    artifactEnd < artifactStart
+  )
+    return ["role artifact chronology is not supervisor-observed"];
+  return [];
 }
 
 export function validateExperimentConclusion(record) {
@@ -676,6 +1309,9 @@ export function validateExperimentConclusion(record) {
 
 export function validateCanonicalContract(contract) {
   const failures = [];
+  const lock = readJson("experiment/lock.json");
+  const fileSha256 = (relativePath) =>
+    sha256(readFileSync(path.join(root, relativePath)));
   const findingSchema = readJson("experiment/schemas/finding.schema.json");
   const exactFindingFields = [
     "id",
@@ -748,9 +1384,21 @@ export function validateCanonicalContract(contract) {
     unblinder: 300,
     git_worker: 600,
   };
+  const cliModelRoles = ["builder", "reviewer", "fixer", "tester", "evaluator"];
+  if (
+    JSON.stringify(contract.cliRuntime.modelRoleCoverage) !==
+      JSON.stringify(cliModelRoles) ||
+    !contract.cliRuntime.roleLaunchRule?.includes("every model-bearing role")
+  )
+    failures.push("canonical CLI runtime does not cover every model role");
   for (const [role, maximum] of Object.entries(expectedRoleBudgets)) {
     if (contract.roles[role]?.wallSecondsMaximum !== maximum)
       failures.push(`canonical ${role} wall budget diverges`);
+    if (
+      cliModelRoles.includes(role) &&
+      contract.roles[role]?.executionRuntime !== "fresh-external-cli-subprocess"
+    )
+      failures.push(`canonical ${role} CLI subprocess policy diverges`);
   }
   if (
     contract.costPolicy.maxTokens !== null ||
@@ -768,34 +1416,140 @@ export function validateCanonicalContract(contract) {
   ];
   if (
     contract.builderFreeze?.promptSha256 !==
-      "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39" ||
+      fileSha256("experiment/prompts/neutral-builder.md") ||
+    contract.builderFreeze?.promptSha256 !== lock.neutralBuilderPromptSha256 ||
+    contract.builderFreeze?.smokePromptSha256 !==
+      fileSha256("experiment/prompts/runner-smoke.md") ||
+    contract.builderFreeze?.smokePromptSha256 !==
+      lock.runnerSmokePromptSha256 ||
     contract.builderFreeze?.configSha256 !==
-      "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606" ||
+      "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4" ||
     contract.builderFreeze?.rule !==
-      "every builder freeze must equal both canonical prompt/config hashes, the corresponding lock commitments, and one separately attested assignment-envelope hash"
+      "each builder receives the exact raw prompt bytes and a byte-identical source-history-free neutral product projection; only opaque invocation ID and runtime coordinate paths differ" ||
+    contract.builderFreeze?.inputProjection?.allowlistSha256 !==
+      lock.builderInputAllowlistSha256 ||
+    contract.builderFreeze?.inputProjection?.manifestSchemaSha256 !==
+      lock.builderInputManifestSchemaSha256 ||
+    contract.builderFreeze?.inputProjection?.preparationScriptSha256 !==
+      lock.builderInputPreparationScriptSha256
   )
     failures.push("canonical builder prompt/config commitments diverge");
   if (
-    contract.assignmentEnvelope?.schemaVersion !== "1.0.0" ||
-    contract.assignmentEnvelope?.schemaPath !==
-      "experiment/schemas/assignment-envelope.schema.json" ||
-    contract.assignmentEnvelope?.schemaSha256 !==
-      "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21" ||
-    JSON.stringify(contract.assignmentEnvelope?.fields) !==
-      JSON.stringify(assignmentEnvelopeFields) ||
-    JSON.stringify(contract.assignmentEnvelope?.attestationFields) !==
-      JSON.stringify(assignmentAttestationFields) ||
-    contract.assignmentEnvelope?.coordinationDirectory !==
-      assignmentCoordinationDirectory ||
-    contract.assignmentEnvelope?.fileConvention !== "<task-leaf>.json" ||
-    contract.assignmentEnvelope?.taskLeafPattern !== "^[a-z0-9_]+$" ||
-    contract.assignmentEnvelope?.workspaceRoot !== assignmentWorkspaceRoot ||
-    JSON.stringify(contract.assignmentEnvelope?.allowedPairDifferences) !==
-      JSON.stringify(assignmentPairDifferences) ||
-    contract.assignmentEnvelope?.siblingAccessRule !==
-      "listing the coordination directory or reading a sibling assignment file is an experiment invalidation"
+    contract.cliRuntime?.launchCommand !== "pwsh -NoProfile -File" ||
+    contract.cliRuntime?.powerShellHost?.path !== lock.powerShellHostPath ||
+    contract.cliRuntime?.powerShellHost?.version !== lock.powerShellVersion ||
+    contract.cliRuntime?.powerShellHost?.sha256 !== lock.powerShellHostSha256 ||
+    contract.cliRuntime?.schemaSha256 !==
+      fileSha256("experiment/schemas/cli-runtime-contract.schema.json") ||
+    contract.cliRuntime?.schemaSha256 !== lock.cliRuntimeSchemaSha256 ||
+    contract.cliRuntime?.runnerSha256 !==
+      fileSha256("scripts/run-cli-builders.ps1") ||
+    contract.cliRuntime?.runnerSha256 !== lock.cliRunnerSha256 ||
+    contract.cliRuntime?.canonicalPathHelperSha256 !==
+      fileSha256("scripts/canonicalize-paths.mjs") ||
+    contract.cliRuntime?.canonicalPathHelperSha256 !==
+      lock.canonicalPathHelperSha256 ||
+    contract.cliRuntime?.binarySha256 !==
+      "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4" ||
+    JSON.stringify(contract.cliRuntime?.invariantArgv) !==
+      JSON.stringify(cliInvariantArgv) ||
+    JSON.stringify(contract.cliRuntime?.perInvocationArgv) !==
+      JSON.stringify(["-C", "<workdir>", "-o", "<final-path>", "-"]) ||
+    contract.cliRuntime?.containmentGraphPolicy !==
+      "before evidence or runtime directory creation and before model launch, canonicalize existing and prospective paths through their nearest existing physical parents; require independent nonnested workdirs, authoritative outputs contained only by evidenceRoot and pairwise nonnested, temp/cache/dependency roots external to and nonnested with evidenceRoot/workdirs/outputs/each other across invocations, and every private input external to every mutable root and output; after execution evidenceRoot contains exactly the authoritative outputs and their necessary parent directories with no reparse points" ||
+    contract.cliRuntime?.v4Evidence?.contractSha256 !==
+      "d1a47087dc0bfcf85638e6c9faef4c7399c98626556747f1fda31e0a67e0645d"
   )
-    failures.push("canonical assignment-envelope contract diverges");
+    failures.push("canonical external CLI runtime contract diverges");
+  if (
+    contract.cliRuntime?.roleRuntime?.schemaSha256 !==
+      fileSha256("experiment/schemas/role-runtime-contract.schema.json") ||
+    contract.cliRuntime?.roleRuntime?.schemaSha256 !==
+      lock.roleRuntimeSchemaSha256 ||
+    contract.cliRuntime?.roleRuntime?.runnerSha256 !==
+      fileSha256("scripts/run-cli-role.ps1") ||
+    contract.cliRuntime?.roleRuntime?.runnerSha256 !== lock.roleRunnerSha256 ||
+    contract.cliRuntime?.roleRuntime?.evidenceSchemaSha256 !==
+      fileSha256("experiment/schemas/cli-supervision-evidence.schema.json") ||
+    contract.cliRuntime?.roleRuntime?.evidenceSchemaSha256 !==
+      lock.supervisionEvidenceSchemaSha256 ||
+    contract.cliRuntime?.roleRuntime?.deadlinePolicy !==
+      "before evidence creation, strict-parse WALL_CLOCK_DEADLINE_ISO as UTC, start the monotonic budget clock before capturing supervisor start, require start < absolute deadline <= start + deadlineSeconds with zero scheduling tolerance, floor the wall-clock absolute budget and subtract all monotonic elapsed time including pre-launch scheduling delay, pass floor(remaining) to WaitForExit, treat less than one millisecond as zero, require actual OS exit completedAt <= absoluteDeadline, and allow two seconds solely for completionObservedAt or process-tree termination" ||
+    contract.cliRuntime?.roleRuntime?.pathMutationPolicy !==
+      "before evidence or runtime directory creation and model launch, canonicalize prospective paths and require evidenceRoot/workdir separation, four pairwise-nonnested authoritative direct-child outputs, external pairwise-nonnested temp/cache/dependency roots, and every private input separate from every mutable root and output; afterward require exactly four evidence files, no subdirectories, and no reparse points" ||
+    contract.cliRuntime?.roleRuntime?.outputSchemaPolicy !==
+      "codex exec supports --output-schema, but authoritative final schemas require supervisor-observed runtime identity and chronology; omit the flag until distinct frozen pre-injection schemas exist, then inject identity, overwrite role artifact chronology with actual OS exit time, record completion observation separately, and validate the authoritative final schema" ||
+    contract.evaluation?.packageScriptSha256 !==
+      fileSha256("scripts/package-blinded-snapshots.mjs") ||
+    contract.evaluation?.packageScriptSha256 !==
+      lock.blindedPackageScriptSha256 ||
+    contract.evaluation?.packageManifestSchemaSha256 !==
+      fileSha256("experiment/schemas/blinded-package-manifest.schema.json") ||
+    contract.evaluation?.packageManifestSchemaSha256 !==
+      lock.blindedPackageSchemaSha256 ||
+    contract.evaluation?.packageMappingSchemaSha256 !==
+      fileSha256("experiment/schemas/blinded-package-mapping.schema.json") ||
+    contract.evaluation?.packageMappingSchemaSha256 !==
+      lock.blindedPackageMappingSchemaSha256
+  )
+    failures.push(
+      "canonical role runtime or blinded packaging contract diverges",
+    );
+  const promptBindings = {
+    reviewer: [
+      "experiment/prompts/blinded-reviewer.md",
+      "reviewerPromptTemplateSha256",
+    ],
+    fixer: ["experiment/prompts/fixer.md", "fixerPromptTemplateSha256"],
+    tester: ["experiment/prompts/tester.md", "testerPromptTemplateSha256"],
+    evaluator: [
+      "experiment/prompts/blinded-evaluator.md",
+      "evaluatorPromptTemplateSha256",
+    ],
+  };
+  const artifactBindings = {
+    reviewer: [
+      "experiment/schemas/review.schema.json",
+      "reviewArtifactSchemaSha256",
+    ],
+    fixer: ["experiment/schemas/fix.schema.json", "fixArtifactSchemaSha256"],
+    tester: ["experiment/schemas/test.schema.json", "testArtifactSchemaSha256"],
+    evaluator: [
+      "experiment/schemas/evaluation.schema.json",
+      "evaluationArtifactSchemaSha256",
+    ],
+  };
+  for (const [role, [relativePath, lockField]] of Object.entries(
+    promptBindings,
+  )) {
+    const expected = fileSha256(relativePath);
+    if (
+      contract.cliRuntime?.roleRuntime?.promptTemplateSha256?.[role] !==
+        expected ||
+      lock[lockField] !== expected
+    )
+      failures.push(`canonical ${role} prompt-template binding diverges`);
+  }
+  for (const [role, [relativePath, lockField]] of Object.entries(
+    artifactBindings,
+  )) {
+    const expected = fileSha256(relativePath);
+    if (
+      contract.cliRuntime?.roleRuntime?.artifactSchemaSha256?.[role] !==
+        expected ||
+      lock[lockField] !== expected
+    )
+      failures.push(`canonical ${role} artifact-schema binding diverges`);
+  }
+  const expectedRubricHash = fileSha256("experiment/rubric.md");
+  const expectedGateHash = frozenGateSetHash();
+  if (
+    contract.evaluation?.rubricSha256 !== expectedRubricHash ||
+    lock.rubricSha256 !== expectedRubricHash ||
+    contract.evaluation?.frozenGateSetSha256 !== expectedGateHash ||
+    lock.frozenGateSetSha256 !== expectedGateHash
+  )
+    failures.push("canonical rubric or frozen-gate binding diverges");
   if (
     JSON.stringify(contract.invalidation?.completedStatuses) !==
       JSON.stringify(["valid", "invalid"]) ||
@@ -859,18 +1613,16 @@ export function validateGoldenRun(
     failures.push("golden fixture canonical-contract hash mismatch");
   failures.push(...validateExperimentConclusion(fixture));
   failures.push(
-    ...validateAssignmentEnvelopePair(
-      fixture.assignmentEnvelopes,
-      fixture.assignmentEnvelopeAttestations,
-      lock,
+    ...validateCliRuntimeContract(fixture.cliRuntimeContract, lock),
+    ...validateCliSupervisionEvidence(
+      fixture.cliRuntimeEvidence,
+      fixture.cliRuntimeContract,
+      fixture.cliRuntimeStdoutByInvocation,
     ),
   );
-  const attestedEnvelopeHashes = new Set(
-    fixture.assignmentEnvelopeAttestations?.map(
-      ({ envelopeSha256 }) => envelopeSha256,
-    ) ?? [],
-  );
-  for (const [candidate, freeze] of Object.entries(fixture.builderFreezes)) {
+  for (const [index, [candidate, freeze]] of Object.entries(
+    fixture.builderFreezes,
+  ).entries()) {
     if (
       freeze.promptSha256 !== contract.builderFreeze.promptSha256 ||
       freeze.promptSha256 !== lock.neutralBuilderPromptSha256
@@ -881,14 +1633,61 @@ export function validateGoldenRun(
       freeze.configSha256 !== lock.neutralBuilderConfigSha256
     )
       failures.push(`golden ${candidate} config commitment drift`);
-    if (!attestedEnvelopeHashes.has(freeze.assignmentEnvelopeSha256))
-      failures.push(`golden ${candidate} assignment envelope is not attested`);
+    const invocation = fixture.cliRuntimeContract.invocations[index];
+    const evidence = fixture.cliRuntimeEvidence.results[index];
     if (
-      fixture.runs[candidate]?.assignmentEnvelopeSha256 !==
-      freeze.assignmentEnvelopeSha256
+      freeze.runtimeInvocationId !== invocation?.invocationId ||
+      freeze.runtimeEvidenceSha256 !== canonicalHash(evidence) ||
+      fixture.runs[candidate]?.runtimeInvocationId !==
+        freeze.runtimeInvocationId ||
+      fixture.runs[candidate]?.runtimeEvidenceSha256 !==
+        freeze.runtimeEvidenceSha256
     )
-      failures.push(`golden ${candidate} run/envelope binding mismatch`);
+      failures.push(`golden ${candidate} runtime evidence binding mismatch`);
   }
+  const roleEvidence = new Map(
+    (fixture.roleRuntimeEvidence ?? []).map((entry) => [
+      entry.invocationId,
+      entry,
+    ]),
+  );
+  const roleArtifacts = [
+    ...(fixture.reviews ?? []),
+    ...(fixture.fixes ?? []),
+    ...(fixture.tests ?? []),
+    ...(fixture.evaluations ?? []),
+  ];
+  for (const artifact of roleArtifacts) {
+    const evidence = roleEvidence.get(artifact.runtimeInvocationId);
+    if (
+      !evidence ||
+      !evidence.lifecycleComplete ||
+      evidence.invocationId !== artifact.runtimeInvocationId ||
+      evidence.processId !== artifact.runtimeProcessId ||
+      evidence.threadId !== artifact.runtimeThreadId
+    )
+      failures.push(
+        "golden downstream artifact/runtime evidence binding mismatch",
+      );
+    else failures.push(...validateRoleArtifactChronology(artifact, evidence));
+  }
+  const evidenceInvocationIds = [...roleEvidence.values()].map(
+    ({ invocationId }) => invocationId,
+  );
+  const evidenceProcessIds = [...roleEvidence.values()].map(
+    ({ processId }) => processId,
+  );
+  const evidenceThreadIds = [...roleEvidence.values()].map(
+    ({ threadId }) => threadId,
+  );
+  if (
+    new Set(evidenceInvocationIds).size !== evidenceInvocationIds.length ||
+    new Set(evidenceProcessIds).size !== evidenceProcessIds.length ||
+    new Set(evidenceThreadIds).size !== evidenceThreadIds.length
+  )
+    failures.push(
+      "golden downstream runtime identities must be globally fresh",
+    );
   const bindings = fixture.bindings;
   if (
     JSON.stringify(bindings.publicGates) !==
@@ -953,11 +1752,57 @@ export function validateGoldenRun(
   const labels = fixture.packages.map(({ packageLabel }) => packageLabel);
   if (JSON.stringify(labels) !== JSON.stringify(["X", "Y", "Z"]))
     failures.push("golden packages must be exactly X/Y/Z");
+  const packageAjv = new Ajv2020({
+    allErrors: true,
+    strict: true,
+    strictTypes: false,
+  });
+  const validatePackageManifest = packageAjv.compile(
+    readJson("experiment/schemas/blinded-package-manifest.schema.json"),
+  );
+  if (!validatePackageManifest(fixture.blindedPackageManifest))
+    failures.push(
+      `golden blinded-package manifest schema failure: ${packageAjv.errorsText(validatePackageManifest.errors)}`,
+    );
+  if (
+    JSON.stringify(fixture.blindedPackageManifest?.randomizedOrder) !==
+    JSON.stringify(fixture.evaluationRandomization.order)
+  )
+    failures.push("golden blinded-package order diverges from randomization");
+  const expectedMappingSeedSha256 = sha256(
+    Buffer.from(fixture.evaluationRandomization.seedHex, "hex"),
+  );
+  if (
+    fixture.blindedPackageManifest?.mappingSeedSha256 !==
+      expectedMappingSeedSha256 ||
+    fixture.blindedPackageManifest?.frozenGateSetSha256 !==
+      lock.frozenGateSetSha256
+  )
+    failures.push("golden blinded-package seed or gate commitment diverges");
+  const snapshotCommits = {
+    B0: baseline.initialSnapshot.commit,
+    T0: treatment.initialSnapshot.commit,
+    Tfinal: treatment.finalSnapshot.commit,
+  };
+  for (const entry of fixture.packages ?? []) {
+    const expectedRole =
+      fixture.evaluationRandomization.mapping?.[entry.packageLabel];
+    if (
+      expectedRole !== entry.snapshotRole ||
+      snapshotCommits[entry.snapshotRole] !== entry.sourceCommit
+    )
+      failures.push(
+        `golden blinded package ${entry.packageLabel} is not bound to its registered snapshot`,
+      );
+  }
   fixture.evaluations.forEach((evaluation, index) => {
     failures.push(...validateEvaluationSemantics(evaluation));
     if (evaluation.packageLabel !== fixture.packages[index].packageLabel)
       failures.push("golden evaluation/package label mismatch");
-    if (evaluation.packageSha256 !== canonicalHash(fixture.packages[index]))
+    if (
+      evaluation.packageSha256 !==
+      fixture.blindedPackageManifest?.packages?.[index]?.packageSha256
+    )
       failures.push("golden evaluation package hash mismatch");
     if (
       evaluation.publicTests.command !== contract.gates.evaluatorPublicCommand
@@ -965,7 +1810,53 @@ export function validateGoldenRun(
       failures.push("golden evaluator public command diverges");
     if (evaluation.hiddenTests.command !== contract.hiddenSuite.command)
       failures.push("golden evaluator hidden command diverges");
+    if (
+      evaluation.evaluationSequence !== index + 1 ||
+      evaluation.revisionAllowed !== false
+    )
+      failures.push(
+        "golden evaluations must be sequentially sealed without revision",
+      );
   });
+  if (
+    new Set(
+      fixture.evaluations.map(({ evaluatorWorkerId }) => evaluatorWorkerId),
+    ).size !== 3
+  )
+    failures.push("golden evaluation requires one fresh evaluator per package");
+  const evaluatorCosts = fixture.costs.filter(
+    ({ role }) => role === "evaluator",
+  );
+  for (let index = 0; index < fixture.evaluations.length; index += 1) {
+    const evaluation = fixture.evaluations[index];
+    const worker = evaluatorCosts.find(
+      ({ workerId }) => workerId === evaluation.evaluatorWorkerId,
+    );
+    if (
+      !worker ||
+      Date.parse(evaluation.sealedAt) < Date.parse(evaluation.evaluatedAt) ||
+      Date.parse(evaluation.sealedAt) > Date.parse(worker.completedAt)
+    )
+      failures.push("golden evaluator seal is outside its worker lifecycle");
+    const nextWorker = evaluatorCosts.find(
+      ({ workerId }) =>
+        workerId === fixture.evaluations[index + 1]?.evaluatorWorkerId,
+    );
+    if (
+      nextWorker &&
+      Date.parse(nextWorker.startedAt) <= Date.parse(evaluation.sealedAt)
+    )
+      failures.push("golden next evaluator launched before prior seal");
+  }
+  const unblinder = fixture.costs.find(({ role }) => role === "unblinder");
+  if (
+    !unblinder ||
+    Date.parse(unblinder.startedAt) <=
+      Math.max(
+        ...fixture.evaluations.map(({ sealedAt }) => Date.parse(sealedAt)),
+      )
+  )
+    failures.push("golden unblinding began before all evaluations were sealed");
   failures.push(...validateOutcomeSemantics(fixture.outcome));
   for (const [label, artifactHash] of Object.entries(
     fixture.outcome.evaluationArtifactHashes,
@@ -1020,9 +1911,14 @@ export function validateScaffold() {
     "experiment/golden-run/golden-run.json",
     "experiment/golden-run/invalid-current.json",
     "experiment/lock.json",
+    "experiment/preflight/operational-parent-inventory.json",
+    "experiment/preflight/final-lock-evidence.json",
     "experiment/builder-config.json",
+    "experiment/builder-package.json",
+    "experiment/builder-input-allowlist.json",
     "experiment/treatment-loop-algorithm.md",
     "experiment/prompts/neutral-builder.md",
+    "experiment/prompts/runner-smoke.md",
     "experiment/prompts/blinded-reviewer.md",
     "experiment/prompts/fixer.md",
     "experiment/prompts/tester.md",
@@ -1031,12 +1927,26 @@ export function validateScaffold() {
     "experiment/schemas/test.schema.json",
     "experiment/schemas/outcome.schema.json",
     "experiment/schemas/experiment-status.schema.json",
-    "experiment/schemas/assignment-envelope.schema.json",
+    "experiment/schemas/cli-runtime-contract.schema.json",
+    "experiment/schemas/builder-input-manifest.schema.json",
+    "experiment/schemas/role-runtime-contract.schema.json",
+    "experiment/schemas/cli-supervision-evidence.schema.json",
+    "experiment/schemas/blinded-package-manifest.schema.json",
+    "experiment/schemas/blinded-package-mapping.schema.json",
+    "experiment/schemas/final-lock-evidence.schema.json",
     "experiment/templates/test.json",
     "experiment/templates/outcome.json",
     "experiment/templates/experiment-status.json",
-    "experiment/templates/assignment-envelope.json",
-    "scripts/validate-builder-envelopes.mjs",
+    "experiment/templates/cli-runtime-contract.json",
+    "experiment/templates/role-runtime-contract.json",
+    "experiment/templates/cli-supervision-evidence.json",
+    "experiment/templates/blinded-package-manifest.json",
+    "experiment/templates/blinded-package-mapping.json",
+    "scripts/run-cli-builders.ps1",
+    "scripts/canonicalize-paths.mjs",
+    "scripts/prepare-builder-input.mjs",
+    "scripts/run-cli-role.ps1",
+    "scripts/package-blinded-snapshots.mjs",
     "tests/public/evaluate.test.ts",
     "tests/public/ui.test.tsx",
     "package.json",
@@ -1050,9 +1960,12 @@ export function validateScaffold() {
   for (const obsolete of [
     "experiment/prompts/baseline-builder.md",
     "experiment/prompts/treatment-builder.md",
+    "experiment/schemas/assignment-envelope.schema.json",
+    "experiment/templates/assignment-envelope.json",
+    "scripts/validate-builder-envelopes.mjs",
   ]) {
     if (existsSync(path.join(root, obsolete)))
-      failures.push(`obsolete builder prompt remains: ${obsolete}`);
+      failures.push(`obsolete protocol artifact remains: ${obsolete}`);
   }
 
   const implementationFiles = [
@@ -1099,8 +2012,28 @@ export function validateScaffold() {
       "experiment/templates/experiment-status.json",
     ],
     [
-      "experiment/schemas/assignment-envelope.schema.json",
-      "experiment/templates/assignment-envelope.json",
+      "experiment/schemas/cli-runtime-contract.schema.json",
+      "experiment/templates/cli-runtime-contract.json",
+    ],
+    [
+      "experiment/schemas/role-runtime-contract.schema.json",
+      "experiment/templates/role-runtime-contract.json",
+    ],
+    [
+      "experiment/schemas/cli-supervision-evidence.schema.json",
+      "experiment/templates/cli-supervision-evidence.json",
+    ],
+    [
+      "experiment/schemas/blinded-package-manifest.schema.json",
+      "experiment/templates/blinded-package-manifest.json",
+    ],
+    [
+      "experiment/schemas/blinded-package-mapping.schema.json",
+      "experiment/templates/blinded-package-mapping.json",
+    ],
+    [
+      "experiment/schemas/final-lock-evidence.schema.json",
+      "experiment/preflight/final-lock-evidence.json",
     ],
   ];
   const ajv = new Ajv2020({
@@ -1126,6 +2059,12 @@ export function validateScaffold() {
   }
 
   const lock = readJson("experiment/lock.json");
+  const finalLockEvidence = readJson(
+    "experiment/preflight/final-lock-evidence.json",
+  );
+  const operationalParentInventory = readJson(
+    "experiment/preflight/operational-parent-inventory.json",
+  );
   const algorithmText = readFileSync(
     path.join(root, "experiment/treatment-loop-algorithm.md"),
     "utf8",
@@ -1136,68 +2075,256 @@ export function validateScaffold() {
       "utf8",
     ),
   );
+  const actualSmokePromptHash = sha256(
+    readFileSync(path.join(root, "experiment/prompts/runner-smoke.md"), "utf8"),
+  );
   const actualConfigHash = sha256(
     readFileSync(path.join(root, "experiment/builder-config.json"), "utf8"),
   );
-  const actualAlgorithmHash = sha256(algorithmText);
-  const actualEnvelopeSchemaHash = sha256(
+  const actualBuilderAllowlistHash = sha256(
+    readFileSync(path.join(root, "experiment/builder-input-allowlist.json")),
+  );
+  const actualBuilderManifestSchemaHash = sha256(
     readFileSync(
-      path.join(root, "experiment/schemas/assignment-envelope.schema.json"),
+      path.join(root, "experiment/schemas/builder-input-manifest.schema.json"),
+    ),
+  );
+  const actualBuilderPreparationScriptHash = sha256(
+    readFileSync(path.join(root, "scripts/prepare-builder-input.mjs")),
+  );
+  const actualAlgorithmHash = sha256(algorithmText);
+  const actualCliSchemaHash = sha256(
+    readFileSync(
+      path.join(root, "experiment/schemas/cli-runtime-contract.schema.json"),
       "utf8",
     ),
   );
+  const actualCliRunnerHash = sha256(
+    readFileSync(path.join(root, "scripts/run-cli-builders.ps1"), "utf8"),
+  );
+  const actualCanonicalPathHelperHash = sha256(
+    readFileSync(path.join(root, "scripts/canonicalize-paths.mjs"), "utf8"),
+  );
+  const actualRoleSchemaHash = sha256(
+    readFileSync(
+      path.join(root, "experiment/schemas/role-runtime-contract.schema.json"),
+      "utf8",
+    ),
+  );
+  const actualRoleRunnerHash = sha256(
+    readFileSync(path.join(root, "scripts/run-cli-role.ps1"), "utf8"),
+  );
+  const actualEvidenceSchemaHash = sha256(
+    readFileSync(
+      path.join(
+        root,
+        "experiment/schemas/cli-supervision-evidence.schema.json",
+      ),
+      "utf8",
+    ),
+  );
+  const actualPackageSchemaHash = sha256(
+    readFileSync(
+      path.join(
+        root,
+        "experiment/schemas/blinded-package-manifest.schema.json",
+      ),
+      "utf8",
+    ),
+  );
+  const actualPackageMappingSchemaHash = sha256(
+    readFileSync(
+      path.join(root, "experiment/schemas/blinded-package-mapping.schema.json"),
+      "utf8",
+    ),
+  );
+  const actualPackageScriptHash = sha256(
+    readFileSync(
+      path.join(root, "scripts/package-blinded-snapshots.mjs"),
+      "utf8",
+    ),
+  );
+  const actualOperationalParentInventoryHash = sha256Bytes(
+    readFileSync(
+      path.join(root, "experiment/preflight/operational-parent-inventory.json"),
+    ),
+  );
+  const actualPreflightEvidenceHash = sha256Bytes(
+    readFileSync(
+      path.join(root, "experiment/preflight/final-lock-evidence.json"),
+    ),
+  );
+  const actualPreflightEvidenceSchemaHash = sha256Bytes(
+    readFileSync(
+      path.join(root, "experiment/schemas/final-lock-evidence.schema.json"),
+    ),
+  );
+  const actualReviewerPromptHash = sha256(
+    readFileSync(path.join(root, "experiment/prompts/blinded-reviewer.md")),
+  );
+  const actualFixerPromptHash = sha256(
+    readFileSync(path.join(root, "experiment/prompts/fixer.md")),
+  );
+  const actualTesterPromptHash = sha256(
+    readFileSync(path.join(root, "experiment/prompts/tester.md")),
+  );
+  const actualEvaluatorPromptHash = sha256(
+    readFileSync(path.join(root, "experiment/prompts/blinded-evaluator.md")),
+  );
+  const actualReviewSchemaHash = sha256(
+    readFileSync(path.join(root, "experiment/schemas/review.schema.json")),
+  );
+  const actualFixSchemaHash = sha256(
+    readFileSync(path.join(root, "experiment/schemas/fix.schema.json")),
+  );
+  const actualTestSchemaHash = sha256(
+    readFileSync(path.join(root, "experiment/schemas/test.schema.json")),
+  );
+  const actualEvaluationSchemaHash = sha256(
+    readFileSync(path.join(root, "experiment/schemas/evaluation.schema.json")),
+  );
+  const actualRubricHash = sha256(
+    readFileSync(path.join(root, "experiment/rubric.md")),
+  );
+  const actualFrozenGateSetHash = frozenGateSetHash();
   const canonicalContract = readJson("experiment/canonical-contract.json");
   const goldenRun = readJson("experiment/golden-run/golden-run.json");
   const invalidCurrent = readJson("experiment/golden-run/invalid-current.json");
   const finalCommitments = {
-    protocolVersion: "2.3.0-frozen",
+    protocolVersion: "2.4.0",
     protocolStatus: "locked",
-    supersedesLockCommit: "67eb14066fc437f0944b963f7d8b3328e09a88b1",
-    lockParentCommit: "1c89143c023ccf267289b1a0e2e2831ce7bc5c56",
+    supersedesLockCommit: "0fc2e5c6d0cc2355310f10e4f04fcf8e2131d636",
+    supersedesFinalizationCommit: "a37774cf25821103861ed94c261ac5db4f433860",
+    lockParentCommit: "f957cdf3054b8055a3d4b90d7cae0fbb8c79394c",
+    lockParentTree: "23c9c1005efa704d42e79fe8b80f3dc33aa5ab17",
+    lockParentLockSha256:
+      "450870be5209d8a6bfc6080a52869ae0ed543ee4a674d7eb7bff24acf36fb44d",
     hiddenSuiteId: "permissions-playground-sealed-v2",
     hiddenSuiteSha256:
       "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
-    treatmentSkillCommit: "33355b97041070e1dec4b7c9beca4ce96faa50bb",
-    treatmentSkillTree: "14b0ca16dfe873e07307c6d0d333744ebbc88cc0",
+    treatmentSkillCommit: "05d26d6387971512fb38d079387ad015e46a8b07",
+    treatmentSkillTree: "088dc8dbe9a9b46007fe06fae031ed415fcc5e4c",
+    treatmentSkillManifestFile: "MANIFEST.sha256",
     treatmentSkillManifestSha256:
-      "4f2909c061f342170a3f1658a3a4d68551ddc0dd46b66054c85e31eb53c6dfc5",
+      "db590a507661ddc3bb97dc98fdd6d26c27b52dc8fb844b8bf4af6eba14c5c423",
+    treatmentSkillManifestEntryCount: 52,
+    treatmentSkillManifestCommentLineCount: 3,
+    treatmentSkillManifestPhysicalLineCount: 55,
+    treatmentSkillManifestByteSource: "canonical-git-blob",
+    treatmentSkillManifestToolPath: "validation/manifest_tool.py",
+    treatmentSkillManifestToolSha256:
+      "06539fbea74c7992d5324cf2ca2caaf12f615a76840a77627c8282a92f34d9d5",
+    treatmentSkillAttributesSha256:
+      "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c",
+    treatmentSkillSourceParitySha256:
+      "6a31b071d752fe24a4fba0643492482623307f2184ba2e5ff69e4a629bc230e9",
+    treatmentSkillSourceParityFileCount: 41,
+    treatmentSkillSourceParityAllMatch: true,
     treatmentAlgorithmSha256: actualAlgorithmHash,
     neutralBuilderPromptSha256: actualPromptHash,
+    runnerSmokePromptSha256: actualSmokePromptHash,
     neutralBuilderConfigSha256: actualConfigHash,
-    assignmentEnvelopeSchemaSha256: actualEnvelopeSchemaHash,
-    assignmentCoordinationDirectory,
+    builderInputAllowlistSha256: actualBuilderAllowlistHash,
+    builderInputManifestSchemaSha256: actualBuilderManifestSchemaHash,
+    builderInputPreparationScriptSha256: actualBuilderPreparationScriptHash,
+    powerShellHostPath: String.raw`C:\Users\rhenm\AppData\Local\pwsh7\pwsh.exe`,
+    powerShellVersion: "7.6.2",
+    powerShellHostSha256:
+      "99ec38d8c4910fd5f2feeeec4dedb5076ff39a08ca21e12642822bc8d989e316",
+    cliBinaryPath: String.raw`C:\Users\rhenm\.codex\plugins\.plugin-appserver\codex.exe`,
+    cliVersion: "codex-cli 0.145.0-alpha.18",
+    cliBinarySha256:
+      "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
+    cliAuthStatus: "Logged in using ChatGPT",
+    cliRuntimeSchemaSha256: actualCliSchemaHash,
+    cliRunnerSha256: actualCliRunnerHash,
+    canonicalPathHelperSha256: actualCanonicalPathHelperHash,
+    roleRuntimeSchemaSha256: actualRoleSchemaHash,
+    roleRunnerSha256: actualRoleRunnerHash,
+    supervisionEvidenceSchemaSha256: actualEvidenceSchemaHash,
+    reviewerPromptTemplateSha256: actualReviewerPromptHash,
+    fixerPromptTemplateSha256: actualFixerPromptHash,
+    testerPromptTemplateSha256: actualTesterPromptHash,
+    evaluatorPromptTemplateSha256: actualEvaluatorPromptHash,
+    reviewArtifactSchemaSha256: actualReviewSchemaHash,
+    fixArtifactSchemaSha256: actualFixSchemaHash,
+    testArtifactSchemaSha256: actualTestSchemaHash,
+    evaluationArtifactSchemaSha256: actualEvaluationSchemaHash,
+    rubricSha256: actualRubricHash,
+    frozenGateSetSha256: actualFrozenGateSetHash,
+    blindedPackageSchemaSha256: actualPackageSchemaHash,
+    blindedPackageMappingSchemaSha256: actualPackageMappingSchemaHash,
+    blindedPackageScriptSha256: actualPackageScriptHash,
+    v4SmokeContractSha256:
+      "d1a47087dc0bfcf85638e6c9faef4c7399c98626556747f1fda31e0a67e0645d",
+    v4SmokeSupervisorSha256:
+      "2d1c8408af254da00f892217ea2df3863671986249605c4ef8d2431c897d9a25",
+    v4SmokeSupervisionSha256:
+      "06ed787a595abe3a22334e099a35af1a11e2a2a855e54aa7f37a386d28ea20c1",
+    v4SmokePromptSha256:
+      "5e099d26f1aa21ca6077051d681e974b1a9b3ae182dafe26741b4937c0c98a8a",
+    runnerSmokeContractSha256: null,
+    runnerSmokeSupervisionSha256: null,
+    runnerSmokeAttestationSha256: null,
+    gateAAttestationSha256:
+      "2157bb3a422988bc517354a486dcd0ac20c1b463a76e3a663007bd571b202bbe",
+    gateBAttestationSha256:
+      "3a987b0b17b17d460491df0eb2af4814410a9b7f6a2300198ecfbdf040a0ca5f",
+    gateCAttestationSha256:
+      "e1be8620932501f12327dc1534c19953f403d8cec897946ca52cdf67fe61d2bd",
+    operationalParentInventoryPath:
+      "experiment/preflight/operational-parent-inventory.json",
+    operationalParentInventorySha256:
+      "6a31b071d752fe24a4fba0643492482623307f2184ba2e5ff69e4a629bc230e9",
+    preflightEvidencePath: "experiment/preflight/final-lock-evidence.json",
+    preflightEvidenceSha256:
+      "fd93491c9989fa92ed35af6aa2c128f72b0dac41c55fa4dc348979032d89ace4",
+    preflightEvidenceSchemaPath:
+      "experiment/schemas/final-lock-evidence.schema.json",
+    preflightEvidenceSchemaSha256:
+      "45b9e5802ab9e8d4650ac5b4bbbc6ae6ae041064e6bb3bc049278a35e7336b9d",
+    gateAggregateSha256:
+      "b8a64749acdff8a0867fdada0e41d3282da808441d0074a520499e7817eaeb58",
     canonicalContractSha256: canonicalHash(canonicalContract),
     goldenFixtureSha256: canonicalHash(goldenRun),
     invalidCurrentFixtureSha256: canonicalHash(invalidCurrent),
-    freezeState: "frozen",
+    commonStartCommitPolicy:
+      "At execution, record the GitHub commonStartCommit in experiment and run manifests together with this locked preregistration commit and its lock-file SHA-256; this finalization commit seals preflight evidence only and was not itself executed as a gate.",
+    freezeState: "locked",
   };
+  if (
+    actualOperationalParentInventoryHash !==
+    lock.operationalParentInventorySha256
+  )
+    failures.push("operational parent inventory byte hash mismatch");
+  if (actualPreflightEvidenceHash !== lock.preflightEvidenceSha256)
+    failures.push("preflight evidence byte hash mismatch");
+  if (actualPreflightEvidenceSchemaHash !== lock.preflightEvidenceSchemaSha256)
+    failures.push("preflight evidence schema byte hash mismatch");
   for (const [key, expected] of Object.entries(finalCommitments)) {
     if (lock[key] !== expected)
       failures.push(`${key} does not match the final integrated lock`);
   }
   failures.push(
+    ...validateFinalLockEvidence(
+      finalLockEvidence,
+      operationalParentInventory,
+      lock,
+    ),
     ...validateCanonicalContract(canonicalContract),
     ...validateGoldenRun(goldenRun, canonicalContract, lock),
     ...validateExperimentConclusion(invalidCurrent),
-    ...validateAssignmentEnvelopePair(
-      invalidCurrent.assignmentEnvelopes,
-      invalidCurrent.assignmentEnvelopeAttestations,
-      lock,
-    ),
   );
 
   const builderConfig = readJson("experiment/builder-config.json");
   if (
-    builderConfig.turnLimit !== 1 ||
+    builderConfig.executionLimit !== 1 ||
     builderConfig.wallSecondsMaximum !== 2400 ||
     builderConfig.maxTokens !== null ||
     !builderConfig.maxTokensUnavailableReason ||
-    builderConfig.assignmentEnvelope?.schemaSha256 !==
-      actualEnvelopeSchemaHash ||
-    builderConfig.assignmentEnvelope?.coordinationDirectory !==
-      assignmentCoordinationDirectory ||
-    JSON.stringify(builderConfig.assignmentEnvelope?.allowedPairDifferences) !==
-      JSON.stringify(assignmentPairDifferences)
+    builderConfig.cliPath !== lock.cliBinaryPath ||
+    JSON.stringify(builderConfig.invariantArgv) !==
+      JSON.stringify(cliInvariantArgv)
   )
     failures.push(
       "neutral builder config violates prospective budget invariants",
@@ -1306,14 +2433,7 @@ if (isEntrypoint) {
           ),
         );
       else if (relativeInput === "experiment/golden-run/invalid-current.json")
-        failures.push(
-          ...validateExperimentConclusion(value),
-          ...validateAssignmentEnvelopePair(
-            value.assignmentEnvelopes,
-            value.assignmentEnvelopeAttestations,
-            readJson("experiment/lock.json"),
-          ),
-        );
+        failures.push(...validateExperimentConclusion(value));
       else
         failures.push(
           "execution mode input must be a registered golden fixture",
@@ -1332,6 +2452,6 @@ if (isEntrypoint) {
     process.exit(1);
   }
   console.log(
-    `Protocol 2.3.0-frozen scaffold validation passed (${schemaPairCount} schema/data pairs; assignment envelopes and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.4.0 locked scaffold validation passed (${schemaPairCount} schema/data pairs; P-bound preflight and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }

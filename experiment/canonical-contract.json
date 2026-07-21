@@ -1,6 +1,6 @@
 {
-  "contractVersion": "1.2.0",
-  "protocolVersion": "2.3.0",
+  "contractVersion": "1.3.0",
+  "protocolVersion": "2.4.0",
   "normativeSource": "experiment/protocol.md",
   "canonicalJson": {
     "id": "utf8-sorted-json-v1",
@@ -31,43 +31,125 @@
     "idPattern": "^cycle-[1-5]-reviewer-[0-9]{2}$"
   },
   "builderFreeze": {
-    "promptSha256": "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39",
-    "configSha256": "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606",
-    "rule": "every builder freeze must equal both canonical prompt/config hashes, the corresponding lock commitments, and one separately attested assignment-envelope hash"
+    "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
+    "smokePromptSha256": "135c5fc59fe72b4b37d924cd6f1a14e4f2a3b7b59711cc12294e81f52cbfd6a2",
+    "configSha256": "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4",
+    "rule": "each builder receives the exact raw prompt bytes and a byte-identical source-history-free neutral product projection; only opaque invocation ID and runtime coordinate paths differ",
+    "inputProjection": {
+      "allowlistPath": "experiment/builder-input-allowlist.json",
+      "allowlistSha256": "37af679c4f3f71cbd9e28b810897d4ff82c7c47cf4421a9d661b8b90947aef5b",
+      "manifestSchemaPath": "experiment/schemas/builder-input-manifest.schema.json",
+      "manifestSchemaSha256": "b044646ede4fef4543a4950e5842f51997dc3b65e6bfabad7eeb1ff84caf0bb5",
+      "preparationScriptPath": "scripts/prepare-builder-input.mjs",
+      "preparationScriptSha256": "68e186914a0dd99e0b91f0851d45f8081086fffadae8d2949050e29ea1b832b3",
+      "sourceRule": "private manifest binds the clean protocol source commit/tree; neither source nor manifest is builder input",
+      "outputRule": "two fresh nonnested git-init repositories with identical one-root commit/tree, core.autocrlf=false, no remotes, and exact allowlisted bytes only"
+    }
   },
-  "assignmentEnvelope": {
-    "schemaVersion": "1.0.0",
-    "schemaPath": "experiment/schemas/assignment-envelope.schema.json",
-    "schemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21",
-    "fields": [
-      "schemaVersion",
-      "opaqueWorkerKey",
-      "opaqueCandidateId",
-      "absoluteWorktreePath",
-      "buildBranch",
-      "baseBranch",
-      "commonStartCommit",
-      "commonStartTree",
-      "promptSha256",
-      "configSha256",
-      "envelopeSchemaSha256"
+  "cliRuntime": {
+    "launchCommand": "pwsh -NoProfile -File",
+    "powerShellHost": {
+      "path": "C:\\Users\\rhenm\\AppData\\Local\\pwsh7\\pwsh.exe",
+      "version": "7.6.2",
+      "sha256": "99ec38d8c4910fd5f2feeeec4dedb5076ff39a08ca21e12642822bc8d989e316"
+    },
+    "modelRoleCoverage": [
+      "builder",
+      "reviewer",
+      "fixer",
+      "tester",
+      "evaluator"
     ],
-    "attestationFields": ["opaqueCandidateId", "envelopeSha256"],
-    "coordinationDirectory": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-builder-assignments",
-    "fileConvention": "<task-leaf>.json",
-    "taskLeafPattern": "^[a-z0-9_]+$",
-    "workspaceRoot": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20",
-    "allowedPairDifferences": [
-      "opaqueWorkerKey",
-      "opaqueCandidateId",
-      "absoluteWorktreePath",
-      "buildBranch",
-      "baseBranch"
+    "roleLaunchRule": "every model-bearing role invocation is a fresh external Codex CLI subprocess using the frozen binary/auth/invariant argv, role-specific exact raw prompt bytes on stdin, --ephemeral, no resume, and distinct process and thread.started IDs; the bundled two-invocation contract and supervisor instantiate this rule for builders",
+    "schemaPath": "experiment/schemas/cli-runtime-contract.schema.json",
+    "schemaSha256": "665016233b950a2f39f0bbee1f5f75b530980d3bcd979e543943cf976b0a2689",
+    "runnerPath": "scripts/run-cli-builders.ps1",
+    "runnerSha256": "b2e848a193c28d93893829a3dceeba323999193a0d96acee8848d0eff06e70b7",
+    "canonicalPathHelperPath": "scripts/canonicalize-paths.mjs",
+    "canonicalPathHelperSha256": "194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e",
+    "binaryPath": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe",
+    "binaryVersion": "codex-cli 0.145.0-alpha.18",
+    "binarySha256": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
+    "authStatus": "Logged in using ChatGPT",
+    "pinnedModel": "gpt-5.4",
+    "pinnedReasoning": "xhigh",
+    "pinnedProvider": "OpenAI through attested ChatGPT authentication",
+    "invariantArgv": [
+      "-a",
+      "never",
+      "-m",
+      "gpt-5.4",
+      "-c",
+      "model_reasoning_effort=\"xhigh\"",
+      "exec",
+      "--ephemeral",
+      "--ignore-user-config",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "workspace-write",
+      "--json"
     ],
-    "pairRule": "opaque worker keys, candidate IDs, worktree paths, build branches, and base branches are pairwise distinct; paths are safe absolute children of workspaceRoot and are not nested; every other field is identical",
-    "bindingRule": "promptSha256, configSha256, and envelopeSchemaSha256 equal the canonical and lock commitments; commonStartCommit and commonStartTree are identical across the pair",
-    "semanticExclusion": "the envelope contains no task semantics, arm/treatment/comparison information, timestamps, rankings, prior-run data, or hints",
-    "siblingAccessRule": "listing the coordination directory or reading a sibling assignment file is an experiment invalidation"
+    "perInvocationArgv": ["-C", "<workdir>", "-o", "<final-path>", "-"],
+    "rawStdinRule": "write exact neutral prompt bytes without prefix or suffix, then close stdin",
+    "allowedDifferences": [
+      "opaqueInvocationId",
+      "workdir",
+      "finalPath",
+      "stdoutPath",
+      "stderrPath",
+      "evidencePath",
+      "processId",
+      "threadId"
+    ],
+    "freshnessRule": "builders launch concurrently in two separate OS processes with distinct thread.started IDs, --ephemeral, and no resume",
+    "metadataRule": "model and reasoning are authoritatively pinned in argv after a harmless support check; provider is pinned by ChatGPT auth plus no OSS/local-provider option; trusted JSONL observations are recorded when present and conflicts invalidate; agent self-report is never evidence",
+    "estimandRule": "descriptive randomized pilot under the pinned CLI deployment configuration; no strong causal or provider-wide generalization is claimed",
+    "isolationRule": "audited procedural boundary, not kernel-enforced proof: builders receive only independently initialized one-root neutral projections whose explicit path/byte manifest, aggregate content hash, projection commit/tree, allowlist, schema, and preparation script are verified before model launch; source history/context and every private input remain outside every mutable path; remotes are disabled; workdirs, authoritative outputs, evidence, external temp/cache/dependency roots, and cross-invocation paths are physically distinct and nonnested; workspace-write CLI sandbox and strict JSONL reconciliation apply",
+    "containmentGraphPolicy": "before evidence or runtime directory creation and before model launch, canonicalize existing and prospective paths through their nearest existing physical parents; require independent nonnested workdirs, authoritative outputs contained only by evidenceRoot and pairwise nonnested, temp/cache/dependency roots external to and nonnested with evidenceRoot/workdirs/outputs/each other across invocations, and every private input external to every mutable root and output; after execution evidenceRoot contains exactly the authoritative outputs and their necessary parent directories with no reparse points",
+    "successRule": "each process starts, receives stdin, exits zero before the external deadline, emits exactly one thread.started and turn.completed, exposes or explains absent usage, uses a distinct thread ID, reconciles raw JSONL and hashes, leaves an exact closed evidence tree, and finishes with a clean committed clone",
+    "roleRuntime": {
+      "schemaPath": "experiment/schemas/role-runtime-contract.schema.json",
+      "schemaSha256": "ac620774663e6ce8dd9917f760f6f53eeb8063e70b88240999ffc6bef6184c5a",
+      "runnerPath": "scripts/run-cli-role.ps1",
+      "runnerSha256": "f78ec27cc30f66a58464be6f5b60a4437808b97ec85186916171ee22e9b6b3b4",
+      "evidenceSchemaPath": "experiment/schemas/cli-supervision-evidence.schema.json",
+      "evidenceSchemaSha256": "b43690cdb988df31e3a778acf8021052fa0e9dae0767f518d9c8c126a8866556",
+      "promptTemplateSha256": {
+        "reviewer": "5bd94cc7c44165acae23675f82d74ece6bab0b4dab31f387d338d1c9a5e7dcae",
+        "fixer": "ac4c0a40dbcee8b1ffe11b6eb7e81c5458849859a1ab38d09b78431aa390c9cf",
+        "tester": "644ef262eb7a4c85b3a4d5636d88479082ebca37a5f082dbce165c90a9ef16c3",
+        "evaluator": "ee2e0620aa9a7d55ef047dda9d6d947ee750ebd3bb3bc1f149a229eb11adbe40"
+      },
+      "artifactSchemaSha256": {
+        "reviewer": "66e47c9e4a0a8a4b1d5f09a73f09f753879b8f0f0d8219a1e4b187b88d3d791f",
+        "fixer": "d92b46d65322b053699bdcc8e35a6f9d0c1c91d3dacccddbcfc569c673d7e96b",
+        "tester": "f0d6937137661ef750fe435afbe4ca1cba8ce727ed7bdf0986e98a9c1d476f06",
+        "evaluator": "12a769a0868261e28299b5a7feef71626ea6e1ee51bfb0eb59ce65bbec05e6aa"
+      },
+      "promptSubstitutionRule": "exact role-specific key set; single-line bounded values; candidate/cycle/snapshot, fixer handoff, and evaluator package/sequence/rubric/schema/hidden-suite values must equal their contract bindings",
+      "deadlinePolicy": "before evidence creation, strict-parse WALL_CLOCK_DEADLINE_ISO as UTC, start the monotonic budget clock before capturing supervisor start, require start < absolute deadline <= start + deadlineSeconds with zero scheduling tolerance, floor the wall-clock absolute budget and subtract all monotonic elapsed time including pre-launch scheduling delay, pass floor(remaining) to WaitForExit, treat less than one millisecond as zero, require actual OS exit completedAt <= absoluteDeadline, and allow two seconds solely for completionObservedAt or process-tree termination",
+      "pathMutationPolicy": "before evidence or runtime directory creation and model launch, canonicalize prospective paths and require evidenceRoot/workdir separation, four pairwise-nonnested authoritative direct-child outputs, external pairwise-nonnested temp/cache/dependency roots, and every private input separate from every mutable root and output; afterward require exactly four evidence files, no subdirectories, and no reparse points",
+      "outputSchemaPolicy": "codex exec supports --output-schema, but authoritative final schemas require supervisor-observed runtime identity and chronology; omit the flag until distinct frozen pre-injection schemas exist, then inject identity, overwrite role artifact chronology with actual OS exit time, record completion observation separately, and validate the authoritative final schema",
+      "reviewerPolicy": "read-only snapshot",
+      "fixerPolicy": "authorized isolated full-clone write followed by clean commit",
+      "testerPolicy": "workspace-write disposable copy; no mutation transfer",
+      "evaluatorPolicy": "one fresh evaluator per single history-free package in randomized order; workspace-write disposable copy; score and seal before next; no revisions"
+    },
+    "v4Evidence": {
+      "contractSha256": "d1a47087dc0bfcf85638e6c9faef4c7399c98626556747f1fda31e0a67e0645d",
+      "supervisorSha256": "2d1c8408af254da00f892217ea2df3863671986249605c4ef8d2431c897d9a25",
+      "supervisionSha256": "06ed787a595abe3a22334e099a35af1a11e2a2a855e54aa7f37a386d28ea20c1",
+      "promptSha256": "5e099d26f1aa21ca6077051d681e974b1a9b3ae182dafe26741b4937c0c98a8a",
+      "threadIds": [
+        "019f827b-221c-7021-b650-a948e9dd4298",
+        "019f827b-221c-7363-a23f-0f40b4ec017d"
+      ],
+      "observedLimitations": [
+        "PowerShell shell snapshots are unsupported",
+        "model/provider/reasoning metadata was not consistently observable in trusted JSONL",
+        "v4 was harmless runtime evidence and not a builder execution"
+      ]
+    }
   },
   "stopping": {
     "baselineStopReason": "baseline-zero-cycles",
@@ -111,27 +193,118 @@
   "evaluation": {
     "packageLabels": ["X", "Y", "Z"],
     "snapshotRoles": ["B0", "T0", "Tfinal"],
+    "blindingClaim": "mapping-blinded single-package evaluation, not lineage-blinded inference",
+    "sequenceRule": "randomize X/Y/Z order; use a fresh evaluator subprocess for one package; record mapping guess and integer confidence percentage from 0 through 100; score and seal before launching the next; prohibit revisions",
+    "packageScriptPath": "scripts/package-blinded-snapshots.mjs",
+    "packageScriptSha256": "98ef96dd16f37a14fa4a56b324a0274dd3aa29010d296244e695fe42663478d7",
+    "packageManifestSchemaPath": "experiment/schemas/blinded-package-manifest.schema.json",
+    "packageManifestSchemaSha256": "4d9d8397fc068cdf511e99bae6980ed2d2ef5410e5128385043f1c426cdb8bd5",
+    "packageMappingSchemaPath": "experiment/schemas/blinded-package-mapping.schema.json",
+    "packageMappingSchemaSha256": "2d0a96f27d43f511c26b57a49dfef5c05acfe0f5dfb1f8419f724d524513fb74",
+    "packageInputRule": "exact X/Y/Z randomized order and B0/T0/Tfinal set; core.autocrlf=false clean full-clone sources must match exact refs, committed Git commit/tree, one frozen public-gate-set hash, and schema-bound private provenance markers; source, output, mapping, and private manifest paths remain separate and nonnested; evaluator-facing manifests omit source role/ref/commit/tree",
+    "rubricSha256": "f0f4b5b918a9a50183455bf237a90706dcac58ce3cf708996bdc9ceb3b0978ef",
+    "frozenGateSetSha256": "af8a2d6f7a29ff3dcbc1ca4240361e6bdbba520078a0cd39dbd0f4e4ba0f7930",
     "rubricItems": [
-      { "id": "A1", "maximum": 6, "anchors": [0, 3, 6] },
-      { "id": "A2", "maximum": 8, "anchors": [0, 4, 8] },
-      { "id": "A3", "maximum": 10, "anchors": [0, 4, 7, 10] },
-      { "id": "A4", "maximum": 10, "anchors": [0, 4, 7, 10] },
-      { "id": "A5", "maximum": 7, "anchors": [0, 4, 7] },
-      { "id": "A6", "maximum": 7, "anchors": [0, 4, 7] },
-      { "id": "A7", "maximum": 2, "anchors": [0, 1, 2] },
-      { "id": "B1", "maximum": 5, "anchors": [0, 3, 5] },
-      { "id": "B2", "maximum": 5, "anchors": [0, 3, 5] },
-      { "id": "B3", "maximum": 5, "anchors": [0, 3, 5] },
-      { "id": "C1", "maximum": 6, "anchors": [0, 3, 6] },
-      { "id": "C2", "maximum": 4, "anchors": [0, 2, 4] },
-      { "id": "C3", "maximum": 5, "anchors": [0, 3, 5] },
-      { "id": "D1", "maximum": 4, "anchors": [0, 2, 4] },
-      { "id": "D2", "maximum": 4, "anchors": [0, 2, 4] },
-      { "id": "D3", "maximum": 2, "anchors": [0, 1, 2] },
-      { "id": "E1", "maximum": 3, "anchors": [0, 1, 2, 3] },
-      { "id": "E2", "maximum": 3, "anchors": [0, 1, 2, 3] },
-      { "id": "E3", "maximum": 2, "anchors": [0, 1, 2] },
-      { "id": "E4", "maximum": 2, "anchors": [0, 1, 2] }
+      {
+        "id": "A1",
+        "maximum": 6,
+        "anchors": [0, 3, 6]
+      },
+      {
+        "id": "A2",
+        "maximum": 8,
+        "anchors": [0, 4, 8]
+      },
+      {
+        "id": "A3",
+        "maximum": 10,
+        "anchors": [0, 4, 7, 10]
+      },
+      {
+        "id": "A4",
+        "maximum": 10,
+        "anchors": [0, 4, 7, 10]
+      },
+      {
+        "id": "A5",
+        "maximum": 7,
+        "anchors": [0, 4, 7]
+      },
+      {
+        "id": "A6",
+        "maximum": 7,
+        "anchors": [0, 4, 7]
+      },
+      {
+        "id": "A7",
+        "maximum": 2,
+        "anchors": [0, 1, 2]
+      },
+      {
+        "id": "B1",
+        "maximum": 5,
+        "anchors": [0, 3, 5]
+      },
+      {
+        "id": "B2",
+        "maximum": 5,
+        "anchors": [0, 3, 5]
+      },
+      {
+        "id": "B3",
+        "maximum": 5,
+        "anchors": [0, 3, 5]
+      },
+      {
+        "id": "C1",
+        "maximum": 6,
+        "anchors": [0, 3, 6]
+      },
+      {
+        "id": "C2",
+        "maximum": 4,
+        "anchors": [0, 2, 4]
+      },
+      {
+        "id": "C3",
+        "maximum": 5,
+        "anchors": [0, 3, 5]
+      },
+      {
+        "id": "D1",
+        "maximum": 4,
+        "anchors": [0, 2, 4]
+      },
+      {
+        "id": "D2",
+        "maximum": 4,
+        "anchors": [0, 2, 4]
+      },
+      {
+        "id": "D3",
+        "maximum": 2,
+        "anchors": [0, 1, 2]
+      },
+      {
+        "id": "E1",
+        "maximum": 3,
+        "anchors": [0, 1, 2, 3]
+      },
+      {
+        "id": "E2",
+        "maximum": 3,
+        "anchors": [0, 1, 2, 3]
+      },
+      {
+        "id": "E3",
+        "maximum": 2,
+        "anchors": [0, 1, 2]
+      },
+      {
+        "id": "E4",
+        "maximum": 2,
+        "anchors": [0, 1, 2]
+      }
     ],
     "sectionItems": {
       "functional": ["A1", "A2", "A3", "A4", "A5", "A6", "A7"],
@@ -153,11 +326,31 @@
     "mainSelection": "higher of B0 and Tfinal; exact tie selects baseline"
   },
   "roles": {
-    "builder": { "wallSecondsMaximum": 2400, "modelConfigHash": "required" },
-    "reviewer": { "wallSecondsMaximum": 900, "modelConfigHash": "required" },
-    "fixer": { "wallSecondsMaximum": 1500, "modelConfigHash": "required" },
-    "tester": { "wallSecondsMaximum": 900, "modelConfigHash": "required" },
-    "evaluator": { "wallSecondsMaximum": 1800, "modelConfigHash": "required" },
+    "builder": {
+      "wallSecondsMaximum": 2400,
+      "modelConfigHash": "required",
+      "executionRuntime": "fresh-external-cli-subprocess"
+    },
+    "reviewer": {
+      "wallSecondsMaximum": 900,
+      "modelConfigHash": "required",
+      "executionRuntime": "fresh-external-cli-subprocess"
+    },
+    "fixer": {
+      "wallSecondsMaximum": 1500,
+      "modelConfigHash": "required",
+      "executionRuntime": "fresh-external-cli-subprocess"
+    },
+    "tester": {
+      "wallSecondsMaximum": 900,
+      "modelConfigHash": "required",
+      "executionRuntime": "fresh-external-cli-subprocess"
+    },
+    "evaluator": {
+      "wallSecondsMaximum": 1800,
+      "modelConfigHash": "required",
+      "executionRuntime": "fresh-external-cli-subprocess"
+    },
     "unblinder": {
       "wallSecondsMaximum": 300,
       "modelConfigHash": "nullable-with-reason"
