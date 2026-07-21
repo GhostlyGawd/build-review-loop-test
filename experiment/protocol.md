@@ -1,6 +1,6 @@
 # Preregistered neutral-build versus review-loop protocol
 
-Protocol version: 2.2.0-frozen
+Protocol version: 2.3.0-frozen
 
 Design: paired, blinded pilot with two independent neutral builds, post-build random assignment, and treatment-only iterative review
 
@@ -20,7 +20,7 @@ The primary estimand is `score(Tfinal) - score(B0)`. The secondary within-treatm
 
 ## 2. Canonical contract and frozen lock boundary
 
-This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. The earlier 2.1.0-frozen lock is superseded by the integrated 2.2.0-frozen lock. Before any builder sees task materials, the frozen lock MUST:
+This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. The 2.2.0-frozen lock is superseded because collaboration workers share the orchestrator initial directory. The integrated 2.3.0-frozen lock binds the synchronized skill, content parent, workspace-envelope schema, and coordination convention. Before builder exposure, the frozen lock MUST:
 
 1. pass `npm ci` and `npm run check` on Node 22;
 2. record the exact lock-parent commit;
@@ -28,8 +28,9 @@ This Markdown protocol is the canonical public source. `experiment/canonical-con
 4. freeze the treatment skill-v1 source and manifest and record their commit and SHA-256;
 5. verify the treatment-loop algorithm against the final skill-v1 source and record its commitment;
 6. record SHA-256 hashes of the neutral builder prompt and neutral builder configuration, both of which MUST be delivered byte-for-byte without per-builder substitution;
-7. validate all templates and prospective semantic test cases; and
-8. confirm no builder has received task materials.
+7. freeze the strict assignment-envelope schema, coordination convention, and schema SHA-256;
+8. validate all templates and prospective semantic test cases; and
+9. confirm no builder has received task materials.
 
 The lock cannot contain its own commit SHA. After the lock is merged, the operator records the final GitHub `commonStartCommit`, preregistration lock commit, and byte-identical lock-file SHA-256 in the private experiment manifest and both run manifests. That triple is the authoritative common-start binding.
 
@@ -37,7 +38,13 @@ After locking, the specification, rubric, public tests, prompts, schemas, valida
 
 ## 3. Experimental units and neutral construction
 
-The units are two isolated worktrees created from the same bound `commonStartCommit`, privately tracked by the operator as `candidate-a` and `candidate-b`. Each receives the exact same bytes of `experiment/prompts/neutral-builder.md` and the exact same serialized builder configuration, with no label/deadline substitution or surrounding coaching. No builder receives, reads, or is told about the treatment skill, review algorithm, assignment, other candidate, hidden suite, or downstream role prompts.
+The units are two isolated worktrees created from the same bound `commonStartCommit`, privately tracked by the operator as `candidate-a` and `candidate-b`. Collaboration workers begin in the shared orchestrator directory, so per-builder path wrappers are forbidden. Each receives the exact same bytes of `experiment/prompts/neutral-builder.md` and builder configuration, with no path/label/deadline substitution or surrounding coaching.
+
+Before dispatch, the steward creates exactly two strict opaque envelopes and runs `node scripts/validate-builder-envelopes.mjs --first <path-one> --second <path-two>`. The frozen directory is `C:\Users\rhenm\Documents\Codex\2026-07-20\pilot-002-builder-assignments`; each filename is `<task-leaf>.json`, derived only from orchestrator system context and matching `^[a-z0-9_]+$`. The helper reads only the named files and no candidate contents.
+
+Each envelope contains only the 11 canonical schema fields. The pair may differ only in opaque worker key, opaque candidate ID, absolute worktree path, build branch, and base branch. Those values are distinct, paths are safe absolute and nonnested, every other value is identical, and prompt/config/schema hashes equal canonical and lock commitments. Each envelope hash is attested separately. These workspace coordinates are a narrow exception, not additions to the identical prompt/config, and contain no task, arm/treatment/comparison, timestamp, ranking, prior-run, or hint semantics.
+
+Each builder derives its task leaf, reads exactly that assignment file, validates its bindings, and then uses only the assigned worktree. Listing the coordination directory or reading a sibling assignment file invalidates the experiment. No builder receives, reads, or is told about the treatment skill, review algorithm, assignment, other candidate, hidden suite, or downstream role prompts.
 
 Each builder gets exactly one agent/subagent turn and inherits the same model, provider/version, reasoning setting, tool permissions, starting context, machine class, Node/npm versions, network policy, and prospective limits. The two initial builds may run concurrently in equivalent isolation or sequentially without cross-run context. Their initial commits and evidence chains are sealed before assignment.
 
@@ -87,7 +94,7 @@ The exact skill-v1 flow is stored in `experiment/treatment-loop-algorithm.md`. I
 
 Public gates are immutable: `docs/permissions-playground-spec.md`, `docs/public-test-contract.md`, `tests/public/**`, `scripts/run-public-tests.mjs`, dependency versions/lockfile, rubric weights and anchors, protocol/prompts/schemas/validator, CI, and the activation file list. Builders and treatment roles may change implementation files, application documentation, and candidate-added tests only.
 
-Every snapshot and role artifact is content-addressed. The run manifest links, in order: common-start triple; canonical-contract and gate bindings; neutral prompt/config hashes; initial source commit and tree hash; assignment record hash; each cycle input commit; role prompt hash; transcript hash when available; review/fix/test artifact hashes; output commit/tree hash; exact check commands/exit codes; and cost-record hash. The evaluator chain links each neutral package hash, public/hidden suite hashes, raw test outputs, rubric artifact hash, and evaluator transcript hash when available. Missing provider transcripts are recorded as `null`, not fabricated.
+Every snapshot and role artifact is content-addressed. The run manifest links, in order: common-start triple; canonical-contract and gate bindings; neutral prompt/config hashes; assignment-envelope schema, path, canonical hash, and separate attestation; initial source commit and tree hash; assignment record hash; each cycle input commit; role prompt hash; transcript hash when available; review/fix/test artifact hashes; output commit/tree hash; exact check commands/exit codes; and cost-record hash. The evaluator chain links each neutral package hash, public/hidden suite hashes, raw test outputs, rubric artifact hash, and evaluator transcript hash when available. Missing provider transcripts are recorded as `null`, not fabricated.
 
 Canonical JSON `utf8-sorted-json-v1` accepts only null, booleans, safe integers, strings, arrays, and objects. Object keys sort by ascending UTF-8 bytes; arrays preserve order; strings use JSON escaping; and output contains no insignificant whitespace or trailing newline. Artifact SHA-256 input is the ASCII/byte domain `permissions-playground/canonical-json-v1\x00` followed by those canonical JSON bytes. A source-tree hash uses the frozen packaging procedure declared in the manifest.
 
@@ -134,7 +141,7 @@ The seven role names and maximum wall seconds are exact: `builder` 2400, `review
 
 The tester command is exactly `npm run check`, invoking in order `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run validate:scaffold`, `npm run test:protocol`, `npm run test:public:if-implemented`, and `npm run build`. The evaluator public command is exactly `npm run test:public`. The sealed hidden suite ID is `permissions-playground-sealed-v2`, its command is `node sealed-hidden-suite/run.mjs`, and its SHA-256 commitment is `a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b`. Run records bind all of these values and the canonical-contract hash.
 
-Templates are non-executable examples and validate only in explicit `template` mode. `execution` mode rejects a provisional lock, zero hashes/seeds, sentinel or `required-at-run` values, template-equal records, duplicate worker IDs, invalid snapshots, and any divergence from this contract.
+Templates are non-executable examples and validate only in explicit `template` mode. `execution` mode rejects a provisional lock, zero hashes/seeds, sentinel or `required-at-run` values, template-equal records, duplicate worker IDs, invalid snapshots, invalid envelope pairs/attestations, and any divergence from this contract. Steward envelope validation reads only explicitly supplied files.
 
 ## 10.2 Executable invalidation state
 
@@ -144,7 +151,7 @@ The public validator interface is `node scripts/validate-scaffold.mjs --mode tem
 
 ## 11. Invalidation rules
 
-Invalidate one candidate run and rerun it from common start before assignment if construction used the wrong start, prompt bytes, config, inherited model/settings, budget, dependency lock, extra role turn, cross-candidate context, skill exposure, hidden content, operator code edit, or modified public gate. Because assignment occurs only after both initial builds seal, a pre-assignment rerun requires discarding the unused seed (if any) and generating assignment only after two valid replacements exist.
+Invalidate one candidate run and rerun it from common start before assignment if construction used the wrong start, prompt bytes, config, inherited model/settings, budget, dependency lock, extra role turn, cross-candidate context, skill exposure, hidden content, operator code edit, modified public gate, coordination-directory listing, or sibling assignment-file access. Because assignment occurs only after both initial builds seal, a pre-assignment rerun requires discarding the unused seed (if any) and generating assignment only after two valid replacements exist.
 
 Invalidate treatment from `T0` and repeat assignment-independent treatment processing only when a treatment role receives the wrong frozen algorithm/prompt/input, exceeds five cycles, reuses a role context, exceeds its prospective budget, sees baseline/hidden/assignment material, modifies a public gate, or has a broken evidence link. Preserve the failed attempt as invalid evidence; do not count it as a valid cycle.
 

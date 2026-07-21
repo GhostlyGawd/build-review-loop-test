@@ -1,6 +1,6 @@
 {
-  "contractVersion": "1.1.0",
-  "protocolVersion": "2.2.0",
+  "contractVersion": "1.2.0",
+  "protocolVersion": "2.3.0",
   "normativeSource": "experiment/protocol.md",
   "canonicalJson": {
     "id": "utf8-sorted-json-v1",
@@ -31,9 +31,43 @@
     "idPattern": "^cycle-[1-5]-reviewer-[0-9]{2}$"
   },
   "builderFreeze": {
-    "promptSha256": "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82",
-    "configSha256": "caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b",
-    "rule": "every builder freeze must equal both canonical hashes and the corresponding lock commitments"
+    "promptSha256": "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39",
+    "configSha256": "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606",
+    "rule": "every builder freeze must equal both canonical prompt/config hashes, the corresponding lock commitments, and one separately attested assignment-envelope hash"
+  },
+  "assignmentEnvelope": {
+    "schemaVersion": "1.0.0",
+    "schemaPath": "experiment/schemas/assignment-envelope.schema.json",
+    "schemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21",
+    "fields": [
+      "schemaVersion",
+      "opaqueWorkerKey",
+      "opaqueCandidateId",
+      "absoluteWorktreePath",
+      "buildBranch",
+      "baseBranch",
+      "commonStartCommit",
+      "commonStartTree",
+      "promptSha256",
+      "configSha256",
+      "envelopeSchemaSha256"
+    ],
+    "attestationFields": ["opaqueCandidateId", "envelopeSha256"],
+    "coordinationDirectory": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-builder-assignments",
+    "fileConvention": "<task-leaf>.json",
+    "taskLeafPattern": "^[a-z0-9_]+$",
+    "workspaceRoot": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20",
+    "allowedPairDifferences": [
+      "opaqueWorkerKey",
+      "opaqueCandidateId",
+      "absoluteWorktreePath",
+      "buildBranch",
+      "baseBranch"
+    ],
+    "pairRule": "opaque worker keys, candidate IDs, worktree paths, build branches, and base branches are pairwise distinct; paths are safe absolute children of workspaceRoot and are not nested; every other field is identical",
+    "bindingRule": "promptSha256, configSha256, and envelopeSchemaSha256 equal the canonical and lock commitments; commonStartCommit and commonStartTree are identical across the pair",
+    "semanticExclusion": "the envelope contains no task semantics, arm/treatment/comparison information, timestamps, rankings, prior-run data, or hints",
+    "siblingAccessRule": "listing the coordination directory or reading a sibling assignment file is an experiment invalidation"
   },
   "stopping": {
     "baselineStopReason": "baseline-zero-cycles",

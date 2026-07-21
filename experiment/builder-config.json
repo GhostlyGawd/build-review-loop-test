@@ -7,7 +7,23 @@
   "modelPolicy": "same-inherited-model-and-provider-version",
   "reasoningPolicy": "same-inherited-setting",
   "toolPolicy": "same-frozen-tool-permissions",
-  "contextPolicy": "isolated-common-start-with-no-skill-or-cross-candidate-context",
+  "contextPolicy": "shared-orchestrator-cwd-then-one-opaque-envelope-and-assigned-worktree-only",
   "networkPolicy": "same-frozen-operator-policy",
-  "nodeVersion": "22.x"
+  "nodeVersion": "22.x",
+  "assignmentEnvelope": {
+    "schemaVersion": "1.0.0",
+    "schemaPath": "experiment/schemas/assignment-envelope.schema.json",
+    "schemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21",
+    "coordinationDirectory": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-builder-assignments",
+    "fileConvention": "<task-leaf>.json",
+    "taskLeafPattern": "^[a-z0-9_]+$",
+    "allowedPairDifferences": [
+      "opaqueWorkerKey",
+      "opaqueCandidateId",
+      "absoluteWorktreePath",
+      "buildBranch",
+      "baseBranch"
+    ],
+    "siblingAccess": "forbidden-and-invalidating"
+  }
 }
