@@ -1,0 +1,23 @@
+{
+  "recordVersion": "1.0.0",
+  "protocolVersion": "2.4.0",
+  "lockCommit": "f85357139efd9d192afc4ad2494dd180a8c7e5cf",
+  "lockTree": "cf3d40b50e306760e98a14426ad09b42582d0013",
+  "disposition": "aborted-before-launch",
+  "defect": {
+    "code": "candidate-check-contract-mismatch",
+    "builderPackageSha256": "be233b856939e83840a4807c22f59e8883643c2dd80cddb90166db655cd98143",
+    "testerSchemaSha256": "f0d6937137661ef750fe435afbe4ca1cba8ce727ed7bdf0986e98a9c1d476f06",
+    "frozenGateSetSha256": "af8a2d6f7a29ff3dcbc1ca4240361e6bdbba520078a0cd39dbd0f4e4ba0f7930",
+    "summary": "The projected candidate npm run check had five ordered stages, while the treatment tester artifact required seven; a conforming tester artifact was impossible without changing frozen bytes or adding unregistered files."
+  },
+  "executionState": {
+    "candidateLaunches": 0,
+    "modelInvocations": 0,
+    "assignmentSeedDrawn": false,
+    "assignmentPerformed": false,
+    "evaluationStarted": false,
+    "hiddenSuiteAccessed": false
+  },
+  "replacementPolicy": "Preserve protocol 2.4.0 history and preregister a corrected successor before any builder, assignment, treatment, or evaluation activity."
+}

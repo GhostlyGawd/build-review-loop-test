@@ -91,11 +91,11 @@ const administrativeParityExceptions = new Set([
 
 export function validateFinalLockEvidence(evidence, inventory, lock) {
   const failures = [];
-  const expectedParentCommit = "f957cdf3054b8055a3d4b90d7cae0fbb8c79394c";
-  const expectedParentTree = "23c9c1005efa704d42e79fe8b80f3dc33aa5ab17";
+  const expectedParentCommit = "18dda9691711086733d8dde1084931a9d23d5fdf";
+  const expectedParentTree = "04fd258a7d9ba849aa33a1f906dfff7f8b02ddbc";
   if (
     evidence.supersedesFinalizationCommit !==
-      "a37774cf25821103861ed94c261ac5db4f433860" ||
+      "f85357139efd9d192afc4ad2494dd180a8c7e5cf" ||
     evidence.supersedesFinalizationCommit !== lock.supersedesFinalizationCommit
   )
     failures.push("final-lock superseded-finalization binding mismatch");
@@ -129,10 +129,17 @@ export function validateFinalLockEvidence(evidence, inventory, lock) {
       lock.treatmentSkillAttributesSha256 ||
     evidence.treatmentSkill.sourceParitySha256 !==
       lock.treatmentSkillSourceParitySha256 ||
-    evidence.treatmentSkill.sourceParityFileCount !== 41 ||
+    evidence.treatmentSkill.sourceParityFileCount !== 42 ||
     evidence.treatmentSkill.sourceParityAllMatch !== true
   )
     failures.push("final-lock treatment-skill binding mismatch");
+  if (
+    evidence.abortedPrelaunch?.path !== lock.abortedPrelaunchRecordPath ||
+    evidence.abortedPrelaunch?.sha256 !== lock.abortedPrelaunchRecordSha256 ||
+    evidence.abortedPrelaunch?.disposition !== "aborted-before-launch" ||
+    evidence.abortedPrelaunch?.activityCount !== 0
+  )
+    failures.push("final-lock aborted-prelaunch binding mismatch");
   if (
     canonicalHash(evidence.gates) !==
     "65f600fc7e320bcf43750b36bb6ce512dcc32157e912168f87c40537ec917022"
@@ -158,10 +165,10 @@ export function validateFinalLockEvidence(evidence, inventory, lock) {
   if (
     inventory.protocolCommit !== expectedParentCommit ||
     inventory.protocolTree !== expectedParentTree ||
-    inventory.fileCount !== 41 ||
+    inventory.fileCount !== 42 ||
     inventory.allMatch !== true ||
     !Array.isArray(inventory.files) ||
-    inventory.files.length !== 41
+    inventory.files.length !== 42
   )
     failures.push("operational parent inventory header mismatch");
   const seen = new Set();
@@ -1409,9 +1416,7 @@ export function validateCanonicalContract(contract) {
     "npm run format:check",
     "npm run lint",
     "npm run typecheck",
-    "npm run validate:scaffold",
-    "npm run test:protocol",
-    "npm run test:public:if-implemented",
+    "npm run test:public",
     "npm run build",
   ];
   if (
@@ -1902,6 +1907,7 @@ export function validateScaffold() {
   const failures = [];
   const requiredFiles = [
     "README.md",
+    "MANIFEST.sha256",
     "docs/permissions-playground-spec.md",
     "docs/public-test-contract.md",
     "experiment/protocol.md",
@@ -1913,6 +1919,7 @@ export function validateScaffold() {
     "experiment/lock.json",
     "experiment/preflight/operational-parent-inventory.json",
     "experiment/preflight/final-lock-evidence.json",
+    "experiment/preflight/aborted-lock-2.4.0.json",
     "experiment/builder-config.json",
     "experiment/builder-package.json",
     "experiment/builder-input-allowlist.json",
@@ -2149,6 +2156,16 @@ export function validateScaffold() {
       path.join(root, "experiment/preflight/operational-parent-inventory.json"),
     ),
   );
+  const actualAttributesHash = sha256Bytes(
+    readFileSync(path.join(root, ".gitattributes")),
+  );
+  const manifestAttributesHash = readFileSync(
+    path.join(root, "MANIFEST.sha256"),
+    "utf8",
+  )
+    .split(/\r?\n/u)
+    .find((line) => line.endsWith("  .gitattributes"))
+    ?.split("  ", 1)[0];
   const actualPreflightEvidenceHash = sha256Bytes(
     readFileSync(
       path.join(root, "experiment/preflight/final-lock-evidence.json"),
@@ -2157,6 +2174,11 @@ export function validateScaffold() {
   const actualPreflightEvidenceSchemaHash = sha256Bytes(
     readFileSync(
       path.join(root, "experiment/schemas/final-lock-evidence.schema.json"),
+    ),
+  );
+  const actualAbortedPrelaunchRecordHash = sha256Bytes(
+    readFileSync(
+      path.join(root, "experiment/preflight/aborted-lock-2.4.0.json"),
     ),
   );
   const actualReviewerPromptHash = sha256(
@@ -2191,34 +2213,33 @@ export function validateScaffold() {
   const goldenRun = readJson("experiment/golden-run/golden-run.json");
   const invalidCurrent = readJson("experiment/golden-run/invalid-current.json");
   const finalCommitments = {
-    protocolVersion: "2.4.0",
+    protocolVersion: "2.5.0",
     protocolStatus: "locked",
-    supersedesLockCommit: "0fc2e5c6d0cc2355310f10e4f04fcf8e2131d636",
-    supersedesFinalizationCommit: "a37774cf25821103861ed94c261ac5db4f433860",
-    lockParentCommit: "f957cdf3054b8055a3d4b90d7cae0fbb8c79394c",
-    lockParentTree: "23c9c1005efa704d42e79fe8b80f3dc33aa5ab17",
+    supersedesLockCommit: "f85357139efd9d192afc4ad2494dd180a8c7e5cf",
+    supersedesFinalizationCommit: "f85357139efd9d192afc4ad2494dd180a8c7e5cf",
+    lockParentCommit: "18dda9691711086733d8dde1084931a9d23d5fdf",
+    lockParentTree: "04fd258a7d9ba849aa33a1f906dfff7f8b02ddbc",
     lockParentLockSha256:
-      "450870be5209d8a6bfc6080a52869ae0ed543ee4a674d7eb7bff24acf36fb44d",
+      "0851f46d3767cedb02e9d64f4b6bdefcae717e9a92ae9fd5ac71aaa8a28c4e89",
     hiddenSuiteId: "permissions-playground-sealed-v2",
     hiddenSuiteSha256:
       "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
-    treatmentSkillCommit: "05d26d6387971512fb38d079387ad015e46a8b07",
-    treatmentSkillTree: "088dc8dbe9a9b46007fe06fae031ed415fcc5e4c",
+    treatmentSkillCommit: "68cdc5feb25ab42b23a2675e49f1a9d7ab7ae167",
+    treatmentSkillTree: "f5ad6bf3b318d065f71699416eec6bd5d729f2f1",
     treatmentSkillManifestFile: "MANIFEST.sha256",
     treatmentSkillManifestSha256:
-      "db590a507661ddc3bb97dc98fdd6d26c27b52dc8fb844b8bf4af6eba14c5c423",
-    treatmentSkillManifestEntryCount: 52,
+      "e126176431ce720ef5bf693ea1142d03f65b802c4b40682905b95166f602f1d2",
+    treatmentSkillManifestEntryCount: 53,
     treatmentSkillManifestCommentLineCount: 3,
-    treatmentSkillManifestPhysicalLineCount: 55,
+    treatmentSkillManifestPhysicalLineCount: 56,
     treatmentSkillManifestByteSource: "canonical-git-blob",
     treatmentSkillManifestToolPath: "validation/manifest_tool.py",
     treatmentSkillManifestToolSha256:
-      "06539fbea74c7992d5324cf2ca2caaf12f615a76840a77627c8282a92f34d9d5",
-    treatmentSkillAttributesSha256:
-      "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c",
+      "3245978fa26e49a0f1542126ac1c1b3934a245c84d7f34374fcd247c52c23bcf",
+    treatmentSkillAttributesSha256: actualAttributesHash,
     treatmentSkillSourceParitySha256:
-      "6a31b071d752fe24a4fba0643492482623307f2184ba2e5ff69e4a629bc230e9",
-    treatmentSkillSourceParityFileCount: 41,
+      "a737c74136b1394fd52f8c13065cf4836b3bfdafb74c0350c53934f6211f0dee",
+    treatmentSkillSourceParityFileCount: 42,
     treatmentSkillSourceParityAllMatch: true,
     treatmentAlgorithmSha256: actualAlgorithmHash,
     neutralBuilderPromptSha256: actualPromptHash,
@@ -2275,21 +2296,24 @@ export function validateScaffold() {
     operationalParentInventoryPath:
       "experiment/preflight/operational-parent-inventory.json",
     operationalParentInventorySha256:
-      "6a31b071d752fe24a4fba0643492482623307f2184ba2e5ff69e4a629bc230e9",
+      "a737c74136b1394fd52f8c13065cf4836b3bfdafb74c0350c53934f6211f0dee",
     preflightEvidencePath: "experiment/preflight/final-lock-evidence.json",
     preflightEvidenceSha256:
-      "fd93491c9989fa92ed35af6aa2c128f72b0dac41c55fa4dc348979032d89ace4",
+      "ffec990e1ba5ad79960704126a6d3a5c5ba226a81598a47d60a2977f465ae7bb",
     preflightEvidenceSchemaPath:
       "experiment/schemas/final-lock-evidence.schema.json",
     preflightEvidenceSchemaSha256:
-      "45b9e5802ab9e8d4650ac5b4bbbc6ae6ae041064e6bb3bc049278a35e7336b9d",
+      "1807fe09799ad49e701c19497da37f44f5d77112f1e965c4f4141487fdf074ff",
     gateAggregateSha256:
-      "b8a64749acdff8a0867fdada0e41d3282da808441d0074a520499e7817eaeb58",
+      "f5b8877a0e3f23e66746d50062a0b88481a30e8ead6d5a7e0423330916119388",
+    abortedPrelaunchRecordPath: "experiment/preflight/aborted-lock-2.4.0.json",
+    abortedPrelaunchRecordSha256:
+      "9e44db3f8d900d71e8ca7363fd627dc7976d6397976cef00af84a07626183c79",
     canonicalContractSha256: canonicalHash(canonicalContract),
     goldenFixtureSha256: canonicalHash(goldenRun),
     invalidCurrentFixtureSha256: canonicalHash(invalidCurrent),
     commonStartCommitPolicy:
-      "At execution, record the GitHub commonStartCommit in experiment and run manifests together with this locked preregistration commit and its lock-file SHA-256; this finalization commit seals preflight evidence only and was not itself executed as a gate.",
+      "At execution, record the exact merged common-start commit/tree, this final preregistration commit, and the lock-file SHA-256 before any builder launch.",
     freezeState: "locked",
   };
   if (
@@ -2297,10 +2321,14 @@ export function validateScaffold() {
     lock.operationalParentInventorySha256
   )
     failures.push("operational parent inventory byte hash mismatch");
+  if (manifestAttributesHash !== lock.treatmentSkillAttributesSha256)
+    failures.push("treatment skill attributes manifest binding mismatch");
   if (actualPreflightEvidenceHash !== lock.preflightEvidenceSha256)
     failures.push("preflight evidence byte hash mismatch");
   if (actualPreflightEvidenceSchemaHash !== lock.preflightEvidenceSchemaSha256)
     failures.push("preflight evidence schema byte hash mismatch");
+  if (actualAbortedPrelaunchRecordHash !== lock.abortedPrelaunchRecordSha256)
+    failures.push("aborted-prelaunch record byte hash mismatch");
   for (const [key, expected] of Object.entries(finalCommitments)) {
     if (lock[key] !== expected)
       failures.push(`${key} does not match the final integrated lock`);
@@ -2452,6 +2480,6 @@ if (isEntrypoint) {
     process.exit(1);
   }
   console.log(
-    `Protocol 2.4.0 locked scaffold validation passed (${schemaPairCount} schema/data pairs; P-bound preflight and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.5.0 locked scaffold validation passed (${schemaPairCount} schema/data pairs; P-bound preflight and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }

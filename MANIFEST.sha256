@@ -1,10 +1,11 @@
-# Frozen SHA-256 manifest for build-review-loop skill v1 / public protocol 2.4.0-draft.
+# Frozen SHA-256 manifest for build-review-loop skill v2 / public protocol 2.5.0-draft.
 # Hashes cover canonical Git blobs for attributes, skill sources, public fixtures, parity, and evidence.
 # Excluded: this manifest (to avoid self-reference), ignored bytecode, and unrelated repository files.
 23302dd90b8bb74b44d365fafef8df20f809b61cb347023951ecf60a88a29651  .gitattributes
-ea25649e9b4b69cc8a05059e13a29d15ef6289f462f58d3069df997652476a54  skills/build-review-loop/SKILL.md
-ee593caa63d7d0f5c160414581babb4762c0978ef136107f0ec55bb70c09dc94  skills/build-review-loop/agents/openai.yaml
-afe98f81a2b37617ccdc79b15dc0f3dc559ca99ad7bcc8f93cf405c3d9f6afd2  skills/build-review-loop/references/artifact-contract.md
+36c2bf493d1ac6868c758d8d018043caac459b8f3fef4b60f92326a3c52813f6  skills/build-review-loop/SKILL.md
+211cd16a9527e8744dbfb113d5d0f0776098a4965844567ae4202066639704c6  skills/build-review-loop/agents/openai.yaml
+9e44db3f8d900d71e8ca7363fd627dc7976d6397976cef00af84a07626183c79  skills/build-review-loop/references/aborted-lock-2.4.0.json
+4275a8b871c2071d8872cc16d2fbb72e306a22bb5a791fa31b96905042b54a1f  skills/build-review-loop/references/artifact-contract.md
 ee2e0620aa9a7d55ef047dda9d6d947ee750ebd3bb3bc1f149a229eb11adbe40  skills/build-review-loop/references/blinded-evaluator.md
 4d9d8397fc068cdf511e99bae6980ed2d2ef5410e5128385043f1c426cdb8bd5  skills/build-review-loop/references/blinded-package-manifest.schema.json
 c35470675fadf7157d954216bba53f88b226786c204ab2d6ce575b31450acadf  skills/build-review-loop/references/blinded-package-manifest.template.json
@@ -15,13 +16,13 @@ f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4  skills/build-r
 37af679c4f3f71cbd9e28b810897d4ff82c7c47cf4421a9d661b8b90947aef5b  skills/build-review-loop/references/builder-input-allowlist.json
 b044646ede4fef4543a4950e5842f51997dc3b65e6bfabad7eeb1ff84caf0bb5  skills/build-review-loop/references/builder-input-manifest.schema.json
 be233b856939e83840a4807c22f59e8883643c2dd80cddb90166db655cd98143  skills/build-review-loop/references/builder-package.json
-52f8be0515758293014a27745a70c14a6c6020b28a5a4300fadc8fa578f376fa  skills/build-review-loop/references/canonical-contract.json
-665016233b950a2f39f0bbee1f5f75b530980d3bcd979e543943cf976b0a2689  skills/build-review-loop/references/cli-runtime-contract.schema.json
+f50d17a705086434cc1d8e922cfdaff73710bdc685927ba09444302b733ce660  skills/build-review-loop/references/canonical-contract.json
+3678f9482e5082b8ae19ff31c5dd1c4405d60bb75891d372d2b6dae5a1c0c716  skills/build-review-loop/references/cli-runtime-contract.schema.json
 d0ac2fab6db1be3625c00d26bd165513adecb89dd04d04f048068c9cf7148fc5  skills/build-review-loop/references/cli-runtime-contract.template.json
-b43690cdb988df31e3a778acf8021052fa0e9dae0767f518d9c8c126a8866556  skills/build-review-loop/references/cli-supervision-evidence.schema.json
+6a6a79d47617208a49e75b6f48a4a67be083a7e6482e26923ccc99c863611af5  skills/build-review-loop/references/cli-supervision-evidence.schema.json
 ae5d0074c36067983e583fff943cebae528aadb11810cce66ae36229ef2b9863  skills/build-review-loop/references/cli-supervision-evidence.template.json
 12a769a0868261e28299b5a7feef71626ea6e1ee51bfb0eb59ce65bbec05e6aa  skills/build-review-loop/references/evaluation.schema.json
-fc0c15cc2fe47db5e29e82e9f6ecc6ac56c0f961bfdca837826b0930874e5e0e  skills/build-review-loop/references/experiment-lock.schema.json
+7262357967c8de61e7c7ac3ff5915165e1adbf6431b575a29521aba94ae8cf97  skills/build-review-loop/references/experiment-lock.schema.json
 8d365104b7da7e80043d3d2d86c54c1e7773053f7100ba81a46f98ad6b70e254  skills/build-review-loop/references/finding.schema.json
 d92b46d65322b053699bdcc8e35a6f9d0c1c91d3dacccddbcfc569c673d7e96b  skills/build-review-loop/references/fix.schema.json
 ac4c0a40dbcee8b1ffe11b6eb7e81c5458849859a1ab38d09b78431aa390c9cf  skills/build-review-loop/references/fixer.md
@@ -32,14 +33,14 @@ e85aee3135740a7b5501030af2dc3ffe7c16f50d93812499759a6f60c7238ee9  skills/build-r
 2c281ab2fc936c659323a135234622fb2c8ea1baa720fc411cca1e995b321424  skills/build-review-loop/references/projection/index.html
 f1a2806abaa69116b0180d1e047916a4bc62b53fa89c0d65a2ece3a9aa94d00b  skills/build-review-loop/references/projection/package-lock.json
 880acfdd79d16f24b1849ed6491198926ed49b6df89af2f4cac99defe8d78e9c  skills/build-review-loop/references/projection/src/main.tsx
-450870be5209d8a6bfc6080a52869ae0ed543ee4a674d7eb7bff24acf36fb44d  skills/build-review-loop/references/protocol-lock.json
-d3a5a5eb98d9d58b7dcb4b5aa895a007c72e40f8d7b9b1e58600ba58a6bb7349  skills/build-review-loop/references/protocol.md
+0851f46d3767cedb02e9d64f4b6bdefcae717e9a92ae9fd5ac71aaa8a28c4e89  skills/build-review-loop/references/protocol-lock.json
+bbbaae6a1c7f277081c90d4dfba12938f053978717995486797218ea9a1ca99b  skills/build-review-loop/references/protocol.md
 66e47c9e4a0a8a4b1d5f09a73f09f753879b8f0f0d8219a1e4b187b88d3d791f  skills/build-review-loop/references/review.schema.json
 9a67ac7f98f9f6ffbe12cc4d1b080a2925c7f99cd9eb27081134bcb518a49d8f  skills/build-review-loop/references/role-prompts.md
-ac620774663e6ce8dd9917f760f6f53eeb8063e70b88240999ffc6bef6184c5a  skills/build-review-loop/references/role-runtime-contract.schema.json
+7dfdbb16b8f3c760c123fdb3981d7253f28feb57e0c7751eced9f6bb4d650da3  skills/build-review-loop/references/role-runtime-contract.schema.json
 2218c2edbe53d793a7874e7adcc28cde63386b13219dce5455a88d1a30d5f6f3  skills/build-review-loop/references/role-runtime-contract.template.json
 135c5fc59fe72b4b37d924cd6f1a14e4f2a3b7b59711cc12294e81f52cbfd6a2  skills/build-review-loop/references/runner-smoke.md
-f0d6937137661ef750fe435afbe4ca1cba8ce727ed7bdf0986e98a9c1d476f06  skills/build-review-loop/references/test.schema.json
+e9774f5d6a718582b9871cfbf54519508c0f80424181f0bdeb35158b026fc2fd  skills/build-review-loop/references/test.schema.json
 644ef262eb7a4c85b3a4d5636d88479082ebca37a5f082dbce165c90a9ef16c3  skills/build-review-loop/references/tester.md
 194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e  skills/build-review-loop/scripts/canonicalize-paths.mjs
 98ef96dd16f37a14fa4a56b324a0274dd3aa29010d296244e695fe42663478d7  skills/build-review-loop/scripts/package-blinded-snapshots.mjs
@@ -47,9 +48,9 @@ f0d6937137661ef750fe435afbe4ca1cba8ce727ed7bdf0986e98a9c1d476f06  skills/build-r
 b2e848a193c28d93893829a3dceeba323999193a0d96acee8848d0eff06e70b7  skills/build-review-loop/scripts/run-cli-builders.ps1
 f78ec27cc30f66a58464be6f5b60a4437808b97ec85186916171ee22e9b6b3b4  skills/build-review-loop/scripts/run-cli-role.ps1
 41343ff41ef7440774ca216367ea9b226426243ab5ad247f39ce5ddb5728b91a  skills/build-review-loop/scripts/test_validate_artifacts.py
-2ab400c362b0291653e164764a7159a6ae206fdeec12812217d514d7e96f4ceb  skills/build-review-loop/scripts/validate_artifacts.py
-39f6b6401bb404b0f1654cde25c50418fe3f0a2d9bc7e387de311101b926b39f  skills/build-review-loop/tests/fixtures/golden-run.json
-7abd35f57da85143a955c6497b83e9f7b81acf3b21fe5c16080911983fdc1415  skills/build-review-loop/tests/fixtures/invalid-current.json
-06539fbea74c7992d5324cf2ca2caaf12f615a76840a77627c8282a92f34d9d5  validation/manifest_tool.py
-6a31b071d752fe24a4fba0643492482623307f2184ba2e5ff69e4a629bc230e9  validation/source-parity.json
-ae6cd9dfcd26e8a2def941400aae632c39ced0d1a95478f6094aac4b1111a432  validation/validation-evidence.txt
+1a7878e60c6d93557bede4d3514252867a119038477a6d35852ec4efc162be99  skills/build-review-loop/scripts/validate_artifacts.py
+4e5883870655738ceff286eee6679f29712c131d8ef1fcc48759443b757d2466  skills/build-review-loop/tests/fixtures/golden-run.json
+645ec3f60d0004e0f60c6ef559f6fa2de0b16f408a7d72b8c265993a44909fe3  skills/build-review-loop/tests/fixtures/invalid-current.json
+3245978fa26e49a0f1542126ac1c1b3934a245c84d7f34374fcd247c52c23bcf  validation/manifest_tool.py
+a737c74136b1394fd52f8c13065cf4836b3bfdafb74c0350c53934f6211f0dee  validation/source-parity.json
+9233135fd16736f8a1e1fa5a663decf3a563616f85f6a1d3f23a10fc7cce461b  validation/validation-evidence.txt

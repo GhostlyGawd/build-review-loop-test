@@ -1,6 +1,6 @@
 # Preregistered neutral-build versus review-loop protocol
 
-Protocol version: 2.4.0 (locked)
+Protocol version: 2.5.0 (locked correction)
 
 Design: paired, blinded pilot with two independent neutral builds, post-build random assignment, and treatment-only iterative review
 
@@ -22,7 +22,7 @@ The primary estimand is `score(Tfinal) - score(B0)`. The secondary within-treatm
 
 ## 2. Canonical contract and frozen lock boundary
 
-This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. Protocol 2.4.0 supersedes the 2.3.0 lock with a supervised external CLI runtime. Its final lock binds parent P, portable-manifest treatment skill S2, and preflight gates A/B/C. The gates ran against P; neither administrative finalization was itself executed. The successor explicitly supersedes F (`a37774cf25821103861ed94c261ac5db4f433860`) solely to bind S2's canonical-Git-byte manifest and committed verification tool. Before builder exposure, the final lock MUST:
+This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. Protocol 2.5.0 is the preregistered correction to the unexecuted 2.4.0 lock at `f85357139efd9d192afc4ad2494dd180a8c7e5cf`. That lock was aborted before any builder/model launch, seed draw, assignment, treatment, or evaluation because its projected candidate `npm run check` exposed five stages while its tester artifact required seven. The sanitized record is `experiment/preflight/aborted-lock-2.4.0.json`. Protocol 2.5.0 preserves the projected candidate bytes and registers those same five stages as the tester contract. The locked lineage binds corrected parent P `18dda9691711086733d8dde1084931a9d23d5fdf`, portable skill S3 `68cdc5feb25ab42b23a2675e49f1a9d7ab7ae167`, and the unchanged applicable A/B/C preflight attestations. Before builder exposure, the final lock MUST:
 
 1. pass `npm ci` and `npm run check` on Node 22;
 2. record the exact lock-parent commit;
@@ -143,7 +143,7 @@ Do not combine score and cost into an unregistered composite.
 
 The seven role names and maximum wall seconds are exact: `builder` 2400, `reviewer` 900, `fixer` 1500, `tester` 900, `evaluator` 1800, `unblinder` 300, and `git_worker` 600. Each model invocation has one unique worker/invocation/process/thread identity, one turn, and the pinned `gpt-5.4`/`xhigh`/ChatGPT-authenticated OpenAI configuration. A failed support or resolution preflight invalidates; ignorance is never treated as equality. `maxTokens` is null when unavailable; exposed lifecycle usage is recorded.
 
-The tester command is exactly `npm run check`, invoking in order `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run validate:scaffold`, `npm run test:protocol`, `npm run test:public:if-implemented`, and `npm run build`. The evaluator public command is exactly `npm run test:public`. The sealed hidden suite ID is `permissions-playground-sealed-v2`, its command is `node sealed-hidden-suite/run.mjs`, and its SHA-256 commitment is `a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b`. Run records bind all of these values and the canonical-contract hash.
+The tester command is exactly the projected candidate's `npm run check`, invoking in order `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:public`, and `npm run build`. The protocol repository's own maintainer `npm run check` is administrative validation and is not a candidate gate. The evaluator public command is exactly `npm run test:public`. The sealed hidden suite ID is `permissions-playground-sealed-v2`, its command is `node sealed-hidden-suite/run.mjs`, and its SHA-256 commitment is `a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b`. Run records bind all of these values and the canonical-contract hash.
 
 Templates are non-executable examples and validate only in explicit `template` mode. `execution` mode rejects a provisional lock, zero hashes/seeds, sentinel or `required-at-run` values, template-equal records, duplicate worker/process/thread/invocation IDs, invalid snapshots, malformed or unreconciled JSONL, unsafe/nested paths, missing usage treatment, and any divergence from this contract.
 

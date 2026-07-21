@@ -1,18 +1,18 @@
-build-review-loop skill v1 / protocol 2.4.0-draft validation evidence
+build-review-loop skill v2 / protocol 2.5.0-draft validation evidence
 validated: 2026-07-21 America/New_York
-skill base commit: 0faaee9169d1f8fb07f5bbe59d07782216e418a1
-skill base tree: 33355b97041070e1dec4b7c9beca4ce96faa50bb
-skill branch: experiment/skill-v1
-protocol source commit: f957cdf3054b8055a3d4b90d7cae0fbb8c79394c
-protocol source tree: 23c9c1005efa704d42e79fe8b80f3dc33aa5ab17
+skill base commit: 18dda9691711086733d8dde1084931a9d23d5fdf
+skill base tree: 04fd258a7d9ba849aa33a1f906dfff7f8b02ddbc
+skill branch: agent/protocol-prereg-repair
+protocol source commit: 18dda9691711086733d8dde1084931a9d23d5fdf
+protocol source tree: 04fd258a7d9ba849aa33a1f906dfff7f8b02ddbc
 candidate access: none
 push/PR/publication: none
 
 Source-byte parity
-- validation/source-parity.json records 41 protocol-derived source mappings.
+- validation/source-parity.json records 42 protocol-derived source mappings, including the sanitized aborted-before-launch 2.4 record.
 - Each bundled Git blob equals the named protocol commit's Git blob.
-- allMatch: true; fileCount: 41.
-- Sources include canonical/config/golden/invalid fixtures and golden note; builder/smoke/four role prompts; builder projection allowlist/package/manifest schema/preparer; CLI/role/supervision/mapping/manifest schemas and templates; artifact schemas; protocol lock/schema/prose; canonical path helper; both PowerShell runners; exact-HEAD packager; and frozen public projection surfaces.
+- allMatch: true; fileCount: 42.
+- Sources include canonical/config/golden/invalid fixtures and golden note; builder/smoke/four role prompts; builder projection allowlist/package/manifest schema/preparer; CLI/role/supervision/mapping/manifest schemas and templates; artifact schemas; protocol lock/schema/prose and aborted-prelaunch record; canonical path helper; both PowerShell runners; exact-HEAD packager; and frozen public projection surfaces.
 
 Portable manifest
 - generation and validation use validation/manifest_tool.py against canonical index or Git tree-ish blob bytes, not smudged worktree bytes.
@@ -27,7 +27,8 @@ Hardened runtime coverage
 - builder supervision binds deterministic post-model visible-filesystem snapshots and the exact evidence-root parent closure.
 - role supervision charges pre-launch delay, uses a strict UTC absolute deadline, binds actual OS exit separately from completion observation, and preserves the two-second observation/termination tolerance only.
 - packager requires exact HEAD/ref/commit/tree and rejects traversal, physical aliases, reparse points, lineage leakage, and source drift.
-- No live model runner or candidate execution was performed by this skill validation.
+- The corrected tester contract exactly matches the projected candidate package: format, lint, typecheck, public tests, and build. The protocol repository's administrative checks are not grafted into candidate workdirs.
+- No live model runner, candidate execution, seed draw, assignment, treatment, or evaluation was performed by this skill validation.
 
 Skill validator
 command: python -m unittest -v skills/build-review-loop/scripts/test_validate_artifacts.py
@@ -50,10 +51,10 @@ Adversarial additions
 
 Exact protocol-source suite
 command: npm run test:protocol
-working directory: build-review-loop-protocol-v2 at f957cdf3054b8055a3d4b90d7cae0fbb8c79394c
-result: PASS, 52 tests, 0 failures
+working directory: prospective protocol 2.5 finalization based on skill seal a40895bac8e6a8775e33bc5a6d7242f0b1993361
+result: PASS, 53 tests, 0 failures
 coverage includes projected-input contamination, ignored files, every schema-valid builder/role containment overlap, junction and Windows 8.3 aliases, deadline parsing and pre-wait charging, exact runtime/prompt/evidence bindings, deterministic blinded packaging, and all integrated contract mutations.
-host note: two earlier complete attempts encountered transient PowerShell CLR TaskbarJumpList startup failures in different subprocesses. Each affected case passed in isolation, and the final complete 52-test run passed with POWERSHELL_TELEMETRY_OPTOUT=1 and POWERSHELL_UPDATECHECK=Off.
+host note: one earlier complete attempt encountered a transient PowerShell CLR startup failure in one subprocess. The affected case passed in isolation, and the final complete 53-test run passed with POWERSHELL_TELEMETRY_OPTOUT=1 and POWERSHELL_UPDATECHECK=Off.
 candidate access: none; packaging/projection tests use temporary synthetic repositories.
 
 Static validation

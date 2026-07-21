@@ -25,15 +25,7 @@
       "exitCode": 0
     },
     {
-      "command": "npm run validate:scaffold",
-      "exitCode": 0
-    },
-    {
-      "command": "npm run test:protocol",
-      "exitCode": 0
-    },
-    {
-      "command": "npm run test:public:if-implemented",
+      "command": "npm run test:public",
       "exitCode": 0
     },
     {

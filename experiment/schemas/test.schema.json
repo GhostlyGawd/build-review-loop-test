@@ -36,15 +36,13 @@
     "exitCode": { "type": "integer" },
     "componentResults": {
       "type": "array",
-      "minItems": 7,
-      "maxItems": 7,
+      "minItems": 5,
+      "maxItems": 5,
       "items": false,
       "prefixItems": [
         { "$ref": "#/$defs/formatCheck" },
         { "$ref": "#/$defs/lint" },
         { "$ref": "#/$defs/typecheck" },
-        { "$ref": "#/$defs/scaffold" },
-        { "$ref": "#/$defs/protocolTests" },
         { "$ref": "#/$defs/publicTests" },
         { "$ref": "#/$defs/build" }
       ]
@@ -80,26 +78,12 @@
         { "properties": { "command": { "const": "npm run typecheck" } } }
       ]
     },
-    "scaffold": {
-      "allOf": [
-        { "$ref": "#/$defs/result" },
-        {
-          "properties": { "command": { "const": "npm run validate:scaffold" } }
-        }
-      ]
-    },
-    "protocolTests": {
-      "allOf": [
-        { "$ref": "#/$defs/result" },
-        { "properties": { "command": { "const": "npm run test:protocol" } } }
-      ]
-    },
     "publicTests": {
       "allOf": [
         { "$ref": "#/$defs/result" },
         {
           "properties": {
-            "command": { "const": "npm run test:public:if-implemented" }
+            "command": { "const": "npm run test:public" }
           }
         }
       ]
