@@ -1110,7 +1110,7 @@ describe("protocol 2.6.0 locked cross-contract validation", () => {
     );
   });
 
-  it("binds the final lock to sanitized P/S/A/B/C preflight evidence", () => {
+  it("binds the final lock to P/S/A/B/C, abort, and permission evidence", () => {
     const lock = readJson("experiment/lock.json");
     const evidence = readJson("experiment/preflight/final-lock-evidence.json");
     const inventory = readJson(
@@ -1123,11 +1123,11 @@ describe("protocol 2.6.0 locked cross-contract validation", () => {
     assert.deepEqual(validateFinalLockEvidence(evidence, inventory, lock), []);
     assert.equal(
       lock.supersedesFinalizationCommit,
-      "f85357139efd9d192afc4ad2494dd180a8c7e5cf",
+      "c373d77cbbd82cadcd24a456d68fac771f34ffd3",
     );
-    assert.equal(lock.treatmentSkillManifestEntryCount, 53);
+    assert.equal(lock.treatmentSkillManifestEntryCount, 57);
     assert.equal(lock.treatmentSkillManifestCommentLineCount, 3);
-    assert.equal(lock.treatmentSkillManifestPhysicalLineCount, 56);
+    assert.equal(lock.treatmentSkillManifestPhysicalLineCount, 60);
     assert.equal(lock.treatmentSkillManifestByteSource, "canonical-git-blob");
     assert.equal(lock.runnerSmokeContractSha256, null);
     assert.equal(lock.runnerSmokeSupervisionSha256, null);

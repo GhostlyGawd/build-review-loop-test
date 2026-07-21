@@ -97,7 +97,7 @@
     "protocolStatus": { "const": "locked" },
     "supersedesLockCommit": { "$ref": "#/$defs/sha1" },
     "supersedesFinalizationCommit": {
-      "const": "f85357139efd9d192afc4ad2494dd180a8c7e5cf"
+      "const": "c373d77cbbd82cadcd24a456d68fac771f34ffd3"
     },
     "lockParentCommit": { "$ref": "#/$defs/sha1" },
     "lockParentTree": { "$ref": "#/$defs/sha1" },
@@ -108,9 +108,9 @@
     "treatmentSkillTree": { "$ref": "#/$defs/sha1" },
     "treatmentSkillManifestFile": { "const": "MANIFEST.sha256" },
     "treatmentSkillManifestSha256": { "$ref": "#/$defs/sha256" },
-    "treatmentSkillManifestEntryCount": { "const": 53 },
+    "treatmentSkillManifestEntryCount": { "const": 57 },
     "treatmentSkillManifestCommentLineCount": { "const": 3 },
-    "treatmentSkillManifestPhysicalLineCount": { "const": 56 },
+    "treatmentSkillManifestPhysicalLineCount": { "const": 60 },
     "treatmentSkillManifestByteSource": { "const": "canonical-git-blob" },
     "treatmentSkillManifestToolPath": {
       "const": "validation/manifest_tool.py"
@@ -118,7 +118,7 @@
     "treatmentSkillManifestToolSha256": { "$ref": "#/$defs/sha256" },
     "treatmentSkillAttributesSha256": { "$ref": "#/$defs/sha256" },
     "treatmentSkillSourceParitySha256": { "$ref": "#/$defs/sha256" },
-    "treatmentSkillSourceParityFileCount": { "const": 42 },
+    "treatmentSkillSourceParityFileCount": { "const": 44 },
     "treatmentSkillSourceParityAllMatch": { "const": true },
     "treatmentAlgorithmSha256": { "$ref": "#/$defs/sha256" },
     "neutralBuilderPromptSha256": { "$ref": "#/$defs/sha256" },

@@ -11,13 +11,14 @@
     "protocolParent",
     "treatmentSkill",
     "abortedPrelaunch",
+    "permissionProbe",
     "gates",
     "gateAggregateSha256"
   ],
   "properties": {
     "evidenceVersion": { "const": "1.0.0" },
     "supersedesFinalizationCommit": {
-      "const": "f85357139efd9d192afc4ad2494dd180a8c7e5cf"
+      "const": "c373d77cbbd82cadcd24a456d68fac771f34ffd3"
     },
     "aggregation": {
       "type": "object",
@@ -70,14 +71,14 @@
         "tree": { "$ref": "#/$defs/sha1" },
         "manifestFile": { "const": "MANIFEST.sha256" },
         "manifestSha256": { "$ref": "#/$defs/sha256" },
-        "manifestEntryCount": { "const": 53 },
+        "manifestEntryCount": { "const": 57 },
         "manifestCommentLineCount": { "const": 3 },
-        "manifestPhysicalLineCount": { "const": 56 },
+        "manifestPhysicalLineCount": { "const": 60 },
         "manifestByteSource": { "const": "canonical-git-blob" },
         "manifestToolSha256": { "$ref": "#/$defs/sha256" },
         "attributesSha256": { "$ref": "#/$defs/sha256" },
         "sourceParitySha256": { "$ref": "#/$defs/sha256" },
-        "sourceParityFileCount": { "const": 42 },
+        "sourceParityFileCount": { "const": 44 },
         "sourceParityAllMatch": { "const": true }
       }
     },
@@ -88,8 +89,28 @@
       "properties": {
         "path": { "const": "experiment/preflight/aborted-lock-2.5.0.json" },
         "sha256": { "$ref": "#/$defs/sha256" },
-        "disposition": { "const": "aborted-before-launch" },
-        "activityCount": { "const": 0 }
+        "disposition": { "const": "invalidated-before-assignment" },
+        "activityCount": { "const": 2 }
+      }
+    },
+    "permissionProbe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "scriptSha256",
+        "commitScriptSha256",
+        "modelCall",
+        "valid"
+      ],
+      "properties": {
+        "path": { "const": "experiment/preflight/permission-probe-2.6.0.json" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "scriptSha256": { "$ref": "#/$defs/sha256" },
+        "commitScriptSha256": { "$ref": "#/$defs/sha256" },
+        "modelCall": { "const": false },
+        "valid": { "const": true }
       }
     },
     "gates": {
