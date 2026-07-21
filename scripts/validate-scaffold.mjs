@@ -1153,7 +1153,7 @@ export function validateScaffold() {
     protocolVersion: "2.3.0-frozen",
     protocolStatus: "locked",
     supersedesLockCommit: "67eb14066fc437f0944b963f7d8b3328e09a88b1",
-    lockParentCommit: "b76a5fa3a82543d793b7344648e0abbc51214958",
+    lockParentCommit: "1c89143c023ccf267289b1a0e2e2831ce7bc5c56",
     hiddenSuiteId: "permissions-playground-sealed-v2",
     hiddenSuiteSha256:
       "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
