@@ -1263,6 +1263,23 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       assert.match(source, /Invoke-NativeCapture \$contract\.cliPath/);
       assert.match(source, /Assert-JsonSchema \$schemaPath \$contractFullPath/);
     }
+    const builderSource = runnerSources[0];
+    const finalGraphGate = builderSource.indexOf(
+      "Assert-PathsSeparate $privatePath $runtimeRoot",
+    );
+    const outputParentCreation = builderSource.indexOf(
+      "CreateDirectory([System.IO.Path]::GetDirectoryName($outputPath))",
+    );
+    const builderModelStart = builderSource.indexOf(
+      "$started = $process.Start()",
+    );
+    assert.ok(finalGraphGate < outputParentCreation);
+    assert.ok(outputParentCreation < builderModelStart);
+    assert.match(
+      builderSource,
+      /\$null -eq \$_\.finalSha256/,
+      "exit zero without an authoritative final output must remain invalid",
+    );
     const hostBytes = readFileSync(lock.powerShellHostPath);
     assert.equal(sha256(hostBytes), lock.powerShellHostSha256);
     assert.equal(

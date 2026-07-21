@@ -275,6 +275,7 @@ foreach ($spec in $contract.invocations) {
   if ((Invoke-Git $workdir @("status", "--porcelain=v1")).Length -ne 0) { throw "Builder clone must start clean" }
 }
 [System.IO.Directory]::CreateDirectory($evidenceRoot) | Out-Null
+foreach ($outputPath in $authoritativeOutputPaths) { [System.IO.Directory]::CreateDirectory([System.IO.Path]::GetDirectoryName($outputPath)) | Out-Null }
 
 $runs = @()
 foreach ($spec in $contract.invocations) {
