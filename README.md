@@ -58,17 +58,19 @@ The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact t
 - [`experiment/treatment-loop-algorithm.md`](experiment/treatment-loop-algorithm.md): exact frozen skill-v1 flow
 - [`experiment/schemas/`](experiment/schemas/): machine-readable artifact contracts and the authoritative finding schema
 - [`experiment/templates/`](experiment/templates/): prospective, non-evidentiary artifact examples
-- [`experiment/lock.json`](experiment/lock.json): final 2.3 preregistration commitments
+- [`experiment/lock.json`](experiment/lock.json): provisional 2.4 commitments; final runner-smoke and treatment-skill fields remain null
 
 ## Architecture and boundaries
 
-The scaffold contains protocol documents, schemas, test contracts, public tests, a parameterized concurrent supervisor, and a Vite placeholder. Invoke the runner as `powershell -File scripts/run-cli-builders.ps1 -ContractPath <absolute-contract.json>`. It launches exactly two fresh ephemeral processes with global `-a never` before `exec`, writes the neutral prompt bytes directly to stdin, and uses `-C` only as process configuration. Builder-visible context contains no assignment envelope or task-leaf wrapper. Public gates, pinned dependencies, product semantics, and evaluator semantics remain immutable.
+The scaffold contains protocol documents, schemas, test contracts, public tests, parameterized supervisors, a deterministic blinding packager, and a Vite placeholder. Invoke neutral construction as `powershell -File scripts/run-cli-builders.ps1 -ContractPath <absolute-contract.json>`. Invoke one reviewer, fixer, tester, or evaluator as `powershell -File scripts/run-cli-role.ps1 -ContractPath <absolute-role-contract.json>`. Both runners use frozen `gpt-5.4`/`xhigh` argv, raw stdin, fresh external processes, and content-addressed evidence. Builder-visible context contains no assignment envelope or task-leaf wrapper.
 
-Evaluators own the sealed hidden suite outside this repository. They receive three history-free packages labeled only X/Y/Z and never see lineage, assignment, role artifacts, or Git metadata. The browser product is specified to use local in-memory state only: no authentication, backend, network calls, credentials, persistence, or personal data.
+Create evaluator inputs with `node scripts/package-blinded-snapshots.mjs --mapping <private-mapping.json> --output-root <fresh-output-directory> --manifest <private-manifest.json>`. The mapping supplies the exact X/Y/Z order, B0/T0/Tfinal source clones and commit/tree bindings, and frozen public-gate-set hash. The manifest must remain outside the output root.
+
+Evaluators own the sealed hidden suite outside this repository. Each fresh evaluator receives exactly one history-free package labeled only X, Y, or Z and never sees lineage, assignment, another package, role artifacts, or Git metadata. It seals one score and post-score mapping diagnostic before the next evaluator starts. The browser product is specified to use local in-memory state only: no authentication, backend, network calls, credentials, persistence, or personal data.
 
 ## Limitations, security, and provenance
 
-This is a two-candidate pilot, not a statistically powered benchmark. Its results are descriptive for this task and frozen provider configuration. Public tests expose examples and contracts, not hidden cases. Hidden fixtures must never be committed to a candidate or protocol branch.
+This is a two-candidate pilot, not a statistically powered benchmark. Its results are descriptive for this task and frozen provider configuration. Isolation is an audited procedural boundary plus the CLI sandbox, not kernel-enforced proof against every child-process, network, junction, or reparse-point escape. Operators must use non-reparse, nonnested roots and audit pre/post Git and evidence commitments. Public tests expose examples and contracts, not hidden cases. Hidden fixtures must never be committed to a candidate or protocol branch.
 
 The diagram above is the truthful visual for this protocol scaffold. Product screenshots are deferred because no product exists yet; a promoted implementation must later capture sanitized real UI evidence with alt text and provenance. The specification and protocol materials are original project work. Dependency provenance remains pinned in `package-lock.json`.
 

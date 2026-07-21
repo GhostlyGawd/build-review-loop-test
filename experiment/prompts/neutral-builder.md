@@ -1,6 +1,6 @@
 # Exact prompt: neutral builder
 
-The operator writes this entire file byte-for-byte to raw standard input for each fresh CLI execution. No prefix, suffix, placeholder substitution, candidate label, deadline timestamp, path wrapper, model override, reasoning override, or added guidance is permitted. The identical `experiment/builder-config.json` is enforced externally. The CLI `-C` argument supplies the isolated checkout and is not model context.
+The operator writes this entire file byte-for-byte to raw standard input for each fresh CLI execution. No prefix, suffix, placeholder substitution, candidate label, deadline timestamp, path wrapper, prompt-embedded runtime override, or added guidance is permitted. The identical `experiment/builder-config.json`, including the externally pinned model and reasoning setting, is enforced before `exec`. The CLI `-C` argument supplies the isolated checkout and is not model context.
 
 ---
 

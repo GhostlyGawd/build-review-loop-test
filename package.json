@@ -17,7 +17,6 @@
     "test:public": "node scripts/run-public-tests.mjs",
     "test:public:if-implemented": "node scripts/run-public-tests.mjs --allow-absent",
     "test:protocol": "node --test scripts/validate-scaffold.test.mjs",
-    "validate:envelopes": "node scripts/validate-builder-envelopes.mjs",
     "validate:scaffold": "node scripts/validate-scaffold.mjs",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run validate:scaffold && npm run test:protocol && npm run test:public:if-implemented && npm run build"
   },

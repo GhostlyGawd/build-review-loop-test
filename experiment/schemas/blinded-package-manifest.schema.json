@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/blinded-package-manifest.schema.json",
+  "title": "Private deterministic blinded-package manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifestVersion",
+    "mappingSeedSha256",
+    "randomizedOrder",
+    "frozenGateSetSha256",
+    "packages",
+    "sanitizationPolicySha256"
+  ],
+  "properties": {
+    "manifestVersion": { "const": "1.0.0" },
+    "mappingSeedSha256": { "$ref": "#/$defs/sha256" },
+    "randomizedOrder": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": false,
+      "prefixItems": [
+        { "enum": ["X", "Y", "Z"] },
+        { "enum": ["X", "Y", "Z"] },
+        { "enum": ["X", "Y", "Z"] }
+      ]
+    },
+    "frozenGateSetSha256": { "$ref": "#/$defs/sha256" },
+    "packages": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/package" },
+      "allOf": [
+        {
+          "contains": {
+            "properties": { "packageLabel": { "const": "X" } },
+            "required": ["packageLabel"]
+          }
+        },
+        {
+          "contains": {
+            "properties": { "packageLabel": { "const": "Y" } },
+            "required": ["packageLabel"]
+          }
+        },
+        {
+          "contains": {
+            "properties": { "packageLabel": { "const": "Z" } },
+            "required": ["packageLabel"]
+          }
+        },
+        {
+          "contains": {
+            "properties": { "sourceRole": { "const": "B0" } },
+            "required": ["sourceRole"]
+          }
+        },
+        {
+          "contains": {
+            "properties": { "sourceRole": { "const": "T0" } },
+            "required": ["sourceRole"]
+          }
+        },
+        {
+          "contains": {
+            "properties": { "sourceRole": { "const": "Tfinal" } },
+            "required": ["sourceRole"]
+          }
+        }
+      ]
+    },
+    "sanitizationPolicySha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packageLabel",
+        "sourceRole",
+        "sourceCommit",
+        "sourceTree",
+        "packageSha256",
+        "fileCount",
+        "historyFree",
+        "lineageScanPassed",
+        "timestampsNormalized"
+      ],
+      "properties": {
+        "packageLabel": { "enum": ["X", "Y", "Z"] },
+        "sourceRole": { "enum": ["B0", "T0", "Tfinal"] },
+        "sourceCommit": { "$ref": "#/$defs/sha1" },
+        "sourceTree": { "$ref": "#/$defs/sha1" },
+        "packageSha256": { "$ref": "#/$defs/sha256" },
+        "fileCount": { "type": "integer", "minimum": 1 },
+        "historyFree": { "const": true },
+        "lineageScanPassed": { "const": true },
+        "timestampsNormalized": { "const": true }
+      }
+    }
+  }
+}

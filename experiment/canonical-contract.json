@@ -31,8 +31,8 @@
     "idPattern": "^cycle-[1-5]-reviewer-[0-9]{2}$"
   },
   "builderFreeze": {
-    "promptSha256": "d6f4aeeddf0dd83fda8b85dcaec57b9ea69781a4ce666fefacbe2d9de6e8de01",
-    "configSha256": "e0f924128130a9f1f9a44168bb4a6c0626b074e96ef71fb78c347b3a984fbffa",
+    "promptSha256": "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0",
+    "configSha256": "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4",
     "rule": "each builder receives the exact raw prompt bytes on stdin under an otherwise identical frozen external CLI execution; only opaque invocation ID and runtime coordinate paths differ"
   },
   "cliRuntime": {
@@ -45,22 +45,29 @@
     ],
     "roleLaunchRule": "every model-bearing role invocation is a fresh external Codex CLI subprocess using the frozen binary/auth/invariant argv, role-specific exact raw prompt bytes on stdin, --ephemeral, no resume, and distinct process and thread.started IDs; the bundled two-invocation contract and supervisor instantiate this rule for builders",
     "schemaPath": "experiment/schemas/cli-runtime-contract.schema.json",
-    "schemaSha256": "d6c9fbc6c766955bfb9f1da513b6dd408980c382ce72368cec678650f7bd13f4",
+    "schemaSha256": "c18db758a6b40194e64c88d3842522ade28ff831806c6315e3c5348e92934c33",
     "runnerPath": "scripts/run-cli-builders.ps1",
-    "runnerSha256": "9634de81d0654aa218d49474b8a11b279d0ec12e18082399bee0ca355301f33e",
+    "runnerSha256": "ded5fe244ae16771e7635abf0daaf979fe690060d8c6cc94885ae03e6f5e7efd",
     "binaryPath": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe",
     "binaryVersion": "codex-cli 0.145.0-alpha.18",
     "binarySha256": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
     "authStatus": "Logged in using ChatGPT",
+    "pinnedModel": "gpt-5.4",
+    "pinnedReasoning": "xhigh",
+    "pinnedProvider": "OpenAI through attested ChatGPT authentication",
     "invariantArgv": [
       "-a",
       "never",
+      "-m",
+      "gpt-5.4",
+      "-c",
+      "model_reasoning_effort=\"xhigh\"",
       "exec",
       "--ephemeral",
       "--ignore-user-config",
       "--skip-git-repo-check",
       "--sandbox",
-      "danger-full-access",
+      "workspace-write",
       "--json"
     ],
     "perInvocationArgv": ["-C", "<workdir>", "-o", "<final-path>", "-"],
@@ -75,9 +82,36 @@
       "processId",
       "threadId"
     ],
-    "freshnessRule": "two concurrent separate OS processes, distinct thread.started IDs, --ephemeral, and no resume",
-    "metadataRule": "model, provider, and reasoning are trusted only when present in JSONL runtime metadata; otherwise null with required unavailable reason; agent self-report is never evidence",
-    "successRule": "each process starts, receives stdin, exits zero before the external deadline, emits exactly one thread.started and turn.completed, uses a distinct thread ID, and records no unauthorized tool or write",
+    "freshnessRule": "builders launch concurrently in two separate OS processes with distinct thread.started IDs, --ephemeral, and no resume",
+    "metadataRule": "model and reasoning are authoritatively pinned in argv after a harmless support check; provider is pinned by ChatGPT auth plus no OSS/local-provider option; trusted JSONL observations are recorded when present and conflicts invalidate; agent self-report is never evidence",
+    "estimandRule": "descriptive randomized pilot under the pinned CLI deployment configuration; no strong causal or provider-wide generalization is claimed",
+    "isolationRule": "audited procedural boundary, not kernel-enforced proof: independent full clones with remotes disabled, nonnested non-reparse opaque paths, clean bound input commit/tree, separate temp/cache/dependency/port/evidence roots, workspace-write CLI sandbox, strict JSONL reconciliation, and invalidation on missing or out-of-scope evidence",
+    "successRule": "each process starts, receives stdin, exits zero before the external deadline, emits exactly one thread.started and turn.completed, exposes or explains absent usage, uses a distinct thread ID, reconciles raw JSONL and hashes, and finishes with a clean committed clone",
+    "roleRuntime": {
+      "schemaPath": "experiment/schemas/role-runtime-contract.schema.json",
+      "schemaSha256": "25a30d43ceb77e7bd4b908f8e577dc6ea0c7f9eb41c61f7c8c77af83f528632f",
+      "runnerPath": "scripts/run-cli-role.ps1",
+      "runnerSha256": "a924ecb6818a0c7be6d60c74109230e6ab98490a5b943395b67fcb759fc68333",
+      "evidenceSchemaPath": "experiment/schemas/cli-supervision-evidence.schema.json",
+      "evidenceSchemaSha256": "f6c18acea89f5cfac3b2fe6ad84871f563e217d884b14ecb29e6606bb99dcd89",
+      "promptTemplateSha256": {
+        "reviewer": "5bd94cc7c44165acae23675f82d74ece6bab0b4dab31f387d338d1c9a5e7dcae",
+        "fixer": "ac4c0a40dbcee8b1ffe11b6eb7e81c5458849859a1ab38d09b78431aa390c9cf",
+        "tester": "644ef262eb7a4c85b3a4d5636d88479082ebca37a5f082dbce165c90a9ef16c3",
+        "evaluator": "ee2e0620aa9a7d55ef047dda9d6d947ee750ebd3bb3bc1f149a229eb11adbe40"
+      },
+      "artifactSchemaSha256": {
+        "reviewer": "66e47c9e4a0a8a4b1d5f09a73f09f753879b8f0f0d8219a1e4b187b88d3d791f",
+        "fixer": "d92b46d65322b053699bdcc8e35a6f9d0c1c91d3dacccddbcfc569c673d7e96b",
+        "tester": "f0d6937137661ef750fe435afbe4ca1cba8ce727ed7bdf0986e98a9c1d476f06",
+        "evaluator": "12a769a0868261e28299b5a7feef71626ea6e1ee51bfb0eb59ce65bbec05e6aa"
+      },
+      "promptSubstitutionRule": "exact role-specific key set; single-line bounded values; candidate/cycle/snapshot, fixer handoff, and evaluator package/sequence/rubric/schema/hidden-suite values must equal their contract bindings",
+      "reviewerPolicy": "read-only snapshot",
+      "fixerPolicy": "authorized isolated full-clone write followed by clean commit",
+      "testerPolicy": "workspace-write disposable copy; no mutation transfer",
+      "evaluatorPolicy": "one fresh evaluator per single history-free package in randomized order; workspace-write disposable copy; score and seal before next; no revisions"
+    },
     "v4Evidence": {
       "contractSha256": "d1a47087dc0bfcf85638e6c9faef4c7399c98626556747f1fda31e0a67e0645d",
       "supervisorSha256": "2d1c8408af254da00f892217ea2df3863671986249605c4ef8d2431c897d9a25",
@@ -136,27 +170,116 @@
   "evaluation": {
     "packageLabels": ["X", "Y", "Z"],
     "snapshotRoles": ["B0", "T0", "Tfinal"],
+    "blindingClaim": "mapping-blinded single-package evaluation, not lineage-blinded inference",
+    "sequenceRule": "randomize X/Y/Z order; use a fresh evaluator subprocess for one package; record mapping guess and integer confidence percentage from 0 through 100; score and seal before launching the next; prohibit revisions",
+    "packageScriptPath": "scripts/package-blinded-snapshots.mjs",
+    "packageScriptSha256": "3ce131866ad91e16dbc39b713481b92cd9ca4223ae7e8da1ae523b8ddf0b6fc3",
+    "packageManifestSchemaPath": "experiment/schemas/blinded-package-manifest.schema.json",
+    "packageManifestSchemaSha256": "6032cd1cc0ad8297e5eba600bf7691498b5df5f9b314820b139e5064d27f3d9c",
+    "packageInputRule": "exact X/Y/Z randomized order and B0/T0/Tfinal set; clean full-clone sources must match committed Git commit/tree and one frozen public-gate-set hash; source, output, mapping, and private manifest paths remain separate and nonnested",
+    "rubricSha256": "f0f4b5b918a9a50183455bf237a90706dcac58ce3cf708996bdc9ceb3b0978ef",
+    "frozenGateSetSha256": "ac6ad587fc42e4bf423134fddb1ab5704a9924cff968523c5e61cccba8b4a70e",
     "rubricItems": [
-      { "id": "A1", "maximum": 6, "anchors": [0, 3, 6] },
-      { "id": "A2", "maximum": 8, "anchors": [0, 4, 8] },
-      { "id": "A3", "maximum": 10, "anchors": [0, 4, 7, 10] },
-      { "id": "A4", "maximum": 10, "anchors": [0, 4, 7, 10] },
-      { "id": "A5", "maximum": 7, "anchors": [0, 4, 7] },
-      { "id": "A6", "maximum": 7, "anchors": [0, 4, 7] },
-      { "id": "A7", "maximum": 2, "anchors": [0, 1, 2] },
-      { "id": "B1", "maximum": 5, "anchors": [0, 3, 5] },
-      { "id": "B2", "maximum": 5, "anchors": [0, 3, 5] },
-      { "id": "B3", "maximum": 5, "anchors": [0, 3, 5] },
-      { "id": "C1", "maximum": 6, "anchors": [0, 3, 6] },
-      { "id": "C2", "maximum": 4, "anchors": [0, 2, 4] },
-      { "id": "C3", "maximum": 5, "anchors": [0, 3, 5] },
-      { "id": "D1", "maximum": 4, "anchors": [0, 2, 4] },
-      { "id": "D2", "maximum": 4, "anchors": [0, 2, 4] },
-      { "id": "D3", "maximum": 2, "anchors": [0, 1, 2] },
-      { "id": "E1", "maximum": 3, "anchors": [0, 1, 2, 3] },
-      { "id": "E2", "maximum": 3, "anchors": [0, 1, 2, 3] },
-      { "id": "E3", "maximum": 2, "anchors": [0, 1, 2] },
-      { "id": "E4", "maximum": 2, "anchors": [0, 1, 2] }
+      {
+        "id": "A1",
+        "maximum": 6,
+        "anchors": [0, 3, 6]
+      },
+      {
+        "id": "A2",
+        "maximum": 8,
+        "anchors": [0, 4, 8]
+      },
+      {
+        "id": "A3",
+        "maximum": 10,
+        "anchors": [0, 4, 7, 10]
+      },
+      {
+        "id": "A4",
+        "maximum": 10,
+        "anchors": [0, 4, 7, 10]
+      },
+      {
+        "id": "A5",
+        "maximum": 7,
+        "anchors": [0, 4, 7]
+      },
+      {
+        "id": "A6",
+        "maximum": 7,
+        "anchors": [0, 4, 7]
+      },
+      {
+        "id": "A7",
+        "maximum": 2,
+        "anchors": [0, 1, 2]
+      },
+      {
+        "id": "B1",
+        "maximum": 5,
+        "anchors": [0, 3, 5]
+      },
+      {
+        "id": "B2",
+        "maximum": 5,
+        "anchors": [0, 3, 5]
+      },
+      {
+        "id": "B3",
+        "maximum": 5,
+        "anchors": [0, 3, 5]
+      },
+      {
+        "id": "C1",
+        "maximum": 6,
+        "anchors": [0, 3, 6]
+      },
+      {
+        "id": "C2",
+        "maximum": 4,
+        "anchors": [0, 2, 4]
+      },
+      {
+        "id": "C3",
+        "maximum": 5,
+        "anchors": [0, 3, 5]
+      },
+      {
+        "id": "D1",
+        "maximum": 4,
+        "anchors": [0, 2, 4]
+      },
+      {
+        "id": "D2",
+        "maximum": 4,
+        "anchors": [0, 2, 4]
+      },
+      {
+        "id": "D3",
+        "maximum": 2,
+        "anchors": [0, 1, 2]
+      },
+      {
+        "id": "E1",
+        "maximum": 3,
+        "anchors": [0, 1, 2, 3]
+      },
+      {
+        "id": "E2",
+        "maximum": 3,
+        "anchors": [0, 1, 2, 3]
+      },
+      {
+        "id": "E3",
+        "maximum": 2,
+        "anchors": [0, 1, 2]
+      },
+      {
+        "id": "E4",
+        "maximum": 2,
+        "anchors": [0, 1, 2]
+      }
     ],
     "sectionItems": {
       "functional": ["A1", "A2", "A3", "A4", "A5", "A6", "A7"],

@@ -1,6 +1,15 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
 import {
@@ -18,6 +27,8 @@ import {
   validateGoldenRun,
   validateNeutralBuilderPrompt,
   validateOutcomeSemantics,
+  validateRoleRuntimeContract,
+  validateRoleSupervisionEvidence,
   validateRunManifestSemantics,
   validateScaffold,
 } from "./validate-scaffold.mjs";
@@ -25,6 +36,7 @@ import {
 const clone = (value) => structuredClone(value);
 const zero40 = "0".repeat(40);
 const hash = (digit) => digit.repeat(64);
+const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 const snapshot = (number) => ({
   commit: `${number}`.repeat(40),
   sealedAt: "2026-07-20T00:00:00Z",
@@ -170,6 +182,18 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
     assert.equal(golden.canonicalContractSha256, canonicalHash(contract));
   });
 
+  it("cross-binds blinded package roles and source commits to registered snapshots", () => {
+    const contract = readJson("experiment/canonical-contract.json");
+    const golden = readJson("experiment/golden-run/golden-run.json");
+    golden.blindedPackageManifest.packages[0].sourceRole = "Tfinal";
+    golden.blindedPackageManifest.packages[2].sourceRole = "B0";
+    golden.blindedPackageManifest.mappingSeedSha256 = hash("f");
+    assert.match(
+      validateGoldenRun(golden, contract).join("\n"),
+      /registered snapshot|seed or gate commitment/i,
+    );
+  });
+
   it("rejects authoritative finding-field and severity divergence", () => {
     const contract = readJson("experiment/canonical-contract.json");
     contract.finding.requiredFields.splice(5, 1);
@@ -270,6 +294,7 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       validateCliSupervisionEvidence(
         golden.cliRuntimeEvidence,
         golden.cliRuntimeContract,
+        golden.cliRuntimeStdoutByInvocation,
       ),
       [],
     );
@@ -335,6 +360,257 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       ).join("\n"),
       /unavailable reason/i,
     );
+  });
+
+  it("binds every non-builder role contract to frozen runner, prompt, evidence, and artifact schemas", () => {
+    const contract = readJson(
+      "experiment/templates/role-runtime-contract.json",
+    );
+    const lock = readJson("experiment/lock.json");
+    contract.contractSchemaSha256 = lock.roleRuntimeSchemaSha256;
+    contract.runnerSha256 = lock.roleRunnerSha256;
+    contract.evidenceSchemaSha256 = lock.supervisionEvidenceSchemaSha256;
+    contract.promptTemplateSha256 = lock.reviewerPromptTemplateSha256;
+    contract.artifactSchemaSha256 = lock.reviewArtifactSchemaSha256;
+    assert.deepEqual(validateRoleRuntimeContract(contract, lock), []);
+    contract.promptTemplateSha256 = hash("f");
+    contract.artifactSchemaSha256 = hash("e");
+    assert.match(
+      validateRoleRuntimeContract(contract, lock).join("\n"),
+      /prompt-template|artifact-schema/i,
+    );
+  });
+
+  it("strictly reconciles general role JSONL, usage, hashes, and final artifact binding", () => {
+    const contract = readJson(
+      "experiment/templates/role-runtime-contract.json",
+    );
+    const result = readJson(
+      "experiment/templates/cli-supervision-evidence.json",
+    );
+    const raw =
+      `${JSON.stringify({ type: "thread.started", thread_id: "role-thread-1" })}\n` +
+      `${JSON.stringify({ type: "turn.completed", usage: { input_tokens: 10, output_tokens: 2 } })}\n`;
+    result.contractSha256 = hash("1");
+    result.artifactSchemaSha256 = contract.artifactSchemaSha256;
+    result.processId = 321;
+    result.started = true;
+    result.stdinDelivered = true;
+    result.exitCode = 0;
+    result.argv = [
+      "-a",
+      "never",
+      "-m",
+      "gpt-5.4",
+      "-c",
+      'model_reasoning_effort="xhigh"',
+      "exec",
+      "--ephemeral",
+      "--ignore-user-config",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--json",
+      "-C",
+      contract.workdir,
+      "-o",
+      contract.finalPath,
+      "-",
+    ];
+    result.argvSha256 = sha256(result.argv.join("\0"));
+    result.promptSha256 = contract.promptSha256;
+    result.stdoutSha256 = sha256(raw);
+    result.finalSha256 = hash("2");
+    result.finalSchemaValid = true;
+    result.artifactBindingValid = true;
+    result.threadIds = ["role-thread-1"];
+    result.turnCompleted = true;
+    result.rawJsonlValid = true;
+    result.usage = { input_tokens: 10, output_tokens: 2 };
+    result.usageUnavailableReason = null;
+    assert.deepEqual(
+      validateRoleSupervisionEvidence(result, contract, raw),
+      [],
+    );
+    result.unauthorizedToolOrWriteDetected = true;
+    result.finalSchemaValid = false;
+    assert.match(
+      validateRoleSupervisionEvidence(result, contract, raw).join("\n"),
+      /unauthorized|artifact\/contract binding/i,
+    );
+    assert.match(
+      validateRoleSupervisionEvidence(result, contract).join("\n"),
+      /raw JSONL is required/i,
+    );
+  });
+
+  it("packages deterministic blinded snapshots and rejects traversal, nesting, and source drift", () => {
+    const temp = mkdtempSync(path.join(os.tmpdir(), "protocol-package-test-"));
+    try {
+      const source = path.join(temp, "source");
+      mkdirSync(path.join(source, "docs"), { recursive: true });
+      mkdirSync(path.join(source, "tests", "public"), { recursive: true });
+      mkdirSync(path.join(source, "scripts"), { recursive: true });
+      for (const [relative, contents] of [
+        ["docs/permissions-playground-spec.md", "spec\n"],
+        ["docs/public-test-contract.md", "contract\n"],
+        ["tests/public/example.test.ts", "export {};\n"],
+        ["scripts/run-public-tests.mjs", "export {};\n"],
+        ["package.json", "{}\n"],
+        ["package-lock.json", "{}\n"],
+        ["src.txt", "neutral source\n"],
+      ])
+        writeFileSync(path.join(source, relative), contents);
+      for (const args of [
+        ["init"],
+        ["add", "."],
+        [
+          "-c",
+          "user.name=Protocol Test",
+          "-c",
+          "user.email=protocol@example.invalid",
+          "commit",
+          "-m",
+          "fixture",
+        ],
+      ])
+        assert.equal(spawnSync("git", args, { cwd: source }).status, 0);
+      const commit = spawnSync("git", ["rev-parse", "HEAD"], {
+        cwd: source,
+        encoding: "utf8",
+      }).stdout.trim();
+      const tree = spawnSync("git", ["rev-parse", "HEAD^{tree}"], {
+        cwd: source,
+        encoding: "utf8",
+      }).stdout.trim();
+      const clones = ["one", "two", "three"].map((name) => {
+        const destination = path.join(temp, name);
+        assert.equal(
+          spawnSync("git", ["clone", "--quiet", source, destination]).status,
+          0,
+        );
+        return destination;
+      });
+      const gateFiles = [
+        "docs/permissions-playground-spec.md",
+        "docs/public-test-contract.md",
+        "tests/public/example.test.ts",
+        "scripts/run-public-tests.mjs",
+        "package.json",
+        "package-lock.json",
+      ];
+      const frozenGateSetSha256 = sha256(
+        gateFiles
+          .sort()
+          .map(
+            (relative) =>
+              `${relative}\0${sha256(readFileSync(path.join(clones[0], relative)))}\n`,
+          )
+          .join(""),
+      );
+      const mapping = {
+        mappingSeedSha256: hash("a"),
+        randomizedOrder: ["X", "Y", "Z"],
+        frozenGateSetSha256,
+        packages: ["X", "Y", "Z"].map((packageLabel, index) => ({
+          packageLabel,
+          sourceRole: ["B0", "T0", "Tfinal"][index],
+          sourcePath: clones[index],
+          sourceCommit: commit,
+          sourceTree: tree,
+        })),
+      };
+      const mappingPath = path.join(temp, "mapping.json");
+      writeFileSync(mappingPath, JSON.stringify(mapping));
+      const run = (suffix) =>
+        spawnSync(
+          process.execPath,
+          [
+            "scripts/package-blinded-snapshots.mjs",
+            "--mapping",
+            mappingPath,
+            "--output-root",
+            path.join(temp, `output-${suffix}`),
+            "--manifest",
+            path.join(temp, `manifest-${suffix}.json`),
+          ],
+          { cwd: root, encoding: "utf8" },
+        );
+      const first = run("one");
+      const second = run("two");
+      assert.equal(first.status, 0, first.stderr);
+      assert.equal(second.status, 0, second.stderr);
+      assert.deepEqual(
+        JSON.parse(first.stdout).packages.map(
+          ({ packageSha256 }) => packageSha256,
+        ),
+        JSON.parse(second.stdout).packages.map(
+          ({ packageSha256 }) => packageSha256,
+        ),
+      );
+      assert.equal(
+        readdirSync(path.join(temp, "output-one")).sort().join(""),
+        "XYZ",
+      );
+      mapping.packages[0].packageLabel = "../escape";
+      writeFileSync(mappingPath, JSON.stringify(mapping));
+      assert.notEqual(run("escape").status, 0);
+      mapping.packages[0].packageLabel = "X";
+      mapping.packages[0].sourceCommit = "0".repeat(40);
+      writeFileSync(mappingPath, JSON.stringify(mapping));
+      assert.notEqual(run("drift").status, 0);
+      mapping.packages[0].sourceCommit = commit;
+      writeFileSync(mappingPath, JSON.stringify(mapping));
+      const nested = spawnSync(
+        process.execPath,
+        [
+          "scripts/package-blinded-snapshots.mjs",
+          "--mapping",
+          mappingPath,
+          "--output-root",
+          path.join(clones[0], "nested-output"),
+          "--manifest",
+          path.join(temp, "nested-manifest.json"),
+        ],
+        { cwd: root },
+      );
+      assert.notEqual(nested.status, 0);
+      writeFileSync(path.join(clones[0], "Treatment-notes.md"), "neutral\n");
+      assert.equal(
+        spawnSync("git", ["add", "."], { cwd: clones[0] }).status,
+        0,
+      );
+      assert.equal(
+        spawnSync(
+          "git",
+          [
+            "-c",
+            "user.name=Protocol Test",
+            "-c",
+            "user.email=protocol@example.invalid",
+            "commit",
+            "-m",
+            "lineage filename",
+          ],
+          { cwd: clones[0] },
+        ).status,
+        0,
+      );
+      mapping.packages[0].sourceCommit = spawnSync(
+        "git",
+        ["rev-parse", "HEAD"],
+        { cwd: clones[0], encoding: "utf8" },
+      ).stdout.trim();
+      mapping.packages[0].sourceTree = spawnSync(
+        "git",
+        ["rev-parse", "HEAD^{tree}"],
+        { cwd: clones[0], encoding: "utf8" },
+      ).stdout.trim();
+      writeFileSync(mappingPath, JSON.stringify(mapping));
+      assert.notEqual(run("lineage-name").status, 0);
+    } finally {
+      rmSync(temp, { recursive: true, force: true });
+    }
   });
 
   it("requires raw-stdin/current-checkout neutral builder prose", () => {

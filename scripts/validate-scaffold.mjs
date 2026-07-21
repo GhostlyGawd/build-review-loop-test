@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
@@ -19,6 +19,29 @@ const canonicalDomain = Buffer.from(
 );
 const compareUtf8 = (left, right) =>
   Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
+const frozenGatePaths = [
+  "docs/permissions-playground-spec.md",
+  "docs/public-test-contract.md",
+  "tests/public",
+  "scripts/run-public-tests.mjs",
+  "package.json",
+  "package-lock.json",
+];
+export function frozenGateSetHash(base = root) {
+  const records = [];
+  const add = (absolute, relative) => {
+    if (statSync(absolute).isDirectory()) {
+      for (const name of readdirSync(absolute).sort(compareUtf8))
+        add(path.join(absolute, name), `${relative}/${name}`);
+    } else records.push([relative, sha256Bytes(readFileSync(absolute))]);
+  };
+  for (const relative of frozenGatePaths)
+    add(path.join(base, relative), relative);
+  records.sort(([left], [right]) => compareUtf8(left, right));
+  return sha256(
+    records.map(([name, digest]) => `${name}\0${digest}\n`).join(""),
+  );
+}
 
 export function canonicalJson(value) {
   if (value === null || typeof value === "boolean" || typeof value === "string")
@@ -242,6 +265,22 @@ export function validateRunManifestSemantics(run) {
 
 export function validateEvaluationSemantics(evaluation) {
   const failures = [];
+  if (
+    evaluation.mappingGuess === "unknown" &&
+    evaluation.mappingGuessConfidence !== 0
+  )
+    failures.push("unknown mapping guess requires zero confidence");
+  if (
+    typeof evaluation.mappingGuessEvidence !== "string" ||
+    evaluation.mappingGuessEvidence.length === 0
+  )
+    failures.push("mapping guess requires observable diagnostic evidence");
+  if (
+    Number.isNaN(Date.parse(evaluation.evaluatedAt)) ||
+    Number.isNaN(Date.parse(evaluation.sealedAt)) ||
+    Date.parse(evaluation.sealedAt) < Date.parse(evaluation.evaluatedAt)
+  )
+    failures.push("evaluation seal must be at or after evaluation completion");
   const ids = Object.keys(rubricMaxima);
   if (evaluation.items.map(({ id }) => id).join(",") !== ids.join(","))
     failures.push("evaluation items must contain each rubric ID once in order");
@@ -348,8 +387,8 @@ export function validateCostSemantics(cost) {
     cost.cycle !== null
   )
     failures.push("non-cycle role cost must have a null cycle");
-  if (cost.role === "evaluator" && cost.packageLabel !== null)
-    failures.push("one evaluator turn covers all X/Y/Z packages");
+  if (cost.role === "evaluator" && cost.packageLabel === null)
+    failures.push("each evaluator turn must name exactly one package");
   if (cost.maxTokens !== null || !cost.maxTokensUnavailableReason)
     failures.push("unavailable maxTokens must be null with a reason");
   if (!cost.environmentSha256)
@@ -416,178 +455,12 @@ const exactKeys = (value, expected) =>
   JSON.stringify(Object.keys(value).sort(compareUtf8)) ===
     JSON.stringify([...expected].sort(compareUtf8));
 
-export const assignmentEnvelopeFields = [
-  "schemaVersion",
-  "opaqueWorkerKey",
-  "opaqueCandidateId",
-  "absoluteWorktreePath",
-  "buildBranch",
-  "baseBranch",
-  "commonStartCommit",
-  "commonStartTree",
-  "promptSha256",
-  "configSha256",
-  "envelopeSchemaSha256",
-];
-export const assignmentCoordinationDirectory = String.raw`C:\Users\rhenm\Documents\Codex\2026-07-20\pilot-002-builder-assignments`;
-export const assignmentWorkspaceRoot = String.raw`C:\Users\rhenm\Documents\Codex\2026-07-20`;
-const assignmentPairDifferences = [
-  "opaqueWorkerKey",
-  "opaqueCandidateId",
-  "absoluteWorktreePath",
-  "buildBranch",
-  "baseBranch",
-];
-const assignmentAttestationFields = ["opaqueCandidateId", "envelopeSha256"];
-const lowerWinPath = (value) => path.win32.normalize(value).toLowerCase();
-const isNestedWinPath = (parent, candidate) => {
-  const relative = path.win32.relative(parent, candidate);
-  return (
-    relative.length > 0 &&
-    !relative.startsWith("..") &&
-    !path.win32.isAbsolute(relative)
-  );
-};
-
-export function validateAssignmentEnvelope(
-  envelope,
-  lock = readJson("experiment/lock.json"),
-  sourcePath = null,
-) {
-  const failures = [];
-  const ajv = new Ajv2020({
-    allErrors: true,
-    strict: true,
-    strictTypes: false,
-    validateFormats: false,
-  });
-  const validate = ajv.compile(
-    readJson("experiment/schemas/assignment-envelope.schema.json"),
-  );
-  if (!validate(envelope))
-    failures.push(
-      `assignment envelope schema failure: ${ajv.errorsText(validate.errors)}`,
-    );
-  if (!exactKeys(envelope, assignmentEnvelopeFields))
-    failures.push("assignment envelope must contain only the canonical fields");
-  if (envelope.promptSha256 !== lock.neutralBuilderPromptSha256)
-    failures.push("assignment envelope prompt commitment mismatch");
-  if (envelope.configSha256 !== lock.neutralBuilderConfigSha256)
-    failures.push("assignment envelope config commitment mismatch");
-  if (envelope.envelopeSchemaSha256 !== lock.assignmentEnvelopeSchemaSha256)
-    failures.push("assignment envelope schema commitment mismatch");
-
-  const worktree = envelope.absoluteWorktreePath;
-  if (typeof worktree === "string") {
-    const normalized = path.win32.normalize(worktree);
-    const relative = path.win32.relative(assignmentWorkspaceRoot, normalized);
-    if (
-      !path.win32.isAbsolute(worktree) ||
-      normalized !== worktree ||
-      relative.length === 0 ||
-      relative.startsWith("..") ||
-      path.win32.isAbsolute(relative) ||
-      isNestedWinPath(assignmentCoordinationDirectory, normalized) ||
-      lowerWinPath(normalized) === lowerWinPath(assignmentCoordinationDirectory)
-    )
-      failures.push(
-        "assignment envelope worktree path is not a safe canonical absolute path",
-      );
-  }
-
-  if (sourcePath !== null) {
-    const normalizedSource = path.win32.normalize(sourcePath);
-    const leaf = path.win32.basename(normalizedSource, ".json");
-    if (
-      lowerWinPath(path.win32.dirname(normalizedSource)) !==
-        lowerWinPath(assignmentCoordinationDirectory) ||
-      path.win32.extname(normalizedSource) !== ".json" ||
-      !/^[a-z0-9_]+$/.test(leaf)
-    )
-      failures.push(
-        "assignment file violates the frozen task-leaf path convention",
-      );
-  }
-  return failures;
-}
-
-export function validateAssignmentEnvelopePair(
-  envelopes,
-  attestations,
-  lock = readJson("experiment/lock.json"),
-  sourcePaths = [],
-) {
-  const failures = [];
-  if (!Array.isArray(envelopes) || envelopes.length !== 2)
-    return ["assignment envelope pair must contain exactly two envelopes"];
-  envelopes.forEach((envelope, index) =>
-    failures.push(
-      ...validateAssignmentEnvelope(envelope, lock, sourcePaths[index] ?? null),
-    ),
-  );
-  const [left, right] = envelopes;
-  for (const field of assignmentEnvelopeFields.filter(
-    (field) => !assignmentPairDifferences.includes(field),
-  )) {
-    if (left[field] !== right[field])
-      failures.push(`assignment envelope pair mismatch at ${field}`);
-  }
-  for (const field of ["opaqueWorkerKey", "opaqueCandidateId"]) {
-    if (left[field] === right[field])
-      failures.push(`assignment envelope pair duplicates ${field}`);
-  }
-  const worktrees = envelopes.map(({ absoluteWorktreePath }) =>
-    typeof absoluteWorktreePath === "string"
-      ? lowerWinPath(absoluteWorktreePath)
-      : null,
-  );
-  if (
-    worktrees.every((worktree) => worktree !== null) &&
-    (worktrees[0] === worktrees[1] ||
-      isNestedWinPath(worktrees[0], worktrees[1]) ||
-      isNestedWinPath(worktrees[1], worktrees[0]))
-  )
-    failures.push(
-      "assignment envelope worktree paths must be distinct and nonnested",
-    );
-  const branches = envelopes.flatMap(({ buildBranch, baseBranch }) => [
-    buildBranch,
-    baseBranch,
-  ]);
-  if (new Set(branches).size !== branches.length)
-    failures.push(
-      "assignment envelope build/base branches must all be distinct",
-    );
-
-  if (!Array.isArray(attestations) || attestations.length !== 2)
-    failures.push("assignment envelopes require two separate attestations");
-  else {
-    const attestedCandidates = new Set();
-    attestations.forEach((attestation) => {
-      if (!exactKeys(attestation, assignmentAttestationFields))
-        failures.push("assignment attestation fields diverge");
-      const envelope = envelopes.find(
-        ({ opaqueCandidateId }) =>
-          opaqueCandidateId === attestation.opaqueCandidateId,
-      );
-      if (!envelope || attestation.envelopeSha256 !== canonicalHash(envelope))
-        failures.push("assignment envelope attestation hash mismatch");
-      if (attestedCandidates.has(attestation.opaqueCandidateId))
-        failures.push(
-          "assignment envelope candidate is attested more than once",
-        );
-      attestedCandidates.add(attestation.opaqueCandidateId);
-    });
-  }
-  return failures;
-}
-
 export function validateNeutralBuilderPrompt(promptText) {
   const required = [
     "The operator writes this entire file byte-for-byte to raw standard input for each fresh CLI execution.",
     "The CLI `-C` argument supplies the isolated checkout and is not model context.",
     "You are a neutral builder. The current checkout is the frozen common-start commit.",
-    "No prefix, suffix, placeholder substitution, candidate label, deadline timestamp, path wrapper, model override, reasoning override, or added guidance is permitted.",
+    "No prefix, suffix, placeholder substitution, candidate label, deadline timestamp, path wrapper, prompt-embedded runtime override, or added guidance is permitted.",
   ];
   return required
     .filter((clause) => !promptText.includes(clause))
@@ -597,12 +470,16 @@ export function validateNeutralBuilderPrompt(promptText) {
 export const cliInvariantArgv = [
   "-a",
   "never",
+  "-m",
+  "gpt-5.4",
+  "-c",
+  'model_reasoning_effort="xhigh"',
   "exec",
   "--ephemeral",
   "--ignore-user-config",
   "--skip-git-repo-check",
   "--sandbox",
-  "danger-full-access",
+  "workspace-write",
   "--json",
 ];
 const cliTail = (invocation) => [
@@ -640,10 +517,6 @@ export function validateCliRuntimeContract(
   )
     failures.push("CLI runtime must be ephemeral and never resumed");
   if (
-    contract.invariantArgv?.some((arg) => /model|reasoning|config=/i.test(arg))
-  )
-    failures.push("CLI runtime forbids model, reasoning, and config overrides");
-  if (
     contract.cliPath !== lock.cliBinaryPath ||
     contract.cliVersion !== lock.cliVersion ||
     contract.cliSha256 !== lock.cliBinarySha256
@@ -653,6 +526,8 @@ export function validateCliRuntimeContract(
     failures.push("CLI raw stdin prompt commitment mismatch");
   if (contract.authStatus !== "Logged in using ChatGPT")
     failures.push("CLI ChatGPT auth attestation mismatch");
+  if (contract.contractSchemaSha256 !== lock.cliRuntimeSchemaSha256)
+    failures.push("CLI contract schema does not match frozen lock");
   if (!Array.isArray(contract.invocations) || contract.invocations.length !== 2)
     return [...failures, "CLI runtime requires exactly two invocations"];
   for (const field of [
@@ -662,6 +537,10 @@ export function validateCliRuntimeContract(
     "stdoutPath",
     "stderrPath",
     "evidencePath",
+    "tempRoot",
+    "cacheRoot",
+    "dependencyRoot",
+    "port",
   ]) {
     const values = contract.invocations.map(
       (entry) => entry[field]?.toLowerCase?.() ?? entry[field],
@@ -669,10 +548,48 @@ export function validateCliRuntimeContract(
     if (new Set(values).size !== 2)
       failures.push(`CLI invocations duplicate ${field}`);
   }
+  const roots = contract.invocations.map(({ workdir }) =>
+    path.win32.resolve(workdir),
+  );
+  const evidenceRoot = path.win32.resolve(contract.evidenceRoot ?? "");
+  const beneath = (rootPath, candidate) => {
+    const relative = path.win32.relative(rootPath, candidate);
+    return (
+      relative !== "" &&
+      !relative.startsWith("..") &&
+      !path.win32.isAbsolute(relative)
+    );
+  };
+  if (beneath(roots[0], roots[1]) || beneath(roots[1], roots[0]))
+    failures.push("CLI workdirs must be nonnested independent clones");
+  for (const [index, invocation] of contract.invocations.entries()) {
+    if (
+      beneath(roots[index], evidenceRoot) ||
+      beneath(evidenceRoot, roots[index])
+    )
+      failures.push(
+        `CLI invocation ${index} evidence/workdir roots are nested`,
+      );
+    for (const field of [
+      "finalPath",
+      "stdoutPath",
+      "stderrPath",
+      "evidencePath",
+      "tempRoot",
+      "cacheRoot",
+      "dependencyRoot",
+    ])
+      if (!beneath(evidenceRoot, path.win32.resolve(invocation[field] ?? "")))
+        failures.push(`CLI invocation ${index} ${field} escapes evidenceRoot`);
+  }
   return failures;
 }
 
-export function validateCliSupervisionEvidence(evidence, contract) {
+export function validateCliSupervisionEvidence(
+  evidence,
+  contract,
+  rawStdoutByInvocation = null,
+) {
   const failures = [];
   if (!Array.isArray(evidence.results) || evidence.results.length !== 2)
     return ["CLI supervision requires exactly two results"];
@@ -683,6 +600,14 @@ export function validateCliSupervisionEvidence(evidence, contract) {
     const expectedArgv = [...cliInvariantArgv, ...cliTail(invocation)];
     if (JSON.stringify(result.argv) !== JSON.stringify(expectedArgv))
       failures.push(`CLI result ${index} argv differs or is reordered`);
+    if (result.invocationId !== invocation.invocationId)
+      failures.push(`CLI result ${index} invocation ID mismatch`);
+    if (!nonzeroSha256(result.contractSha256))
+      failures.push(`CLI result ${index} contract hash missing`);
+    if (!nonzeroSha256(result.finalSha256))
+      failures.push(`CLI result ${index} final artifact hash missing`);
+    if (result.argvSha256 !== sha256(result.argv.join("\0")))
+      failures.push(`CLI result ${index} argv hash mismatch`);
     if (result.promptSha256 !== contract.promptSha256)
       failures.push(`CLI result ${index} prompt differs`);
     if (!result.started || !result.stdinDelivered)
@@ -690,8 +615,21 @@ export function validateCliSupervisionEvidence(evidence, contract) {
     if (result.timedOut) failures.push(`CLI result ${index} timed out`);
     if (result.exitCode !== 0)
       failures.push(`CLI result ${index} exit was nonzero`);
+    if (result.unauthorizedToolOrWriteDetected === true)
+      failures.push(
+        `CLI result ${index} detected an unauthorized tool or write`,
+      );
+    if (
+      result.unauthorizedToolOrWriteDetected == null &&
+      !result.unauthorizedToolOrWriteUnavailableReason
+    )
+      failures.push(
+        `CLI result ${index} lacks unauthorized-write absence reason`,
+      );
     if (!result.turnCompleted)
       failures.push(`CLI result ${index} lacks turn.completed`);
+    if (!result.rawJsonlValid)
+      failures.push(`CLI result ${index} contains malformed JSONL`);
     if (!Array.isArray(result.threadIds) || result.threadIds.length !== 1)
       failures.push(
         `CLI result ${index} must have exactly one thread.started ID`,
@@ -700,8 +638,52 @@ export function validateCliSupervisionEvidence(evidence, contract) {
     if (result.processId == null)
       failures.push(`CLI result ${index} lacks process ID`);
     else processIds.push(result.processId);
-    if (result.unauthorizedToolOrWriteDetected)
-      failures.push(`CLI result ${index} recorded unauthorized tool or write`);
+    if (
+      result.sandboxMode !== "workspace-write" ||
+      result.inputDisposition !== "authorized-worktree-write"
+    )
+      failures.push(`CLI result ${index} isolation policy mismatch`);
+    if (result.usage == null && !result.usageUnavailableReason)
+      failures.push(`CLI result ${index} missing usage and unavailable reason`);
+    if (result.usage != null && result.usageUnavailableReason != null)
+      failures.push(`CLI result ${index} usage has a false unavailable reason`);
+    const raw = rawStdoutByInvocation?.[result.invocationId];
+    if (raw == null) {
+      failures.push(
+        `CLI result ${index} raw JSONL is required for reconciliation`,
+      );
+    } else {
+      if (result.stdoutSha256 !== sha256(raw))
+        failures.push(`CLI result ${index} stdout hash mismatch`);
+      const events = [];
+      for (const line of raw.split(/\r?\n/u).filter((value) => value.trim())) {
+        try {
+          events.push(JSON.parse(line));
+        } catch {
+          failures.push(`CLI result ${index} malformed raw JSONL`);
+        }
+      }
+      const rawThreads = events
+        .filter(({ type }) => type === "thread.started")
+        .map(({ thread_id: id }) => id);
+      const turnEvents = events.filter(({ type }) => type === "turn.completed");
+      if (JSON.stringify(rawThreads) !== JSON.stringify(result.threadIds))
+        failures.push(
+          `CLI result ${index} thread IDs do not reconcile to raw JSONL`,
+        );
+      if ((turnEvents.length === 1) !== result.turnCompleted)
+        failures.push(
+          `CLI result ${index} lifecycle does not reconcile to raw JSONL`,
+        );
+      if (
+        turnEvents.length === 1 &&
+        JSON.stringify(turnEvents[0].usage ?? null) !==
+          JSON.stringify(result.usage)
+      )
+        failures.push(
+          `CLI result ${index} usage does not reconcile to turn.completed`,
+        );
+    }
     for (const field of [
       "runtimeModel",
       "runtimeProvider",
@@ -723,6 +705,178 @@ export function validateCliSupervisionEvidence(evidence, contract) {
     failures.push("CLI OS process IDs must be distinct");
   if (evidence.valid !== (failures.length === 0))
     failures.push("CLI supervision valid flag disagrees with evidence");
+  return failures;
+}
+
+export function validateRoleRuntimeContract(
+  contract,
+  lock = readJson("experiment/lock.json"),
+) {
+  const failures = [];
+  const ajv = new Ajv2020({
+    allErrors: true,
+    strict: true,
+    strictTypes: false,
+  });
+  const validate = ajv.compile(
+    readJson("experiment/schemas/role-runtime-contract.schema.json"),
+  );
+  if (!validate(contract))
+    failures.push(
+      `role runtime contract schema failure: ${ajv.errorsText(validate.errors)}`,
+    );
+  if (
+    contract.cliPath !== lock.cliBinaryPath ||
+    contract.cliVersion !== lock.cliVersion ||
+    contract.cliSha256 !== lock.cliBinarySha256
+  )
+    failures.push("role runtime CLI binding mismatch");
+  if (contract.contractSchemaSha256 !== lock.roleRuntimeSchemaSha256)
+    failures.push("role runtime schema lock mismatch");
+  if (
+    contract.runnerSha256 !== lock.roleRunnerSha256 ||
+    contract.evidenceSchemaSha256 !== lock.supervisionEvidenceSchemaSha256
+  )
+    failures.push("role runner/evidence schema lock mismatch");
+  const promptLocks = {
+    reviewer: lock.reviewerPromptTemplateSha256,
+    fixer: lock.fixerPromptTemplateSha256,
+    tester: lock.testerPromptTemplateSha256,
+    evaluator: lock.evaluatorPromptTemplateSha256,
+  };
+  const artifactLocks = {
+    reviewer: lock.reviewArtifactSchemaSha256,
+    fixer: lock.fixArtifactSchemaSha256,
+    tester: lock.testArtifactSchemaSha256,
+    evaluator: lock.evaluationArtifactSchemaSha256,
+  };
+  if (contract.promptTemplateSha256 !== promptLocks[contract.role])
+    failures.push("role prompt-template lock mismatch");
+  if (contract.artifactSchemaSha256 !== artifactLocks[contract.role])
+    failures.push("role artifact-schema lock mismatch");
+  return failures;
+}
+
+export function validateRoleSupervisionEvidence(
+  result,
+  contract,
+  rawStdout = null,
+) {
+  const expected = [
+    "-a",
+    "never",
+    "-m",
+    "gpt-5.4",
+    "-c",
+    'model_reasoning_effort="xhigh"',
+    "exec",
+    "--ephemeral",
+    "--ignore-user-config",
+    "--skip-git-repo-check",
+    "--sandbox",
+    contract.sandboxMode,
+    "--json",
+    "-C",
+    contract.workdir,
+    "-o",
+    contract.finalPath,
+    "-",
+  ];
+  const failures = [];
+  const ajv = new Ajv2020({
+    allErrors: true,
+    strict: true,
+    strictTypes: false,
+    validateFormats: false,
+  });
+  const validate = ajv.compile(
+    readJson("experiment/schemas/cli-supervision-evidence.schema.json"),
+  );
+  if (!validate(result))
+    failures.push(
+      `role evidence schema failure: ${ajv.errorsText(validate.errors)}`,
+    );
+  if (JSON.stringify(result.argv) !== JSON.stringify(expected))
+    failures.push("role result argv differs or is reordered");
+  if (
+    result.role !== contract.role ||
+    result.invocationId !== contract.invocationId
+  )
+    failures.push("role result identity mismatch");
+  if (
+    !result.started ||
+    !result.stdinDelivered ||
+    result.timedOut ||
+    result.exitCode !== 0 ||
+    !result.turnCompleted ||
+    !result.rawJsonlValid ||
+    result.threadIds?.length !== 1 ||
+    !result.processId
+  )
+    failures.push("role result lifecycle invalid");
+  if (result.argvSha256 !== sha256(result.argv.join("\0")))
+    failures.push("role result argv hash mismatch");
+  if (result.promptSha256 !== contract.promptSha256)
+    failures.push("role result prompt mismatch");
+  if (
+    !nonzeroSha256(result.contractSha256) ||
+    result.artifactSchemaSha256 !== contract.artifactSchemaSha256 ||
+    !nonzeroSha256(result.finalSha256) ||
+    result.finalSchemaValid !== true ||
+    result.artifactBindingValid !== true
+  )
+    failures.push("role result artifact/contract binding invalid");
+  if (
+    result.sandboxMode !== contract.sandboxMode ||
+    result.inputDisposition !== contract.inputDisposition
+  )
+    failures.push("role result isolation mismatch");
+  if (result.usage == null && !result.usageUnavailableReason)
+    failures.push("role result missing usage reason");
+  if (result.usage != null && result.usageUnavailableReason != null)
+    failures.push("role result usage has a false unavailable reason");
+  if (result.unauthorizedToolOrWriteDetected)
+    failures.push("role result detected an unauthorized tool or write");
+  if (
+    result.unauthorizedToolOrWriteDetected == null &&
+    !result.unauthorizedToolOrWriteUnavailableReason
+  )
+    failures.push("role result lacks unauthorized-write absence reason");
+  for (const field of ["runtimeModel", "runtimeProvider", "reasoningSetting"]) {
+    if (result[field] == null && !result[`${field}UnavailableReason`])
+      failures.push(`role result null ${field} lacks unavailable reason`);
+    if (result[field] != null && result.metadataSource !== "trusted-jsonl")
+      failures.push(`role result ${field} is not trusted JSONL metadata`);
+  }
+  if (rawStdout == null)
+    failures.push("role raw JSONL is required for reconciliation");
+  else {
+    if (result.stdoutSha256 !== sha256(rawStdout))
+      failures.push("role result stdout hash mismatch");
+    const lines = rawStdout.split(/\r?\n/u).filter((line) => line.trim());
+    const events = [];
+    for (const line of lines) {
+      try {
+        events.push(JSON.parse(line));
+      } catch {
+        failures.push("role raw JSONL malformed");
+      }
+    }
+    const threads = events
+      .filter(({ type }) => type === "thread.started")
+      .map(({ thread_id: id }) => id);
+    const turns = events.filter(({ type }) => type === "turn.completed");
+    if (
+      JSON.stringify(threads) !== JSON.stringify(result.threadIds) ||
+      turns.length !== 1
+    )
+      failures.push("role raw lifecycle reconciliation failed");
+    if (
+      turns.length === 1 &&
+      JSON.stringify(turns[0].usage ?? null) !== JSON.stringify(result.usage)
+    )
+      failures.push("role usage reconciliation failed");
+  }
   return failures;
 }
 
@@ -807,6 +961,9 @@ export function validateExperimentConclusion(record) {
 
 export function validateCanonicalContract(contract) {
   const failures = [];
+  const lock = readJson("experiment/lock.json");
+  const fileSha256 = (relativePath) =>
+    sha256(readFileSync(path.join(root, relativePath)));
   const findingSchema = readJson("experiment/schemas/finding.schema.json");
   const exactFindingFields = [
     "id",
@@ -911,18 +1068,20 @@ export function validateCanonicalContract(contract) {
   ];
   if (
     contract.builderFreeze?.promptSha256 !==
-      "d6f4aeeddf0dd83fda8b85dcaec57b9ea69781a4ce666fefacbe2d9de6e8de01" ||
+      "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0" ||
     contract.builderFreeze?.configSha256 !==
-      "e0f924128130a9f1f9a44168bb4a6c0626b074e96ef71fb78c347b3a984fbffa" ||
+      "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4" ||
     contract.builderFreeze?.rule !==
       "each builder receives the exact raw prompt bytes on stdin under an otherwise identical frozen external CLI execution; only opaque invocation ID and runtime coordinate paths differ"
   )
     failures.push("canonical builder prompt/config commitments diverge");
   if (
     contract.cliRuntime?.schemaSha256 !==
-      "d6c9fbc6c766955bfb9f1da513b6dd408980c382ce72368cec678650f7bd13f4" ||
+      fileSha256("experiment/schemas/cli-runtime-contract.schema.json") ||
+    contract.cliRuntime?.schemaSha256 !== lock.cliRuntimeSchemaSha256 ||
     contract.cliRuntime?.runnerSha256 !==
-      "9634de81d0654aa218d49474b8a11b279d0ec12e18082399bee0ca355301f33e" ||
+      fileSha256("scripts/run-cli-builders.ps1") ||
+    contract.cliRuntime?.runnerSha256 !== lock.cliRunnerSha256 ||
     contract.cliRuntime?.binarySha256 !==
       "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4" ||
     JSON.stringify(contract.cliRuntime?.invariantArgv) !==
@@ -933,6 +1092,85 @@ export function validateCanonicalContract(contract) {
       "d1a47087dc0bfcf85638e6c9faef4c7399c98626556747f1fda31e0a67e0645d"
   )
     failures.push("canonical external CLI runtime contract diverges");
+  if (
+    contract.cliRuntime?.roleRuntime?.schemaSha256 !==
+      fileSha256("experiment/schemas/role-runtime-contract.schema.json") ||
+    contract.cliRuntime?.roleRuntime?.schemaSha256 !==
+      lock.roleRuntimeSchemaSha256 ||
+    contract.cliRuntime?.roleRuntime?.runnerSha256 !==
+      fileSha256("scripts/run-cli-role.ps1") ||
+    contract.cliRuntime?.roleRuntime?.runnerSha256 !== lock.roleRunnerSha256 ||
+    contract.cliRuntime?.roleRuntime?.evidenceSchemaSha256 !==
+      fileSha256("experiment/schemas/cli-supervision-evidence.schema.json") ||
+    contract.cliRuntime?.roleRuntime?.evidenceSchemaSha256 !==
+      lock.supervisionEvidenceSchemaSha256 ||
+    contract.evaluation?.packageScriptSha256 !==
+      fileSha256("scripts/package-blinded-snapshots.mjs") ||
+    contract.evaluation?.packageScriptSha256 !==
+      lock.blindedPackageScriptSha256 ||
+    contract.evaluation?.packageManifestSchemaSha256 !==
+      fileSha256("experiment/schemas/blinded-package-manifest.schema.json") ||
+    contract.evaluation?.packageManifestSchemaSha256 !==
+      lock.blindedPackageSchemaSha256
+  )
+    failures.push(
+      "canonical role runtime or blinded packaging contract diverges",
+    );
+  const promptBindings = {
+    reviewer: [
+      "experiment/prompts/blinded-reviewer.md",
+      "reviewerPromptTemplateSha256",
+    ],
+    fixer: ["experiment/prompts/fixer.md", "fixerPromptTemplateSha256"],
+    tester: ["experiment/prompts/tester.md", "testerPromptTemplateSha256"],
+    evaluator: [
+      "experiment/prompts/blinded-evaluator.md",
+      "evaluatorPromptTemplateSha256",
+    ],
+  };
+  const artifactBindings = {
+    reviewer: [
+      "experiment/schemas/review.schema.json",
+      "reviewArtifactSchemaSha256",
+    ],
+    fixer: ["experiment/schemas/fix.schema.json", "fixArtifactSchemaSha256"],
+    tester: ["experiment/schemas/test.schema.json", "testArtifactSchemaSha256"],
+    evaluator: [
+      "experiment/schemas/evaluation.schema.json",
+      "evaluationArtifactSchemaSha256",
+    ],
+  };
+  for (const [role, [relativePath, lockField]] of Object.entries(
+    promptBindings,
+  )) {
+    const expected = fileSha256(relativePath);
+    if (
+      contract.cliRuntime?.roleRuntime?.promptTemplateSha256?.[role] !==
+        expected ||
+      lock[lockField] !== expected
+    )
+      failures.push(`canonical ${role} prompt-template binding diverges`);
+  }
+  for (const [role, [relativePath, lockField]] of Object.entries(
+    artifactBindings,
+  )) {
+    const expected = fileSha256(relativePath);
+    if (
+      contract.cliRuntime?.roleRuntime?.artifactSchemaSha256?.[role] !==
+        expected ||
+      lock[lockField] !== expected
+    )
+      failures.push(`canonical ${role} artifact-schema binding diverges`);
+  }
+  const expectedRubricHash = fileSha256("experiment/rubric.md");
+  const expectedGateHash = frozenGateSetHash();
+  if (
+    contract.evaluation?.rubricSha256 !== expectedRubricHash ||
+    lock.rubricSha256 !== expectedRubricHash ||
+    contract.evaluation?.frozenGateSetSha256 !== expectedGateHash ||
+    lock.frozenGateSetSha256 !== expectedGateHash
+  )
+    failures.push("canonical rubric or frozen-gate binding diverges");
   if (
     JSON.stringify(contract.invalidation?.completedStatuses) !==
       JSON.stringify(["valid", "invalid"]) ||
@@ -1000,6 +1238,7 @@ export function validateGoldenRun(
     ...validateCliSupervisionEvidence(
       fixture.cliRuntimeEvidence,
       fixture.cliRuntimeContract,
+      fixture.cliRuntimeStdoutByInvocation,
     ),
   );
   for (const [index, [candidate, freeze]] of Object.entries(
@@ -1027,6 +1266,48 @@ export function validateGoldenRun(
     )
       failures.push(`golden ${candidate} runtime evidence binding mismatch`);
   }
+  const roleEvidence = new Map(
+    (fixture.roleRuntimeEvidence ?? []).map((entry) => [
+      entry.invocationId,
+      entry,
+    ]),
+  );
+  const roleArtifacts = [
+    ...(fixture.reviews ?? []),
+    ...(fixture.fixes ?? []),
+    ...(fixture.tests ?? []),
+    ...(fixture.evaluations ?? []),
+  ];
+  for (const artifact of roleArtifacts) {
+    const evidence = roleEvidence.get(artifact.runtimeInvocationId);
+    if (
+      !evidence ||
+      !evidence.lifecycleComplete ||
+      evidence.invocationId !== artifact.runtimeInvocationId ||
+      evidence.processId !== artifact.runtimeProcessId ||
+      evidence.threadId !== artifact.runtimeThreadId
+    )
+      failures.push(
+        "golden downstream artifact/runtime evidence binding mismatch",
+      );
+  }
+  const evidenceInvocationIds = [...roleEvidence.values()].map(
+    ({ invocationId }) => invocationId,
+  );
+  const evidenceProcessIds = [...roleEvidence.values()].map(
+    ({ processId }) => processId,
+  );
+  const evidenceThreadIds = [...roleEvidence.values()].map(
+    ({ threadId }) => threadId,
+  );
+  if (
+    new Set(evidenceInvocationIds).size !== evidenceInvocationIds.length ||
+    new Set(evidenceProcessIds).size !== evidenceProcessIds.length ||
+    new Set(evidenceThreadIds).size !== evidenceThreadIds.length
+  )
+    failures.push(
+      "golden downstream runtime identities must be globally fresh",
+    );
   const bindings = fixture.bindings;
   if (
     JSON.stringify(bindings.publicGates) !==
@@ -1091,11 +1372,56 @@ export function validateGoldenRun(
   const labels = fixture.packages.map(({ packageLabel }) => packageLabel);
   if (JSON.stringify(labels) !== JSON.stringify(["X", "Y", "Z"]))
     failures.push("golden packages must be exactly X/Y/Z");
+  const packageAjv = new Ajv2020({
+    allErrors: true,
+    strict: true,
+    strictTypes: false,
+  });
+  const validatePackageManifest = packageAjv.compile(
+    readJson("experiment/schemas/blinded-package-manifest.schema.json"),
+  );
+  if (!validatePackageManifest(fixture.blindedPackageManifest))
+    failures.push(
+      `golden blinded-package manifest schema failure: ${packageAjv.errorsText(validatePackageManifest.errors)}`,
+    );
+  if (
+    JSON.stringify(fixture.blindedPackageManifest?.randomizedOrder) !==
+    JSON.stringify(fixture.evaluationRandomization.order)
+  )
+    failures.push("golden blinded-package order diverges from randomization");
+  const expectedMappingSeedSha256 = sha256(
+    Buffer.from(fixture.evaluationRandomization.seedHex, "hex"),
+  );
+  if (
+    fixture.blindedPackageManifest?.mappingSeedSha256 !==
+      expectedMappingSeedSha256 ||
+    fixture.blindedPackageManifest?.frozenGateSetSha256 !==
+      lock.frozenGateSetSha256
+  )
+    failures.push("golden blinded-package seed or gate commitment diverges");
+  const snapshotCommits = {
+    B0: baseline.initialSnapshot.commit,
+    T0: treatment.initialSnapshot.commit,
+    Tfinal: treatment.finalSnapshot.commit,
+  };
+  for (const entry of fixture.blindedPackageManifest?.packages ?? []) {
+    if (
+      fixture.evaluationRandomization.mapping?.[entry.packageLabel] !==
+        entry.sourceRole ||
+      snapshotCommits[entry.sourceRole] !== entry.sourceCommit
+    )
+      failures.push(
+        `golden blinded package ${entry.packageLabel} is not bound to its registered snapshot`,
+      );
+  }
   fixture.evaluations.forEach((evaluation, index) => {
     failures.push(...validateEvaluationSemantics(evaluation));
     if (evaluation.packageLabel !== fixture.packages[index].packageLabel)
       failures.push("golden evaluation/package label mismatch");
-    if (evaluation.packageSha256 !== canonicalHash(fixture.packages[index]))
+    if (
+      evaluation.packageSha256 !==
+      fixture.blindedPackageManifest?.packages?.[index]?.packageSha256
+    )
       failures.push("golden evaluation package hash mismatch");
     if (
       evaluation.publicTests.command !== contract.gates.evaluatorPublicCommand
@@ -1103,7 +1429,53 @@ export function validateGoldenRun(
       failures.push("golden evaluator public command diverges");
     if (evaluation.hiddenTests.command !== contract.hiddenSuite.command)
       failures.push("golden evaluator hidden command diverges");
+    if (
+      evaluation.evaluationSequence !== index + 1 ||
+      evaluation.revisionAllowed !== false
+    )
+      failures.push(
+        "golden evaluations must be sequentially sealed without revision",
+      );
   });
+  if (
+    new Set(
+      fixture.evaluations.map(({ evaluatorWorkerId }) => evaluatorWorkerId),
+    ).size !== 3
+  )
+    failures.push("golden evaluation requires one fresh evaluator per package");
+  const evaluatorCosts = fixture.costs.filter(
+    ({ role }) => role === "evaluator",
+  );
+  for (let index = 0; index < fixture.evaluations.length; index += 1) {
+    const evaluation = fixture.evaluations[index];
+    const worker = evaluatorCosts.find(
+      ({ workerId }) => workerId === evaluation.evaluatorWorkerId,
+    );
+    if (
+      !worker ||
+      Date.parse(evaluation.sealedAt) < Date.parse(evaluation.evaluatedAt) ||
+      Date.parse(evaluation.sealedAt) > Date.parse(worker.completedAt)
+    )
+      failures.push("golden evaluator seal is outside its worker lifecycle");
+    const nextWorker = evaluatorCosts.find(
+      ({ workerId }) =>
+        workerId === fixture.evaluations[index + 1]?.evaluatorWorkerId,
+    );
+    if (
+      nextWorker &&
+      Date.parse(nextWorker.startedAt) <= Date.parse(evaluation.sealedAt)
+    )
+      failures.push("golden next evaluator launched before prior seal");
+  }
+  const unblinder = fixture.costs.find(({ role }) => role === "unblinder");
+  if (
+    !unblinder ||
+    Date.parse(unblinder.startedAt) <=
+      Math.max(
+        ...fixture.evaluations.map(({ sealedAt }) => Date.parse(sealedAt)),
+      )
+  )
+    failures.push("golden unblinding began before all evaluations were sealed");
   failures.push(...validateOutcomeSemantics(fixture.outcome));
   for (const [label, artifactHash] of Object.entries(
     fixture.outcome.evaluationArtifactHashes,
@@ -1170,11 +1542,19 @@ export function validateScaffold() {
     "experiment/schemas/outcome.schema.json",
     "experiment/schemas/experiment-status.schema.json",
     "experiment/schemas/cli-runtime-contract.schema.json",
+    "experiment/schemas/role-runtime-contract.schema.json",
+    "experiment/schemas/cli-supervision-evidence.schema.json",
+    "experiment/schemas/blinded-package-manifest.schema.json",
     "experiment/templates/test.json",
     "experiment/templates/outcome.json",
     "experiment/templates/experiment-status.json",
     "experiment/templates/cli-runtime-contract.json",
+    "experiment/templates/role-runtime-contract.json",
+    "experiment/templates/cli-supervision-evidence.json",
+    "experiment/templates/blinded-package-manifest.json",
     "scripts/run-cli-builders.ps1",
+    "scripts/run-cli-role.ps1",
+    "scripts/package-blinded-snapshots.mjs",
     "tests/public/evaluate.test.ts",
     "tests/public/ui.test.tsx",
     "package.json",
@@ -1188,9 +1568,12 @@ export function validateScaffold() {
   for (const obsolete of [
     "experiment/prompts/baseline-builder.md",
     "experiment/prompts/treatment-builder.md",
+    "experiment/schemas/assignment-envelope.schema.json",
+    "experiment/templates/assignment-envelope.json",
+    "scripts/validate-builder-envelopes.mjs",
   ]) {
     if (existsSync(path.join(root, obsolete)))
-      failures.push(`obsolete builder prompt remains: ${obsolete}`);
+      failures.push(`obsolete protocol artifact remains: ${obsolete}`);
   }
 
   const implementationFiles = [
@@ -1240,6 +1623,18 @@ export function validateScaffold() {
       "experiment/schemas/cli-runtime-contract.schema.json",
       "experiment/templates/cli-runtime-contract.json",
     ],
+    [
+      "experiment/schemas/role-runtime-contract.schema.json",
+      "experiment/templates/role-runtime-contract.json",
+    ],
+    [
+      "experiment/schemas/cli-supervision-evidence.schema.json",
+      "experiment/templates/cli-supervision-evidence.json",
+    ],
+    [
+      "experiment/schemas/blinded-package-manifest.schema.json",
+      "experiment/templates/blinded-package-manifest.json",
+    ],
   ];
   const ajv = new Ajv2020({
     allErrors: true,
@@ -1287,6 +1682,67 @@ export function validateScaffold() {
   const actualCliRunnerHash = sha256(
     readFileSync(path.join(root, "scripts/run-cli-builders.ps1"), "utf8"),
   );
+  const actualRoleSchemaHash = sha256(
+    readFileSync(
+      path.join(root, "experiment/schemas/role-runtime-contract.schema.json"),
+      "utf8",
+    ),
+  );
+  const actualRoleRunnerHash = sha256(
+    readFileSync(path.join(root, "scripts/run-cli-role.ps1"), "utf8"),
+  );
+  const actualEvidenceSchemaHash = sha256(
+    readFileSync(
+      path.join(
+        root,
+        "experiment/schemas/cli-supervision-evidence.schema.json",
+      ),
+      "utf8",
+    ),
+  );
+  const actualPackageSchemaHash = sha256(
+    readFileSync(
+      path.join(
+        root,
+        "experiment/schemas/blinded-package-manifest.schema.json",
+      ),
+      "utf8",
+    ),
+  );
+  const actualPackageScriptHash = sha256(
+    readFileSync(
+      path.join(root, "scripts/package-blinded-snapshots.mjs"),
+      "utf8",
+    ),
+  );
+  const actualReviewerPromptHash = sha256(
+    readFileSync(path.join(root, "experiment/prompts/blinded-reviewer.md")),
+  );
+  const actualFixerPromptHash = sha256(
+    readFileSync(path.join(root, "experiment/prompts/fixer.md")),
+  );
+  const actualTesterPromptHash = sha256(
+    readFileSync(path.join(root, "experiment/prompts/tester.md")),
+  );
+  const actualEvaluatorPromptHash = sha256(
+    readFileSync(path.join(root, "experiment/prompts/blinded-evaluator.md")),
+  );
+  const actualReviewSchemaHash = sha256(
+    readFileSync(path.join(root, "experiment/schemas/review.schema.json")),
+  );
+  const actualFixSchemaHash = sha256(
+    readFileSync(path.join(root, "experiment/schemas/fix.schema.json")),
+  );
+  const actualTestSchemaHash = sha256(
+    readFileSync(path.join(root, "experiment/schemas/test.schema.json")),
+  );
+  const actualEvaluationSchemaHash = sha256(
+    readFileSync(path.join(root, "experiment/schemas/evaluation.schema.json")),
+  );
+  const actualRubricHash = sha256(
+    readFileSync(path.join(root, "experiment/rubric.md")),
+  );
+  const actualFrozenGateSetHash = frozenGateSetHash();
   const canonicalContract = readJson("experiment/canonical-contract.json");
   const goldenRun = readJson("experiment/golden-run/golden-run.json");
   const invalidCurrent = readJson("experiment/golden-run/invalid-current.json");
@@ -1311,6 +1767,21 @@ export function validateScaffold() {
     cliAuthStatus: "Logged in using ChatGPT",
     cliRuntimeSchemaSha256: actualCliSchemaHash,
     cliRunnerSha256: actualCliRunnerHash,
+    roleRuntimeSchemaSha256: actualRoleSchemaHash,
+    roleRunnerSha256: actualRoleRunnerHash,
+    supervisionEvidenceSchemaSha256: actualEvidenceSchemaHash,
+    reviewerPromptTemplateSha256: actualReviewerPromptHash,
+    fixerPromptTemplateSha256: actualFixerPromptHash,
+    testerPromptTemplateSha256: actualTesterPromptHash,
+    evaluatorPromptTemplateSha256: actualEvaluatorPromptHash,
+    reviewArtifactSchemaSha256: actualReviewSchemaHash,
+    fixArtifactSchemaSha256: actualFixSchemaHash,
+    testArtifactSchemaSha256: actualTestSchemaHash,
+    evaluationArtifactSchemaSha256: actualEvaluationSchemaHash,
+    rubricSha256: actualRubricHash,
+    frozenGateSetSha256: actualFrozenGateSetHash,
+    blindedPackageSchemaSha256: actualPackageSchemaHash,
+    blindedPackageScriptSha256: actualPackageScriptHash,
     v4SmokeContractSha256:
       "d1a47087dc0bfcf85638e6c9faef4c7399c98626556747f1fda31e0a67e0645d",
     v4SmokeSupervisorSha256:
