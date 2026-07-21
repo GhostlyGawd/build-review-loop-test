@@ -9,7 +9,7 @@ This repository is the private prospective source scaffold for locked protocol v
 - Public contract tests: committed but gated until all required implementation files exist
 - Hidden tests: sealed externally; the existing v2 commitment remains unchanged
 - Treatment algorithm: exact skill-v1 flow incorporated and content-addressed
-- Experiment lock: 2.4.0 locked to parent P, treatment skill S, and preflight gates A/B/C
+- Experiment lock: 2.4.0 locked to parent P, portable-manifest treatment skill S2, and preflight gates A/B/C
 - License: none has been granted; no license file is included
 
 Do not present this branch as a completed application or executable experiment. A passing scaffold check establishes internal consistency only.
@@ -63,7 +63,7 @@ The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact t
 - [`experiment/lock.json`](experiment/lock.json): final 2.4 commitments and the sanitized aggregate preflight binding
 - [`experiment/preflight/`](experiment/preflight/): P-bound 41-file S↔P parity inventory and sanitized A/B/C evidence commitments
 
-The three gates were executed against parent commit `f957cdf3054b8055a3d4b90d7cae0fbb8c79394c` (P), not against the administrative finalization commit (F). F only seals P, skill commit S, and the A/B/C evidence. No candidate received task material and no model run was performed at F. The copied 41-file inventory proves S matches P; F intentionally differs only in enumerated administrative sealing files. The legacy `runnerSmoke*` fields remain null because gate B is a reviewer exact-commit closure, not an exact instance of the older runner-smoke contract.
+The three gates were executed against parent commit `f957cdf3054b8055a3d4b90d7cae0fbb8c79394c` (P), not against either administrative finalization. This successor seal supersedes F (`a37774cf25821103861ed94c261ac5db4f433860`) only to bind S2's portable canonical-Git-byte manifest: 52 entries verified by its committed manifest tool, independent of worktree line-ending smudging. P and every A/B/C commitment remain unchanged. No candidate received task material and no model run was performed at F or its successor. The unchanged copied 41-file inventory proves S2's protocol-derived sources still match P; the finalizations intentionally differ only in enumerated administrative sealing files. The legacy `runnerSmoke*` fields remain null because gate B is a reviewer exact-commit closure, not an exact instance of the older runner-smoke contract.
 
 ## Architecture and boundaries
 

@@ -6,6 +6,7 @@
   "additionalProperties": false,
   "required": [
     "evidenceVersion",
+    "supersedesFinalizationCommit",
     "aggregation",
     "protocolParent",
     "treatmentSkill",
@@ -14,6 +15,9 @@
   ],
   "properties": {
     "evidenceVersion": { "const": "1.0.0" },
+    "supersedesFinalizationCommit": {
+      "const": "a37774cf25821103861ed94c261ac5db4f433860"
+    },
     "aggregation": {
       "type": "object",
       "additionalProperties": false,
@@ -50,6 +54,12 @@
         "tree",
         "manifestFile",
         "manifestSha256",
+        "manifestEntryCount",
+        "manifestCommentLineCount",
+        "manifestPhysicalLineCount",
+        "manifestByteSource",
+        "manifestToolSha256",
+        "attributesSha256",
         "sourceParitySha256",
         "sourceParityFileCount",
         "sourceParityAllMatch"
@@ -59,6 +69,12 @@
         "tree": { "$ref": "#/$defs/sha1" },
         "manifestFile": { "const": "MANIFEST.sha256" },
         "manifestSha256": { "$ref": "#/$defs/sha256" },
+        "manifestEntryCount": { "const": 52 },
+        "manifestCommentLineCount": { "const": 3 },
+        "manifestPhysicalLineCount": { "const": 55 },
+        "manifestByteSource": { "const": "canonical-git-blob" },
+        "manifestToolSha256": { "$ref": "#/$defs/sha256" },
+        "attributesSha256": { "$ref": "#/$defs/sha256" },
         "sourceParitySha256": { "$ref": "#/$defs/sha256" },
         "sourceParityFileCount": { "const": 41 },
         "sourceParityAllMatch": { "const": true }

@@ -1015,6 +1015,14 @@ describe("protocol 2.4.0 locked cross-contract validation", () => {
       preflightAggregateHash(evidence),
     );
     assert.deepEqual(validateFinalLockEvidence(evidence, inventory, lock), []);
+    assert.equal(
+      lock.supersedesFinalizationCommit,
+      "a37774cf25821103861ed94c261ac5db4f433860",
+    );
+    assert.equal(lock.treatmentSkillManifestEntryCount, 52);
+    assert.equal(lock.treatmentSkillManifestCommentLineCount, 3);
+    assert.equal(lock.treatmentSkillManifestPhysicalLineCount, 55);
+    assert.equal(lock.treatmentSkillManifestByteSource, "canonical-git-blob");
     assert.equal(lock.runnerSmokeContractSha256, null);
     assert.equal(lock.runnerSmokeSupervisionSha256, null);
     assert.equal(lock.runnerSmokeAttestationSha256, null);
@@ -1024,6 +1032,22 @@ describe("protocol 2.4.0 locked cross-contract validation", () => {
     assert.match(
       validateFinalLockEvidence(tamperedEvidence, inventory, lock).join("\n"),
       /aggregate hash mismatch/,
+    );
+
+    const resealedGateEvidence = clone(evidence);
+    const resealedGateLock = clone(lock);
+    resealedGateEvidence.gates.A.artifacts.contractSha256 = hash("0");
+    resealedGateEvidence.gateAggregateSha256 =
+      preflightAggregateHash(resealedGateEvidence);
+    resealedGateLock.gateAggregateSha256 =
+      resealedGateEvidence.gateAggregateSha256;
+    assert.match(
+      validateFinalLockEvidence(
+        resealedGateEvidence,
+        inventory,
+        resealedGateLock,
+      ).join("\n"),
+      /A\/B\/C gate facts changed/,
     );
 
     const tamperedInventory = clone(inventory);

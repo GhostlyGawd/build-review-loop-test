@@ -22,12 +22,12 @@ The primary estimand is `score(Tfinal) - score(B0)`. The secondary within-treatm
 
 ## 2. Canonical contract and frozen lock boundary
 
-This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. Protocol 2.4.0 supersedes the 2.3.0 lock with a supervised external CLI runtime. Its final lock binds parent P, treatment skill S, and preflight gates A/B/C. The gates ran against P; the administrative finalization commit F only seals their evidence and was not itself executed. Before builder exposure, the final lock MUST:
+This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. Protocol 2.4.0 supersedes the 2.3.0 lock with a supervised external CLI runtime. Its final lock binds parent P, portable-manifest treatment skill S2, and preflight gates A/B/C. The gates ran against P; neither administrative finalization was itself executed. The successor explicitly supersedes F (`a37774cf25821103861ed94c261ac5db4f433860`) solely to bind S2's canonical-Git-byte manifest and committed verification tool. Before builder exposure, the final lock MUST:
 
 1. pass `npm ci` and `npm run check` on Node 22;
 2. record the exact lock-parent commit;
 3. freeze the sealed hidden-suite archive and record its SHA-256 without committing its contents;
-4. freeze the treatment skill-v1 source and manifest and record their commit and SHA-256;
+4. freeze the treatment skill-v1 source and portable manifest; record their commit, tree, manifest SHA-256 and entry counts, committed manifest-tool and attributes hashes, and canonical Git-blob byte policy;
 5. verify the treatment-loop algorithm against the final skill-v1 source and record its commitment;
 6. record SHA-256 hashes of the neutral builder prompt and neutral builder configuration, both of which MUST be delivered byte-for-byte without per-builder substitution;
 7. freeze the CLI binary path, version, SHA-256, ChatGPT authentication attestation, exact argv order, runtime-contract schema, and concurrent supervisor;
@@ -36,7 +36,7 @@ This Markdown protocol is the canonical public source. `experiment/canonical-con
 
 The lock cannot contain its own commit SHA. After the lock is merged, the operator records the final GitHub `commonStartCommit`, preregistration lock commit, and byte-identical lock-file SHA-256 in the private experiment manifest and both run manifests. That triple is the authoritative common-start binding.
 
-The copied 41-file source-parity inventory records exact S↔P parity. F differs from P only in enumerated administrative seal files: the lock, lock schema, this status text, validator, tests, README, and preflight evidence/schema. All operational runner, prompt, builder-input, projection, and package bytes remain P-exact. The legacy `runnerSmoke*` fields remain null because gate B is a reviewer exact-commit closure rather than an exact mapping to that older contract.
+The unchanged copied 41-file source-parity inventory records exact S2↔P parity for protocol-derived bytes. F and its portability successor differ from P only in enumerated administrative seal files: the lock, lock schema, this status text, validator, tests, README, and preflight evidence/schema. All operational runner, prompt, builder-input, projection, and package bytes remain P-exact, and every A/B/C gate fact remains unchanged. The legacy `runnerSmoke*` fields remain null because gate B is a reviewer exact-commit closure rather than an exact mapping to that older contract.
 
 After locking, the specification, rubric, public tests, prompts, schemas, validator, initial dependencies, CI, and lock are immutable. A correction follows section 13; it is never repaired silently.
 

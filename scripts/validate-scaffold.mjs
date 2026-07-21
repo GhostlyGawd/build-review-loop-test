@@ -93,6 +93,12 @@ export function validateFinalLockEvidence(evidence, inventory, lock) {
   const failures = [];
   const expectedParentCommit = "f957cdf3054b8055a3d4b90d7cae0fbb8c79394c";
   const expectedParentTree = "23c9c1005efa704d42e79fe8b80f3dc33aa5ab17";
+  if (
+    evidence.supersedesFinalizationCommit !==
+      "a37774cf25821103861ed94c261ac5db4f433860" ||
+    evidence.supersedesFinalizationCommit !== lock.supersedesFinalizationCommit
+  )
+    failures.push("final-lock superseded-finalization binding mismatch");
   if (preflightAggregateHash(evidence) !== evidence.gateAggregateSha256)
     failures.push("final-lock preflight aggregate hash mismatch");
   if (evidence.gateAggregateSha256 !== lock.gateAggregateSha256)
@@ -109,12 +115,29 @@ export function validateFinalLockEvidence(evidence, inventory, lock) {
     evidence.treatmentSkill.manifestFile !== lock.treatmentSkillManifestFile ||
     evidence.treatmentSkill.manifestSha256 !==
       lock.treatmentSkillManifestSha256 ||
+    evidence.treatmentSkill.manifestEntryCount !==
+      lock.treatmentSkillManifestEntryCount ||
+    evidence.treatmentSkill.manifestCommentLineCount !==
+      lock.treatmentSkillManifestCommentLineCount ||
+    evidence.treatmentSkill.manifestPhysicalLineCount !==
+      lock.treatmentSkillManifestPhysicalLineCount ||
+    evidence.treatmentSkill.manifestByteSource !==
+      lock.treatmentSkillManifestByteSource ||
+    evidence.treatmentSkill.manifestToolSha256 !==
+      lock.treatmentSkillManifestToolSha256 ||
+    evidence.treatmentSkill.attributesSha256 !==
+      lock.treatmentSkillAttributesSha256 ||
     evidence.treatmentSkill.sourceParitySha256 !==
       lock.treatmentSkillSourceParitySha256 ||
     evidence.treatmentSkill.sourceParityFileCount !== 41 ||
     evidence.treatmentSkill.sourceParityAllMatch !== true
   )
     failures.push("final-lock treatment-skill binding mismatch");
+  if (
+    canonicalHash(evidence.gates) !==
+    "65f600fc7e320bcf43750b36bb6ce512dcc32157e912168f87c40537ec917022"
+  )
+    failures.push("final-lock A/B/C gate facts changed");
   for (const gate of ["A", "B", "C"])
     if (
       evidence.gates[gate].attestationSha256 !==
@@ -2171,6 +2194,7 @@ export function validateScaffold() {
     protocolVersion: "2.4.0",
     protocolStatus: "locked",
     supersedesLockCommit: "0fc2e5c6d0cc2355310f10e4f04fcf8e2131d636",
+    supersedesFinalizationCommit: "a37774cf25821103861ed94c261ac5db4f433860",
     lockParentCommit: "f957cdf3054b8055a3d4b90d7cae0fbb8c79394c",
     lockParentTree: "23c9c1005efa704d42e79fe8b80f3dc33aa5ab17",
     lockParentLockSha256:
@@ -2178,11 +2202,20 @@ export function validateScaffold() {
     hiddenSuiteId: "permissions-playground-sealed-v2",
     hiddenSuiteSha256:
       "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
-    treatmentSkillCommit: "0cb11eba2d48ce3b9a50b62530fe1e171f5dbd37",
-    treatmentSkillTree: "a314beffef8a6c7c6912d725ca3286877927f4eb",
+    treatmentSkillCommit: "05d26d6387971512fb38d079387ad015e46a8b07",
+    treatmentSkillTree: "088dc8dbe9a9b46007fe06fae031ed415fcc5e4c",
     treatmentSkillManifestFile: "MANIFEST.sha256",
     treatmentSkillManifestSha256:
-      "e4cd377e9f1d71eaef497cced0fb680bcd22881958dbf0638950521ee1c3d63c",
+      "db590a507661ddc3bb97dc98fdd6d26c27b52dc8fb844b8bf4af6eba14c5c423",
+    treatmentSkillManifestEntryCount: 52,
+    treatmentSkillManifestCommentLineCount: 3,
+    treatmentSkillManifestPhysicalLineCount: 55,
+    treatmentSkillManifestByteSource: "canonical-git-blob",
+    treatmentSkillManifestToolPath: "validation/manifest_tool.py",
+    treatmentSkillManifestToolSha256:
+      "06539fbea74c7992d5324cf2ca2caaf12f615a76840a77627c8282a92f34d9d5",
+    treatmentSkillAttributesSha256:
+      "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c",
     treatmentSkillSourceParitySha256:
       "6a31b071d752fe24a4fba0643492482623307f2184ba2e5ff69e4a629bc230e9",
     treatmentSkillSourceParityFileCount: 41,
@@ -2245,13 +2278,13 @@ export function validateScaffold() {
       "6a31b071d752fe24a4fba0643492482623307f2184ba2e5ff69e4a629bc230e9",
     preflightEvidencePath: "experiment/preflight/final-lock-evidence.json",
     preflightEvidenceSha256:
-      "da80a3eb358a106c4bf888108b17d59a3e89791906222300a62319fdba162fae",
+      "fd93491c9989fa92ed35af6aa2c128f72b0dac41c55fa4dc348979032d89ace4",
     preflightEvidenceSchemaPath:
       "experiment/schemas/final-lock-evidence.schema.json",
     preflightEvidenceSchemaSha256:
-      "0b0512e5e0cd7925a4535782c30e2d5a0112a7790f511dbc5fb257f91f65c544",
+      "45b9e5802ab9e8d4650ac5b4bbbc6ae6ae041064e6bb3bc049278a35e7336b9d",
     gateAggregateSha256:
-      "654c3bce5abb53816960125a22006a12de2e68f0374579ba6f7af87055761997",
+      "b8a64749acdff8a0867fdada0e41d3282da808441d0074a520499e7817eaeb58",
     canonicalContractSha256: canonicalHash(canonicalContract),
     goldenFixtureSha256: canonicalHash(goldenRun),
     invalidCurrentFixtureSha256: canonicalHash(invalidCurrent),
