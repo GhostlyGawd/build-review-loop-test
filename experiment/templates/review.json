@@ -1,11 +1,13 @@
 {
-  "candidateLabel": "candidate-x",
+  "candidateLabel": "candidate-b",
+  "cycle": 1,
   "snapshotCommit": "0000000000000000000000000000000000000000",
-  "reviewerId": "F",
-  "focus": "functional correctness and tests",
+  "roleInstanceId": "cycle-1-reviewer",
+  "workerId": "template-reviewer-worker-id",
   "startedAt": "2026-07-20T00:00:00Z",
   "completedAt": "2026-07-20T00:00:00Z",
   "checksRun": [],
+  "evidenceExamined": ["source evidence required at run"],
   "coverageGaps": [],
   "findings": []
 }

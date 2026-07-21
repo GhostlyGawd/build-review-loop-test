@@ -1,71 +1,55 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/experiment-lock.schema.json",
-  "title": "Experiment lock",
+  "title": "Protocol 2.2.0-frozen integrated experiment lock",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "protocolVersion",
+    "protocolStatus",
+    "supersedesLockCommit",
     "lockParentCommit",
+    "hiddenSuiteId",
     "hiddenSuiteSha256",
     "treatmentSkillCommit",
+    "treatmentSkillTree",
     "treatmentSkillManifestSha256",
+    "treatmentAlgorithmSha256",
+    "neutralBuilderPromptSha256",
+    "neutralBuilderConfigSha256",
+    "canonicalContractSha256",
+    "goldenFixtureSha256",
+    "invalidCurrentFixtureSha256",
     "commonStartCommitPolicy",
     "nodeVersion",
     "packageManager",
     "freezeState"
   ],
   "properties": {
-    "protocolVersion": { "const": "1.0.0-frozen" },
-    "lockParentCommit": {
-      "type": "string",
-      "pattern": "^([0-9a-f]{40}|UNSET_LOCK_PARENT_COMMIT)$"
-    },
-    "hiddenSuiteSha256": {
-      "type": "string",
-      "pattern": "^([0-9a-f]{64}|UNSET_HIDDEN_SUITE_SHA256)$"
-    },
-    "treatmentSkillCommit": {
-      "type": "string",
-      "pattern": "^([0-9a-f]{40}|UNSET_TREATMENT_SKILL_COMMIT)$"
-    },
-    "treatmentSkillManifestSha256": {
-      "type": "string",
-      "pattern": "^([0-9a-f]{64}|UNSET_TREATMENT_SKILL_MANIFEST_SHA256)$"
-    },
+    "protocolVersion": { "const": "2.2.0-frozen" },
+    "protocolStatus": { "const": "locked" },
+    "supersedesLockCommit": { "$ref": "#/$defs/sha1" },
+    "lockParentCommit": { "$ref": "#/$defs/sha1" },
+    "hiddenSuiteId": { "const": "permissions-playground-sealed-v2" },
+    "hiddenSuiteSha256": { "$ref": "#/$defs/sha256" },
+    "treatmentSkillCommit": { "$ref": "#/$defs/sha1" },
+    "treatmentSkillTree": { "$ref": "#/$defs/sha1" },
+    "treatmentSkillManifestSha256": { "$ref": "#/$defs/sha256" },
+    "treatmentAlgorithmSha256": { "$ref": "#/$defs/sha256" },
+    "neutralBuilderPromptSha256": { "$ref": "#/$defs/sha256" },
+    "neutralBuilderConfigSha256": { "$ref": "#/$defs/sha256" },
+    "canonicalContractSha256": { "$ref": "#/$defs/sha256" },
+    "goldenFixtureSha256": { "$ref": "#/$defs/sha256" },
+    "invalidCurrentFixtureSha256": { "$ref": "#/$defs/sha256" },
     "commonStartCommitPolicy": {
-      "const": "Record the final GitHub commonStartCommit post-merge in the experiment and run manifests, together with this preregistration lock commit and lock-file SHA-256."
+      "const": "Record the final GitHub commonStartCommit post-merge in the experiment and run manifests, together with the refrozen preregistration lock commit and lock-file SHA-256."
     },
     "nodeVersion": { "const": "22.x" },
-    "packageManager": {
-      "type": "string",
-      "pattern": "^npm@[0-9]+\\.[0-9]+\\.[0-9]+$"
-    },
-    "freezeState": { "enum": ["provisional", "frozen"] }
+    "packageManager": { "const": "npm@11.11.0" },
+    "freezeState": { "const": "frozen" }
   },
-  "allOf": [
-    {
-      "if": { "properties": { "freezeState": { "const": "frozen" } } },
-      "then": {
-        "properties": {
-          "lockParentCommit": {
-            "type": "string",
-            "pattern": "^[0-9a-f]{40}$"
-          },
-          "hiddenSuiteSha256": {
-            "type": "string",
-            "pattern": "^[0-9a-f]{64}$"
-          },
-          "treatmentSkillCommit": {
-            "type": "string",
-            "pattern": "^[0-9a-f]{40}$"
-          },
-          "treatmentSkillManifestSha256": {
-            "type": "string",
-            "pattern": "^[0-9a-f]{64}$"
-          }
-        }
-      }
-    }
-  ]
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
 }

@@ -1,21 +1,22 @@
-# Permissions Playground build-review-loop experiment
+# Permissions Playground review-loop experiment
 
-This repository is a frozen Phase 1 scaffold for a controlled baseline-versus-treatment software-building experiment. The target product is a React permissions-policy playground, but the product implementation is intentionally absent on this branch.
+This repository is the prospective common-start scaffold for protocol version 2.2.0-frozen. It tests a treatment-only review loop after two independent builders create the same React permissions-policy playground from an identical neutral prompt and configuration.
 
 ## Status
 
-- Phase: common-start scaffold, before arm assignment
-- Product: not implemented
-- Public contract tests: committed but gated until the required implementation files exist
-- Hidden tests: not present in this repository
-- Experiment lock: frozen external commitments; the final GitHub common-start commit is recorded post-merge in experiment run manifests
+- Phase: protocol 2.2.0-frozen preregistration lock, before builder exposure
+- Product: intentionally not implemented on this branch
+- Public contract tests: committed but gated until all required implementation files exist
+- Hidden tests: sealed externally; the existing v2 commitment remains unchanged
+- Treatment algorithm: exact skill-v1 flow incorporated and content-addressed
+- Experiment lock: 2.2.0-frozen, bound to the corrected integrated skill and content parent
 - License: none has been granted; no license file is included
 
-Do not present this branch as a completed application. A successful scaffold check establishes only that the protocol, contracts, templates, and toolchain are internally consistent.
+Do not present this branch as a completed application or executable experiment. A passing scaffold check establishes internal consistency only.
 
 ## Five-minute setup
 
-Requires Node.js 22 and npm 10 or newer.
+Requires Node.js 22 and npm 11.11.0.
 
 ```sh
 npm ci
@@ -23,41 +24,54 @@ npm run check
 npm run dev
 ```
 
-`npm run dev` serves an honest placeholder page. `npm run test:public` intentionally exits nonzero until all required implementation modules exist. `npm run check` uses the scaffold-aware public-test runner: it permits the known all-files-absent state, then automatically runs and enforces the public suite after implementation appears.
+`npm run dev` serves an honest placeholder page. `npm run test:public` intentionally exits nonzero until all three implementation modules exist. `npm run check` accepts only the all-files-absent scaffold state or a complete implementation, and also runs protocol semantic tests.
 
-## Experiment map
+## Experiment flow
 
 ```mermaid
 flowchart LR
-  S[Frozen common start] --> B[Baseline build]
-  S --> T[Treatment build]
-  B --> RB[Two blinded reviews]
-  T --> RT[Two blinded reviews]
-  RB --> FB[Bounded fix pass]
-  RT --> FT[Bounded fix pass]
-  FB --> E[Blinded four-snapshot evaluation]
-  FT --> E
+  S[Frozen common start] --> A[Neutral build A]
+  S --> C[Neutral build B]
+  A --> Z[Seal both initial snapshots]
+  C --> Z
+  Z --> R[32-byte CSPRNG assignment]
+  R --> B[B0 baseline frozen: zero cycles]
+  R --> T[T0 treatment initial]
+  T --> L[Up to 5 fresh reviewer/fixer/tester cycles]
+  L --> F[Tfinal]
+  B --> P[History-free X/Y/Z packages]
+  T --> P
+  F --> P
+  P --> E[Blind public + sealed hidden evaluation]
+  E --> O[Primary Tfinal-B0; secondary Tfinal-T0]
 ```
 
-- [`docs/permissions-playground-spec.md`](docs/permissions-playground-spec.md): frozen product and evaluator semantics
-- [`docs/public-test-contract.md`](docs/public-test-contract.md): required module and UI contract
-- [`experiment/protocol.md`](experiment/protocol.md): assignment, blinding, measurements, invalidation, and stopping rules
-- [`experiment/rubric.md`](experiment/rubric.md): 100-point blinded scoring rubric
-- [`experiment/prompts/`](experiment/prompts/): exact role prompts
-- [`experiment/schemas/`](experiment/schemas/): machine-readable artifact contracts
-- [`experiment/templates/`](experiment/templates/): valid starting artifacts
-- [`experiment/lock.json`](experiment/lock.json): frozen parent/scaffold and external commitments
+The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact tie selects baseline.
+
+- [`docs/permissions-playground-spec.md`](docs/permissions-playground-spec.md): unchanged frozen product semantics
+- [`docs/public-test-contract.md`](docs/public-test-contract.md): unchanged activation and public-test contract
+- [`experiment/protocol.md`](experiment/protocol.md): assignment, freshness, budgets, evidence, evaluation, and invalidation
+- [`experiment/canonical-contract.json`](experiment/canonical-contract.json): machine-readable transcription of the normative public protocol
+- [`experiment/golden-run/`](experiment/golden-run/): synthetic prospective execution-mode conformance record
+- [`experiment/rubric.md`](experiment/rubric.md): unchanged 100-point 50/15/15/10/10 rubric
+- [`experiment/prompts/neutral-builder.md`](experiment/prompts/neutral-builder.md) and [`experiment/builder-config.json`](experiment/builder-config.json): identical neutral construction inputs
+- [`experiment/treatment-loop-algorithm.md`](experiment/treatment-loop-algorithm.md): exact frozen skill-v1 flow
+- [`experiment/schemas/`](experiment/schemas/): machine-readable artifact contracts and the authoritative finding schema
+- [`experiment/templates/`](experiment/templates/): prospective, non-evidentiary artifact examples
+- [`experiment/lock.json`](experiment/lock.json): final preregistration commitments
 
 ## Architecture and boundaries
 
-Phase 1 contains only protocol documents, schemas, test contracts, public tests, and a Vite placeholder. The builders own the three required implementation modules. Evaluators own the hidden suite outside this repository. The browser application is specified to use local in-memory state only: no authentication, backend, network calls, credentials, or personal data.
+The scaffold contains protocol documents, schemas, test contracts, public tests, and a Vite placeholder. Builders own the three required implementation modules, application documentation, and candidate-added tests. Public gates, pinned dependencies, and evaluator semantics remain immutable. Builders never receive the treatment skill or loop algorithm. Only the randomly assigned treatment snapshot is processed by fresh cycle roles; baseline remains byte-frozen at its initial snapshot.
 
-Public tests expose examples and contracts, not the implementation algorithm. Hidden cases and hidden fixtures must never be committed to an arm branch. The diagram above is the truthful visual for this protocol scaffold. Product screenshots are intentionally deferred because there is no implemented product to document yet; each completed arm must capture a sanitized real UI screenshot with alt text and provenance before it can claim product readiness.
+Evaluators own the sealed hidden suite outside this repository. They receive three history-free packages labeled only X/Y/Z and never see lineage, assignment, role artifacts, or Git metadata. The browser product is specified to use local in-memory state only: no authentication, backend, network calls, credentials, persistence, or personal data.
 
-## Limitations and provenance
+## Limitations, security, and provenance
 
-This is a two-arm pilot with one implementation per arm, not a statistically powered benchmark. Its primary result is descriptive. The specification and experiment files are original project materials prepared for this experiment. Dependency provenance is recorded by `package-lock.json` after `npm install`.
+This is a two-candidate pilot, not a statistically powered benchmark. Its results are descriptive for this task and frozen provider configuration. Public tests expose examples and contracts, not hidden cases. Hidden fixtures must never be committed to a candidate or protocol branch.
+
+The diagram above is the truthful visual for this protocol scaffold. Product screenshots are deferred because no product exists yet; a promoted implementation must later capture sanitized real UI evidence with alt text and provenance. The specification and protocol materials are original project work. Dependency provenance remains pinned in `package-lock.json`.
 
 ## Contributing and support
 
-This private experiment is not accepting general contributions. Experiment operators should follow the frozen protocol and record deviations rather than silently repairing them. Repository-owner support is the only support channel during the pilot.
+This private experiment is not accepting general contributions. Operators must record deviations and invalid attempts after they occur rather than pre-populating evidence or silently repairing them. Repository-owner support is the only support channel during the pilot.

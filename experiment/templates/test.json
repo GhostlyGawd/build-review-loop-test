@@ -1,0 +1,22 @@
+{
+  "candidateLabel": "candidate-b",
+  "cycle": 1,
+  "roleInstanceId": "cycle-1-tester",
+  "workerId": "template-tester-worker-id",
+  "snapshotCommit": "0000000000000000000000000000000000000000",
+  "startedAt": "2026-07-20T00:00:00Z",
+  "completedAt": "2026-07-20T00:00:00Z",
+  "command": "npm run check",
+  "exitCode": 0,
+  "componentResults": [
+    { "command": "npm run format:check", "exitCode": 0 },
+    { "command": "npm run lint", "exitCode": 0 },
+    { "command": "npm run typecheck", "exitCode": 0 },
+    { "command": "npm run validate:scaffold", "exitCode": 0 },
+    { "command": "npm run test:protocol", "exitCode": 0 },
+    { "command": "npm run test:public:if-implemented", "exitCode": 0 },
+    { "command": "npm run build", "exitCode": 0 }
+  ],
+  "rawOutputSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "workingTreeClean": true
+}

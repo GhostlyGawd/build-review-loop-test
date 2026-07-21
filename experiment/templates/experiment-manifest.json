@@ -1,25 +1,99 @@
 {
+  "protocolVersion": "2.2.0",
   "experimentId": "pilot-001",
   "startedAt": "2026-07-20T00:00:00Z",
-  "operator": "UNSET_OPERATOR",
-  "commonStartCommit": "0000000000000000000000000000000000000000",
-  "preregistrationLockCommit": "0000000000000000000000000000000000000000",
-  "lockFileSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-  "randomizationDraw": 0,
-  "buildOrder": ["baseline", "treatment"],
-  "blindMapping": {
-    "candidate-x": "baseline",
-    "candidate-y": "treatment"
+  "operator": "operator-id-required-at-run",
+  "bindings": {
+    "commonStartCommit": "0000000000000000000000000000000000000000",
+    "preregistrationLockCommit": "0000000000000000000000000000000000000000",
+    "lockFileSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "canonicalContractSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "gateBindings": {
+    "testerCommand": "npm run check",
+    "componentCommands": [
+      "npm run format:check",
+      "npm run lint",
+      "npm run typecheck",
+      "npm run validate:scaffold",
+      "npm run test:protocol",
+      "npm run test:public:if-implemented",
+      "npm run build"
+    ],
+    "evaluatorPublicCommand": "npm run test:public",
+    "hiddenSuiteId": "permissions-playground-sealed-v2",
+    "hiddenSuiteCommand": "node sealed-hidden-suite/run.mjs",
+    "hiddenSuiteSha256": "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b"
+  },
+  "candidateLabels": ["candidate-a", "candidate-b"],
+  "assignment": {
+    "seedHex": "0000000000000000000000000000000000000000000000000000000000000000",
+    "digestSha256": "909e5426e26a7fec5e0dafaca44f295cfffe12e8e5064fda2f7c16b8da968248",
+    "draw": 0,
+    "generatedAt": "2026-07-20T00:00:00Z",
+    "generator": "os-csprng-api-and-version-required-at-run",
+    "mapping": { "candidate-a": "baseline", "candidate-b": "treatment" }
+  },
+  "evaluationRandomization": {
+    "seedHex": "0000000000000000000000000000000000000000000000000000000000000000",
+    "digestSha256": "ec47fcfaa090e9dfec2038cc3eec7778bce96cab5477dc153f1737ee62adaa07",
+    "order": ["X", "Y", "Z"],
+    "mapping": { "X": "T0", "Y": "Tfinal", "Z": "B0" }
   },
   "environment": {
-    "model": "UNSET_MODEL",
-    "provider": "UNSET_PROVIDER",
-    "reasoningSetting": "UNSET_REASONING",
+    "model": "inherited-model-id-required-at-run",
+    "provider": "provider-and-version-required-at-run",
+    "reasoningSetting": "inherited-reasoning-setting-required-at-run",
     "node": "22.x",
-    "npm": "UNSET_NPM",
-    "os": "UNSET_OS",
-    "networkPolicy": "UNSET_NETWORK_POLICY",
-    "toolPolicy": "UNSET_TOOL_POLICY"
+    "npm": "exact-npm-version-required-at-run",
+    "os": "exact-os-version-required-at-run",
+    "networkPolicy": "frozen-network-policy-required-at-run",
+    "toolPolicy": "frozen-tool-policy-required-at-run",
+    "builderConfigSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "budgets": {
+    "builder": {
+      "wallSecondsMaximum": 2400,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
+      "turnLimit": 1
+    },
+    "reviewer": {
+      "wallSecondsMaximum": 900,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
+      "turnLimit": 1
+    },
+    "fixer": {
+      "wallSecondsMaximum": 1500,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
+      "turnLimit": 1
+    },
+    "tester": {
+      "wallSecondsMaximum": 900,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
+      "turnLimit": 1
+    },
+    "evaluator": {
+      "wallSecondsMaximum": 1800,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
+      "turnLimit": 1
+    },
+    "unblinder": {
+      "wallSecondsMaximum": 300,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
+      "turnLimit": 1
+    },
+    "git_worker": {
+      "wallSecondsMaximum": 600,
+      "maxTokens": null,
+      "maxTokensUnavailableReason": "required-at-run",
+      "turnLimit": 1
+    }
   },
   "deviations": []
 }

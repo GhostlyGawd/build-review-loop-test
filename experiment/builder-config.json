@@ -1,0 +1,13 @@
+{
+  "role": "neutral-builder",
+  "turnLimit": 1,
+  "wallSecondsMaximum": 2400,
+  "maxTokens": null,
+  "maxTokensUnavailableReason": "provider-orchestrator-does-not-expose-an-enforceable-per-role-token-ceiling",
+  "modelPolicy": "same-inherited-model-and-provider-version",
+  "reasoningPolicy": "same-inherited-setting",
+  "toolPolicy": "same-frozen-tool-permissions",
+  "contextPolicy": "isolated-common-start-with-no-skill-or-cross-candidate-context",
+  "networkPolicy": "same-frozen-operator-policy",
+  "nodeVersion": "22.x"
+}

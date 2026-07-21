@@ -1,145 +1,167 @@
-# Preregistered baseline-versus-treatment protocol
+# Preregistered neutral-build versus review-loop protocol
 
-Protocol version: 1.0.0-frozen
+Protocol version: 2.2.0-frozen
 
-Design: paired, blinded, two-arm pilot with one independent implementation per arm
+Design: paired, blinded pilot with two independent neutral builds, post-build random assignment, and treatment-only iterative review
 
 Primary interpretation: descriptive effect estimate, not statistical inference
 
-## 1. Question and hypothesis
+## 1. Question and estimands
 
-Question: for the same frozen React/TypeScript task, does access to one frozen build-review-loop skill improve the final implementation after a standardized review-and-fix cycle compared with the baseline prompt alone?
+Question: after two builders independently receive the same frozen React/TypeScript task, does applying one frozen review-loop algorithm to a randomly assigned implementation improve its final blinded rubric score relative to the other implementation, which is frozen after construction?
 
-Directional hypothesis: the treatment arm will have a higher final blinded 100-point rubric score. The primary estimand is `treatment final total − baseline final total`. Negative values favor baseline.
+The three scored snapshots are:
 
-## 2. Freeze boundary and prerequisites
+- `B0`: baseline initial/final snapshot; baseline receives zero cycles.
+- `T0`: treatment initial snapshot, sealed before any cycle.
+- `Tfinal`: treatment snapshot after the stopping rule.
 
-Phase 1 is complete only when:
+The primary estimand is `score(Tfinal) - score(B0)`. The secondary within-treatment estimand is `score(Tfinal) - score(T0)`. Negative values favor the comparator. For promotion to `main`, select the higher of `B0` and `Tfinal`; an exact tie selects `B0` (baseline).
 
-1. this branch passes `npm ci` and `npm run check` on Node 22;
-2. `experiment/lock.json` records the exact scaffold commit immediately before the preregistration lock commit as `lockParentCommit`;
-3. the external hidden-suite archive is frozen and its SHA-256 is recorded as `hiddenSuiteSha256` without committing its contents;
-4. the treatment skill is immutable; its 40-character commit and manifest SHA-256 are recorded as `treatmentSkillCommit` and `treatmentSkillManifestSha256`;
-5. all JSON templates validate against their paired schemas; and
-6. no builder has received the task materials.
+## 2. Canonical contract and frozen lock boundary
 
-The preregistration lock cannot contain its own commit SHA, and the final GitHub common-start commit does not exist until the PR is merged. Immediately after merge, the operator MUST record the exact merged `commonStartCommit`, this preregistration lock commit SHA, and the SHA-256 of the byte-identical `experiment/lock.json` in the private experiment manifest and both candidate run manifests. This three-value binding is the authoritative common-start record. It supports merge, rebase, or squash strategies without pretending that a commit can hash itself.
+This Markdown protocol is the canonical public source. `experiment/canonical-contract.json` is its machine-readable transcription and is content-addressed in `experiment/lock.json`. A mismatch invalidates the scaffold. The earlier 2.1.0-frozen lock is superseded by the integrated 2.2.0-frozen lock. Before any builder sees task materials, the frozen lock MUST:
 
-After the freeze commit, specification, rubric, public tests, prompts, schemas, initial dependencies, CI, and lock are immutable. Corrections require a logged protocol amendment and normally invalidate both arms for a clean restart.
+1. pass `npm ci` and `npm run check` on Node 22;
+2. record the exact lock-parent commit;
+3. freeze the sealed hidden-suite archive and record its SHA-256 without committing its contents;
+4. freeze the treatment skill-v1 source and manifest and record their commit and SHA-256;
+5. verify the treatment-loop algorithm against the final skill-v1 source and record its commitment;
+6. record SHA-256 hashes of the neutral builder prompt and neutral builder configuration, both of which MUST be delivered byte-for-byte without per-builder substitution;
+7. validate all templates and prospective semantic test cases; and
+8. confirm no builder has received task materials.
 
-## 3. Experimental unit and arms
+The lock cannot contain its own commit SHA. After the lock is merged, the operator records the final GitHub `commonStartCommit`, preregistration lock commit, and byte-identical lock-file SHA-256 in the private experiment manifest and both run manifests. That triple is the authoritative common-start binding.
 
-The unit is a repository worktree produced by one builder session from the same post-merge `commonStartCommit` recorded in its run manifest. Exactly two units are run:
+After locking, the specification, rubric, public tests, prompts, schemas, validator, initial dependencies, CI, and lock are immutable. A correction follows section 13; it is never repaired silently.
 
-- **Baseline:** receives the exact baseline builder prompt and repository, with no treatment skill content, summary, or treatment-specific coaching.
-- **Treatment:** receives the exact treatment builder prompt, repository, and read access to the skill at exactly `treatmentSkillCommit`. No newer or working-tree skill state is allowed.
+## 3. Experimental units and neutral construction
 
-The same model/provider/version, reasoning setting, tool permissions, starting context, machine class, Node/npm versions, network policy, and wall-clock/token limits MUST be used for both builders. The order is randomized with one fair recorded coin flip before either build. `randomizationDraw` is 0 for baseline-first and 1 for treatment-first. A human records the mapping in the private operator manifest; reviewers and the final evaluator see only randomly generated labels `candidate-x` and `candidate-y`.
+The units are two isolated worktrees created from the same bound `commonStartCommit`, privately tracked by the operator as `candidate-a` and `candidate-b`. Each receives the exact same bytes of `experiment/prompts/neutral-builder.md` and the exact same serialized builder configuration, with no label/deadline substitution or surrounding coaching. No builder receives, reads, or is told about the treatment skill, review algorithm, assignment, other candidate, hidden suite, or downstream role prompts.
 
-No context, code, diagnosis, or timing information may pass between builders. Runs are sequential if only one identical execution slot exists; otherwise they may run concurrently on equivalent isolated worktrees.
+Each builder gets exactly one agent/subagent turn and inherits the same model, provider/version, reasoning setting, tool permissions, starting context, machine class, Node/npm versions, network policy, and prospective limits. The two initial builds may run concurrently in equivalent isolation or sequentially without cross-run context. Their initial commits and evidence chains are sealed before assignment.
 
-## 4. Fixed workflow and budgets
+## 4. Post-build assignment
 
-Each arm follows exactly this sequence:
+Only after both `T0/B0`-eligible initial snapshots and their evidence chains are immutable, the operator obtains exactly 32 bytes from an operating-system CSPRNG. Record the 64-lowercase-hex seed in the private manifest. No redraw is allowed.
 
-1. **Build:** one builder session, maximum 90 wall-clock minutes and 120,000 total model tokens. The builder runs checks, commits, and stops.
-2. **Snapshot 1:** operator records commit, diff, command results, elapsed time, and cost. No repair is allowed.
-3. **Review:** two independent blinded reviewers inspect Snapshot 1. Reviewer F focuses on functional correctness/tests; Reviewer Q focuses on robustness, security, accessibility, usability, and maintainability. Each has 30 minutes and 30,000 tokens. They receive the same exact reviewer prompt with only the focus placeholder changed.
-4. **Fix:** a fresh fixer session for that arm receives the frozen repository, its two verbatim reviews in randomized order, and the exact fixer prompt. Maximum 45 minutes and 60,000 tokens. It may implement only review-responsive fixes or necessary regressions discovered while validating them.
-5. **Snapshot 2/final:** operator records commit, diff, disposition for every finding, checks, elapsed time, and cost.
-6. **Evaluation:** after both final snapshots are ready, the same blinded evaluator scores all four sealed snapshots (build and final for each candidate) in one recorded randomized order using public tests, the external hidden suite, and the frozen rubric. Snapshot labels do not disclose stage or lineage during scoring. The evaluator receives no arm mapping, prompts, skill information, costs, timestamps, or commit authorship. It emits one evaluation artifact per snapshot; the two final-snapshot artifacts determine the primary outcome.
+The assignment algorithm is fixed and MUST be implemented byte-for-byte:
 
-Budget exhaustion ends that role at its current filesystem state. It is not a reason for operator repair. Provider-reported cached and uncached tokens and USD cost are recorded when available; unavailable fields are `null`, never estimated silently.
+1. UTF-8 encode and byte-sort the two candidate IDs as `id0` and `id1`;
+2. construct `material` as the ASCII/byte domain `build-review-loop-assignment-v2\x00`, the 32 raw seed bytes, `uint64be(len(id0_bytes))`, `id0_bytes`, `uint64be(len(id1_bytes))`, and `id1_bytes`, in that order;
+3. compute `digest = SHA-256(material)`;
+4. set the baseline index to `digest[0] & 1`; the other index is treatment.
 
-## 5. Environment and contamination controls
+This maps exactly one candidate to each arm without modulo bias. Preserve the seed, digest, draw, mapping, generation command/API, timestamp, and operator identity. Assignment remains private from treatment roles and the evaluator until artifacts are sealed.
 
-- After verifying that both run manifests bind the same `commonStartCommit`, preregistration lock commit, and lock-file SHA-256, create both arm branches directly from `commonStartCommit`; confirm zero diff before the builder prompt.
-- Use clean dependency installation from the committed lockfile. Do not upgrade dependencies per arm.
-- Remove or equalize unrelated global instructions. Repository instructions apply equally.
-- Baseline tools may include ordinary code/search/test tools available to both arms, but must not expose the treatment skill or derivatives.
-- Treatment must not receive extra human coaching beyond the frozen prompt and skill.
-- Reviewers and evaluator must not inspect Git history, branch names, authors, agent transcripts, cost records, or arm manifests. The operator supplies source snapshots with neutral labels.
-- Hidden tests run only after Snapshot 1 is sealed and again at final evaluation if the evaluator needs before/after evidence. Builders and fixers never see hidden source, individual hidden assertions, or failure messages more detailed than the normalized reviewer findings.
-- Network requests by the built app are prohibited. Tool network access is held equal across builders and logged.
+## 5. Prospective budgets and role freshness
 
-## 6. Measurements
+Every role receives exactly one agent/subagent turn. Token ceilings are unavailable in this execution environment and are therefore `null`, with a required `tokenCeilingUnavailableReason`; provider usage is recorded when exposed and otherwise remains `null`, never estimated. Wall-clock exhaustion seals the current filesystem state without operator repair.
 
-### Primary outcome
+| Role            | Maximum wall time | Applicability                                   |
+| --------------- | ----------------: | ----------------------------------------------- |
+| Neutral builder |        40 minutes | once per candidate, same inherited model/config |
+| Reviewer        |        15 minutes | fresh role, at most once per treatment cycle    |
+| Fixer           |        25 minutes | fresh role, at most once per treatment cycle    |
+| Tester          |        15 minutes | fresh role, at most once per treatment cycle    |
+| Evaluator       |        30 minutes | one fresh blinded role for X/Y/Z                |
 
-Final total score (0–100) from `experiment/rubric.md`, adjudicated by the blinded evaluator. Report both totals and the signed treatment-minus-baseline difference.
+Roles MUST NOT be resumed, extended, or given an extra turn. Cost records include wall time, exposed token fields, and provider cost when available. Identical warnings may be issued at 75% and 90% of a budget.
 
-### Secondary outcomes
+## 6. Frozen treatment-loop algorithm
 
-- Snapshot 1 total and final-minus-initial score change per arm.
-- Section scores and treatment-minus-baseline differences.
-- Public and hidden test pass counts at both snapshots.
-- Review effectiveness: valid unique defects found, weighted severity sum, and hidden defects found by neither reviewer.
-- Fix effectiveness: accepted findings resolved without regression divided by accepted findings.
-- Efficiency: build, review, fix, and total wall time; tokens; USD cost where provider-reported.
-- Test effectiveness rubric score and mutation probes killed, if the frozen hidden suite includes mutations.
+Baseline is frozen at its initial snapshot and receives exactly zero reviewer, fixer, or tester cycles.
 
-Do not combine score and cost into an unregistered composite. Report raw outcomes even if an arm fails to build.
+Treatment alone receives up to five cycles. Each cycle uses a fresh reviewer, then (when required) a fresh fixer, then a fresh tester. Roles see only the frozen common artifacts and the inputs explicitly named by their prompt. They receive no earlier transcripts, identities, costs, assignment seed/mapping, baseline material, hidden content, or Git history.
 
-## 7. Review normalization and finding identity
+The exact skill-v1 flow is stored in `experiment/treatment-loop-algorithm.md`. It defines, without operator discretion, the cycle inputs, finding handoff, verification behavior, and next-cycle state. These outer rules are fixed:
 
-The operator removes only arm-identifying metadata, not substantive text. Findings receive IDs `<candidate>-<reviewer>-NN`. Duplicate findings across the two reviewers are linked by `duplicateOf` but retained. Severity meanings are fixed:
+- at most five complete cycles are recorded, numbered 1 through 5;
+- all reviewer findings use the single schema in `experiment/schemas/finding.schema.json` and severities `critical`, `high`, `medium`, or `low`;
+- if a cycle reviewer reports zero actionable findings, stop immediately with `zero-findings` and do not invoke that cycle's fixer or tester;
+- after cycle 5, stop with `max-cycles` even if findings remain;
+- tester runs `npm run check` exactly, records every component gate, does not edit, and does not independently create findings;
+- every invoked role produces a schema-valid artifact and evidence-chain link.
 
-- `critical`: prevents meaningful evaluation, creates material security/privacy exposure, or corrupts core policy decisions broadly;
-- `major`: breaks a required workflow or a substantial set of specified outcomes;
-- `minor`: localized contract, accessibility, usability, test, or documentation defect;
-- `note`: non-required suggestion, scored only if tied to a rubric anchor.
+## 7. Immutable gates, canonical JSON, and evidence chains
 
-The fixer marks each finding `accepted`, `rejected`, or `partially-accepted` and supplies evidence. Reviewers do not revise findings after seeing the other review or final code.
+Public gates are immutable: `docs/permissions-playground-spec.md`, `docs/public-test-contract.md`, `tests/public/**`, `scripts/run-public-tests.mjs`, dependency versions/lockfile, rubric weights and anchors, protocol/prompts/schemas/validator, CI, and the activation file list. Builders and treatment roles may change implementation files, application documentation, and candidate-added tests only.
 
-## 8. Scoring and adjudication
+Every snapshot and role artifact is content-addressed. The run manifest links, in order: common-start triple; canonical-contract and gate bindings; neutral prompt/config hashes; initial source commit and tree hash; assignment record hash; each cycle input commit; role prompt hash; transcript hash when available; review/fix/test artifact hashes; output commit/tree hash; exact check commands/exit codes; and cost-record hash. The evaluator chain links each neutral package hash, public/hidden suite hashes, raw test outputs, rubric artifact hash, and evaluator transcript hash when available. Missing provider transcripts are recorded as `null`, not fabricated.
 
-The evaluator scores observable evidence only. Each rubric item uses its written anchors; intermediate points are permitted only where the rubric explicitly states unit increments. A public or hidden test failure caps the corresponding functional item at the highest anchor consistent with observed behavior. A catastrophic default-allow or code-execution/network violation triggers the rubric caps, not an invented penalty.
+Canonical JSON `utf8-sorted-json-v1` accepts only null, booleans, safe integers, strings, arrays, and objects. Object keys sort by ascending UTF-8 bytes; arrays preserve order; strings use JSON escaping; and output contains no insignificant whitespace or trailing newline. Artifact SHA-256 input is the ASCII/byte domain `permissions-playground/canonical-json-v1\x00` followed by those canonical JSON bytes. A source-tree hash uses the frozen packaging procedure declared in the manifest.
 
-If evaluator uncertainty changes the total by 3 or more points, a second blinded adjudicator independently scores only the disputed items. Their item scores are averaged and rounded to the nearest whole point, with `.5` rounded up. Otherwise the first score stands. All rationales and evidence references are retained.
+Evidence sequence begins at 0 and increases by one. The first `previousSha256` is null; every later value equals the immediately preceding entry's `artifactSha256`. Each artifact hash uses the canonical JSON algorithm above. Any mismatch is an invalidation event.
 
-Arm identity is revealed only after both final evaluations and the evaluation artifact hash are sealed.
+## 8. Blind X/Y/Z evaluation
 
-## 9. Invalidation rules
+After treatment stops, the operator exports exactly three history-free source packages: `B0`, `T0`, and `Tfinal`. Packages exclude `.git`, branches, authorship, manifests, prompts, role artifacts, timestamps, costs, transcripts, and filenames or metadata that disclose stage/lineage. Each includes only the source snapshot and the byte-identical frozen public materials needed to build and score it.
 
-### Invalidate one arm
+Using a separate recorded 32-byte OS-CSPRNG seed, the operator assigns the three packages without replacement to labels `X`, `Y`, and `Z`. Compute `digestSha256` over UTF-8 `permissions-playground/protocol-v2/evaluation\n` plus the lowercase seed hex. For each of `B0`, `T0`, and `Tfinal`, compute a rank key as SHA-256 over the lowercase digest text, one newline, and that snapshot name. Sort ascending by rank key and map the resulting positions to X, Y, and Z. The evaluator receives only randomized X/Y/Z packages, frozen specification, public tests, sealed hidden suite, and exact rubric. It does not receive the package mapping, assignment, history, arm identity, cycle facts, prompts, or skill.
 
-Invalidate and rerun only the affected arm from the common start when any of these occurs before unblinding:
+In one fresh turn (30-minute maximum), the evaluator verifies suite commitments, runs the frozen public and sealed hidden suites in equivalent clean Node 22 environments, inspects the UI as required by the rubric, and emits one evaluation artifact for each of X/Y/Z. It scores the exact 50/15/15/10/10 rubric, applies only its registered caps, and seals all artifacts before unblinding. The operator then reveals the X/Y/Z mapping and computes the primary and secondary deltas and the tie-to-baseline main selection in `experiment/schemas/outcome.schema.json`.
 
-- wrong starting commit, prompt, model/settings, budget, dependency lockfile, or skill commit;
-- baseline exposure to treatment skill content, other-arm work, hidden content, or treatment-specific coaching;
-- treatment failure to receive the frozen skill, or receipt of extra non-frozen skill material;
-- builder/fixer modification of frozen protocol, spec, rubric, public tests, activation runner, schemas, or prompts;
-- operator/human code edits, unregistered extra role turns, material tool outage unique to one arm, or cross-arm contamination;
-- loss/corruption of source snapshot, transcript, cost record, or required manifest that prevents audit.
+## 9. Finding identity and severity
 
-### Invalidate both arms
+`experiment/schemas/finding.schema.json` is the only authoritative finding shape. IDs are `cycle-N-reviewer-NN`. One finding describes one reproducible defect or bounded risk, with evidence, expected/actual behavior, rubric IDs, verification, and optional duplicate linkage.
 
-Invalidate and restart both arms from a new freeze when:
+- `critical`: prevents meaningful evaluation, broadly corrupts core policy decisions, or creates material security/privacy exposure.
+- `high`: breaks a required workflow or a substantial set of specified outcomes.
+- `medium`: localized contract, accessibility, usability, test, or documentation defect with material rubric impact.
+- `low`: bounded polish, maintainability, or documentation defect tied to a rubric anchor; non-required preference is not a finding.
 
-- a substantive ambiguity/error is found in a frozen common artifact;
-- hidden-suite contents or answer-specific hints reach either builder/fixer;
-- the evaluator or either reviewer learns arm identity before sealing relevant artifacts;
-- environment drift makes arms materially incomparable; or
-- the operator changes an outcome, rubric weight, stopping rule, or analysis after seeing arm results.
+The fixer records an accepted, partially accepted, or rejected disposition for every handed-off finding with rationale and evidence. Findings are immutable after their role artifact is sealed.
 
-Cosmetic typos that cannot affect interpretation may be amended without invalidation only if logged before either builder starts. After a result is seen, retain the typo and report it as a limitation.
+## 10. Outcomes and arithmetic
 
-An invalidated run is preserved and labeled invalid; it is never silently replaced. Report its existence and reason, but exclude it from the primary comparison.
+The evaluator records observable evidence only. Evaluation item maxima and section maxima remain exactly 50/15/15/10/10. `uncappedTotal` equals the five section totals; `finalTotal` applies only the rubric's registered caps. Protocol validation rejects duplicated/missing rubric IDs, incorrect maxima, subtotal/total arithmetic, undeclared or inapplicable caps, non-bijective X/Y/Z mappings, incorrect deltas, and an incorrect tie winner.
 
-## 10. Stopping rules
+Report:
 
-The experiment stops after exactly one valid build and final snapshot per arm and one sealed blinded evaluation per snapshot. There is no early stopping for apparent superiority, test pass rate, reviewer sentiment, cost, or time remaining.
+- primary: `Tfinal - B0`;
+- secondary: `Tfinal - T0`;
+- all three totals and section totals;
+- public and hidden test counts;
+- cycle/find/fix/test effectiveness;
+- role wall time, exposed token usage, and exposed USD cost; and
+- deviations, invalid runs, hashes, and raw rubric artifacts.
 
-A role stops at the earliest of: task completion and committed handoff; wall-clock budget; token budget; unrecoverable platform failure; or a safety boundary. Time warnings may be issued identically at 75% and 90% of budget. No role gets extensions.
+Do not combine score and cost into an unregistered composite.
 
-If an arm cannot produce a build, the evaluator assigns rubric scores from available evidence, including zeroes/caps, rather than triggering a rerun unless an invalidation condition caused the failure. If three consecutive attempts to obtain a valid run fail for the same external platform reason, stop the pilot as blocked and report all attempts; do not substitute a different design.
+## 10.1 Canonical roles, costs, and gates
 
-## 11. Analysis and reporting
+The seven role names and maximum wall seconds are exact: `builder` 2400, `reviewer` 900, `fixer` 1500, `tester` 900, `evaluator` 1800, `unblinder` 300, and `git_worker` 600. Each invocation has one unique worker ID, one turn, the bound environment hash, and the same model/config hash when the role uses a model. `maxTokens` is null when unavailable and requires a nonempty unavailability reason; usage remains recorded when exposed.
 
-Report the preregistered primary and secondary values, invalid runs/deviations, environment versions, hashes, command results, and raw rubric artifacts. Because `n=1` per arm, do not report p-values, confidence intervals, significance, population-level superiority, or generalize beyond this task/provider configuration.
+The tester command is exactly `npm run check`, invoking in order `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run validate:scaffold`, `npm run test:protocol`, `npm run test:public:if-implemented`, and `npm run build`. The evaluator public command is exactly `npm run test:public`. The sealed hidden suite ID is `permissions-playground-sealed-v2`, its command is `node sealed-hidden-suite/run.mjs`, and its SHA-256 commitment is `a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b`. Run records bind all of these values and the canonical-contract hash.
 
-Interpretation order is: validity first, functional score, non-functional sections, review/fix effectiveness, then cost/time tradeoffs. Any exploratory observation must be labeled exploratory. Keep the arm mapping private until the sealed evaluation is complete, then retain it for audit.
+Templates are non-executable examples and validate only in explicit `template` mode. `execution` mode rejects a provisional lock, zero hashes/seeds, sentinel or `required-at-run` values, template-equal records, duplicate worker IDs, invalid snapshots, and any divergence from this contract.
 
-## 12. Amendments
+## 10.2 Executable invalidation state
 
-Before builders start, a change requires a new protocol version, rationale, diff, timestamp, operator identity, new preregistration lock, and updated post-merge common-start binding. After builders start, do not amend in place: apply the invalidation rules. Recording the post-merge `commonStartCommit` and preregistration lock commit in manifests completes the declared binding; it does not amend the frozen lock.
+A completed experiment status is exactly `valid` or `invalid`. A valid experiment has `activeInvalidation: null`, may preserve zero or more structured `invalidAttempts`, and requires sealed evaluation and scored outcome artifacts. An invalid current experiment has a structured active invalidation with ID, scope, code, reason, detection timestamp, evidence SHA-256, and preserved-artifact SHA-256; its evaluation conclusion and scored outcome are null. Invalid attempts preserve only those metadata and content commitments, never candidate contents. A scored outcome is forbidden whenever active invalidation is non-null.
+
+The public validator interface is `node scripts/validate-scaffold.mjs --mode template|execution --input <json-path>`. Template mode is restricted to explicit template files. Execution mode validates the canonical golden aggregate or a canonical invalid-current record and rejects arbitrary status values.
+
+## 11. Invalidation rules
+
+Invalidate one candidate run and rerun it from common start before assignment if construction used the wrong start, prompt bytes, config, inherited model/settings, budget, dependency lock, extra role turn, cross-candidate context, skill exposure, hidden content, operator code edit, or modified public gate. Because assignment occurs only after both initial builds seal, a pre-assignment rerun requires discarding the unused seed (if any) and generating assignment only after two valid replacements exist.
+
+Invalidate treatment from `T0` and repeat assignment-independent treatment processing only when a treatment role receives the wrong frozen algorithm/prompt/input, exceeds five cycles, reuses a role context, exceeds its prospective budget, sees baseline/hidden/assignment material, modifies a public gate, or has a broken evidence link. Preserve the failed attempt as invalid evidence; do not count it as a valid cycle.
+
+Invalidate evaluation and repackage all three snapshots with a new evaluation-label seed if the evaluator learns lineage/arm identity/history, receives a non-history-free package, uses a changed/uncommitted suite, modifies a package, receives extra turns, or produces unverifiable evidence. Scores from that attempt remain sealed and excluded.
+
+Invalidate the entire experiment and restart from a new lock when a substantive frozen common-artifact error is found; hidden-suite contents or answer hints reach a builder or fixer; environment drift makes initial builds materially incomparable; assignment is drawn/redrawn early or selectively; the candidate-to-arm mapping is changed; a result is seen before an outcome/stopping/rubric change; or evidence loss prevents validity audit.
+
+Material platform outages unique to a unit invalidate that unit. Ordinary failure to implement or find/fix defects is an outcome, not invalidation. Preserve every invalid attempt with reason, but do not create invalid-attempt evidence prospectively in this scaffold.
+
+## 12. Stopping and reporting
+
+Construction stops after two valid sealed initial builds and one recorded assignment. Baseline stops at zero cycles. Treatment stops only under the frozen algorithm, `zero-findings`, `max-cycles`, role budget/platform/safety termination, or an invalidation condition. There is no early stop for apparent quality, test pass rate, reviewer sentiment, cost, or remaining time.
+
+If a candidate cannot build for product reasons, score available evidence with rubric zeroes/caps. If three consecutive valid-run attempts fail for the same external platform reason, stop the pilot as blocked and report attempts; do not substitute a different design.
+
+Because `n=1` per arm, do not report p-values, confidence intervals, significance, population-level superiority, or generalize beyond this task/provider configuration. Keep mappings private until all three evaluation artifacts are sealed. Label exploratory observations.
+
+## 13. Amendments
+
+Before builders start, a change requires a new protocol version, rationale, diff, timestamp, operator identity, new lock, and updated common-start binding. After builders start, do not amend in place; apply section 11.

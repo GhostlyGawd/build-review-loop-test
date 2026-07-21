@@ -1,0 +1,16 @@
+{
+  "packageMapping": { "X": "B0", "Y": "T0", "Z": "Tfinal" },
+  "scores": { "B0": 0, "T0": 0, "Tfinal": 0 },
+  "primaryTfinalMinusB0": 0,
+  "secondaryTfinalMinusT0": 0,
+  "mainSelection": "baseline",
+  "tiePolicy": "baseline",
+  "evaluationArtifactHashes": {
+    "X": "0000000000000000000000000000000000000000000000000000000000000000",
+    "Y": "0000000000000000000000000000000000000000000000000000000000000000",
+    "Z": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "unblinderWorkerId": "template-unblinder-worker-id",
+  "gitWorkerId": "template-git-worker-id",
+  "evidenceHash": "0000000000000000000000000000000000000000000000000000000000000000"
+}
