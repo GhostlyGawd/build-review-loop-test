@@ -1,6 +1,6 @@
 {
-  "protocolCommit": "32f0899b74c20958a3a9163c0cd94e9ef5be494d",
-  "protocolTree": "f40662a6766ff0112d8f7b8593ed540d0d95254b",
+  "protocolCommit": "2c4b2344f76b7f34b3ba6af7695e0f3e2bb952eb",
+  "protocolTree": "bf2b9bfa1109c010d30cc0d707854d8b64ed0381",
   "fileCount": 49,
   "allMatch": true,
   "files": [
@@ -23,9 +23,9 @@
     {
       "source": "experiment/golden-run/golden-run.json",
       "bundled": "skills/build-review-loop/tests/fixtures/golden-run.json",
-      "gitBlob": "32c3bd84bf9930bf038c559c39a854adccacf154",
-      "bundledBlob": "32c3bd84bf9930bf038c559c39a854adccacf154",
-      "sha256": "8f753e48dba64afb9ea144e234446df2b8e133929c191c9b16b190f0a09ab543",
+      "gitBlob": "6a617e8570db49108cf73cac48916e074c0763ce",
+      "bundledBlob": "6a617e8570db49108cf73cac48916e074c0763ce",
+      "sha256": "c4aebb2aad31567c42ff52ace1d8e8a614b2b0d15baeba4228921f863e75f321",
       "match": true
     },
     {

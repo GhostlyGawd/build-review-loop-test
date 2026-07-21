@@ -450,7 +450,7 @@
       "promptSha256": "5ed878d3be56824f94d3a72a40606c111dbfdfc1631bdf98b6ca7fe75ffebd56",
       "configSha256": "8d64a062c76ba8bdbd436b99d42cd7566ae2601821e009315afe8e37800f323b",
       "runtimeInvocationId": "3fa8a63edab948c496d7e1028dfbeabf",
-      "runtimeEvidenceSha256": "da8d85892e7e58bdbdc1603d1a0efe18d9038d0d1b97c9b675551c579b72c8e3",
+      "runtimeEvidenceSha256": "8c91a7740af528469be10e44477ab0b231e2e41c8fa8fcb1ffc308d237b9170a",
       "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
       "treeSha256": "072af65e123611cbba67c78085459017455f07c4e504ae8165f7f23f036a5fa6",
       "sealedAt": "2026-07-20T01:00:00Z"
@@ -461,7 +461,7 @@
       "promptSha256": "5ed878d3be56824f94d3a72a40606c111dbfdfc1631bdf98b6ca7fe75ffebd56",
       "configSha256": "8d64a062c76ba8bdbd436b99d42cd7566ae2601821e009315afe8e37800f323b",
       "runtimeInvocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
-      "runtimeEvidenceSha256": "1bdbd207382f65fab89864c3c39093c1746a8842dc54dec84b1dc961e6852856",
+      "runtimeEvidenceSha256": "d380348be006945a5e807fec77750c94004c6ad22fae1639712ca70e08bec78d",
       "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
       "treeSha256": "13d1487b1884a6c76710932fea190edbd8a72cad2b27abfc7cd59e79610b85ef",
       "sealedAt": "2026-07-20T01:00:00Z"
@@ -503,7 +503,7 @@
       "assignedArm": "baseline",
       "builderWorkerId": "worker-01-builder-a-7b4c",
       "runtimeInvocationId": "3fa8a63edab948c496d7e1028dfbeabf",
-      "runtimeEvidenceSha256": "da8d85892e7e58bdbdc1603d1a0efe18d9038d0d1b97c9b675551c579b72c8e3",
+      "runtimeEvidenceSha256": "8c91a7740af528469be10e44477ab0b231e2e41c8fa8fcb1ffc308d237b9170a",
       "initialSnapshot": {
         "commit": "0d977cbeeb1df357e500f254108535ba025577d7",
         "sealedAt": "2026-07-20T01:00:00Z",
@@ -526,7 +526,7 @@
       "assignedArm": "treatment",
       "builderWorkerId": "worker-02-builder-b-91e2",
       "runtimeInvocationId": "b3132c32d2fb40e2b65fa1a23cd6fe2d",
-      "runtimeEvidenceSha256": "1bdbd207382f65fab89864c3c39093c1746a8842dc54dec84b1dc961e6852856",
+      "runtimeEvidenceSha256": "d380348be006945a5e807fec77750c94004c6ad22fae1639712ca70e08bec78d",
       "initialSnapshot": {
         "commit": "55f7cc9ac06d2734f4137c935397a5a1742cb1c9",
         "sealedAt": "2026-07-20T01:00:00Z",
@@ -1386,20 +1386,20 @@
     {
       "sequence": 0,
       "artifactKey": "builderFreezes.candidate-a",
-      "artifactSha256": "6384cf2f438715ed7efcd4a6b86d07d8efb3869f9e350d2de0561300e3f3eb44",
+      "artifactSha256": "fcc3b85532a49041b762aa933f5bb0986fc02a65498e048f7b85b49cb11d326b",
       "previousSha256": null
     },
     {
       "sequence": 1,
       "artifactKey": "builderFreezes.candidate-b",
-      "artifactSha256": "a5686033aacf3e33cf1e9eb8b17222cc5e6847268cc76bb2e49f0e86eedbd6a4",
-      "previousSha256": "6384cf2f438715ed7efcd4a6b86d07d8efb3869f9e350d2de0561300e3f3eb44"
+      "artifactSha256": "ed93e045e6093d40af7d1ab1cea133c65a0193468a0651d272fb78b92d7d359a",
+      "previousSha256": "fcc3b85532a49041b762aa933f5bb0986fc02a65498e048f7b85b49cb11d326b"
     },
     {
       "sequence": 2,
       "artifactKey": "assignment",
       "artifactSha256": "c38d397281403b7c5e4dd9cbed7d2aa712d911886ce5e4bc8077caca73d67586",
-      "previousSha256": "a5686033aacf3e33cf1e9eb8b17222cc5e6847268cc76bb2e49f0e86eedbd6a4"
+      "previousSha256": "ed93e045e6093d40af7d1ab1cea133c65a0193468a0651d272fb78b92d7d359a"
     },
     {
       "sequence": 3,
