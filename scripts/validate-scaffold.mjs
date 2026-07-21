@@ -769,27 +769,28 @@ export function validateScaffold() {
   const actualAlgorithmHash = sha256(algorithmText);
   const canonicalContract = readJson("experiment/canonical-contract.json");
   const goldenRun = readJson("experiment/golden-run/golden-run.json");
-  const provisionalCommitments = {
-    protocolVersion: "2.1.0",
-    protocolStatus: "draft",
+  const finalCommitments = {
+    protocolVersion: "2.1.0-frozen",
+    protocolStatus: "locked",
     supersedesLockCommit: "c19c5b3ec96e70b8cedfb15b188394165f4a2759",
-    lockParentCommit: null,
+    lockParentCommit: "211ec41b165c9400a49bb4f55ec2ef2490c9655a",
     hiddenSuiteId: "permissions-playground-sealed-v2",
     hiddenSuiteSha256:
       "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
-    treatmentSkillCommit: null,
-    treatmentSkillTree: null,
-    treatmentSkillManifestSha256: null,
+    treatmentSkillCommit: "b65e03b3d1ba7767d7a0b17c958e2326f292a4d5",
+    treatmentSkillTree: "da8da2f4600651711cd56e1680f02ff0adbd69bf",
+    treatmentSkillManifestSha256:
+      "d25688cb382a748d55de7633500cd0aa17bcc31dcf3ec85a5980d2acb232079b",
     treatmentAlgorithmSha256: actualAlgorithmHash,
     neutralBuilderPromptSha256: actualPromptHash,
     neutralBuilderConfigSha256: actualConfigHash,
     canonicalContractSha256: canonicalHash(canonicalContract),
     goldenFixtureSha256: canonicalHash(goldenRun),
-    freezeState: "provisional",
+    freezeState: "frozen",
   };
-  for (const [key, expected] of Object.entries(provisionalCommitments)) {
+  for (const [key, expected] of Object.entries(finalCommitments)) {
     if (lock[key] !== expected)
-      failures.push(`${key} does not match the provisional remediation lock`);
+      failures.push(`${key} does not match the final integrated lock`);
   }
   failures.push(
     ...validateCanonicalContract(canonicalContract),
@@ -856,6 +857,6 @@ if (isEntrypoint) {
     process.exit(1);
   }
   console.log(
-    `Protocol 2.1.0 provisional scaffold validation passed (${schemaPairCount} schema/data pairs; golden execution fixture accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.1.0-frozen scaffold validation passed (${schemaPairCount} schema/data pairs; golden execution fixture accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }

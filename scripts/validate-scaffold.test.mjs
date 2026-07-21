@@ -271,10 +271,10 @@ describe("protocol 2.1.0 cross-contract validation", () => {
   });
 
   it("rejects a provisional lock in execution mode", () => {
+    const lock = readJson("experiment/lock.json");
+    lock.freezeState = "provisional";
     assert.match(
-      validateArtifactMode(readJson("experiment/lock.json"), "execution").join(
-        "\n",
-      ),
+      validateArtifactMode(lock, "execution").join("\n"),
       /provisional lock/,
     );
   });

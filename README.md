@@ -1,15 +1,15 @@
 # Permissions Playground review-loop experiment
 
-This repository is the prospective common-start scaffold for protocol version 2.1.0. It tests a treatment-only review loop after two independent builders create the same React permissions-policy playground from an identical neutral prompt and configuration.
+This repository is the frozen common-start scaffold for protocol version 2.1.0-frozen. It tests a treatment-only review loop after two independent builders create the same React permissions-policy playground from an identical neutral prompt and configuration.
 
 ## Status
 
-- Phase: protocol 2.1.0 cross-contract remediation, provisional before builder exposure
+- Phase: protocol 2.1.0-frozen, integrated commitments locked before builder exposure
 - Product: intentionally not implemented on this branch
 - Public contract tests: committed but gated until all required implementation files exist
 - Hidden tests: sealed externally; the v2 commitment is not yet recorded
 - Treatment algorithm: exact skill-v1 flow incorporated and content-addressed
-- Experiment lock: the prior `2.0.0-frozen` lock is explicitly superseded; refreeze awaits the corrected skill commitment and new lock-parent commit
+- Experiment lock: the prior `2.0.0-frozen` lock is superseded; this lock binds content commit `211ec41b165c9400a49bb4f55ec2ef2490c9655a` and the corrected integrated skill
 - License: none has been granted; no license file is included
 
 Do not present this branch as a completed application or executable experiment. A passing scaffold check establishes internal consistency only.
@@ -58,7 +58,7 @@ The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact t
 - [`experiment/treatment-loop-algorithm.md`](experiment/treatment-loop-algorithm.md): exact frozen skill-v1 flow
 - [`experiment/schemas/`](experiment/schemas/): machine-readable artifact contracts and the authoritative finding schema
 - [`experiment/templates/`](experiment/templates/): prospective, non-evidentiary artifact examples
-- [`experiment/lock.json`](experiment/lock.json): provisional commitments; execution is prohibited until refrozen
+- [`experiment/lock.json`](experiment/lock.json): frozen non-self-referential integrated commitments
 
 ## Architecture and boundaries
 
