@@ -31,10 +31,20 @@
     "idPattern": "^cycle-[1-5]-reviewer-[0-9]{2}$"
   },
   "builderFreeze": {
-    "promptSha256": "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0",
+    "promptSha256": "bc4fb241c627b3d87093936b5485dff30c761eae0b7fcb0697f98932929935fd",
     "smokePromptSha256": "135c5fc59fe72b4b37d924cd6f1a14e4f2a3b7b59711cc12294e81f52cbfd6a2",
     "configSha256": "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4",
-    "rule": "each builder receives the exact raw prompt bytes on stdin under an otherwise identical frozen external CLI execution; only opaque invocation ID and runtime coordinate paths differ"
+    "rule": "each builder receives the exact raw prompt bytes and a byte-identical source-history-free neutral product projection; only opaque invocation ID and runtime coordinate paths differ",
+    "inputProjection": {
+      "allowlistPath": "experiment/builder-input-allowlist.json",
+      "allowlistSha256": "37af679c4f3f71cbd9e28b810897d4ff82c7c47cf4421a9d661b8b90947aef5b",
+      "manifestSchemaPath": "experiment/schemas/builder-input-manifest.schema.json",
+      "manifestSchemaSha256": "b044646ede4fef4543a4950e5842f51997dc3b65e6bfabad7eeb1ff84caf0bb5",
+      "preparationScriptPath": "scripts/prepare-builder-input.mjs",
+      "preparationScriptSha256": "ef2ce47851c8b849a902fb33f3e50ca38bf58a75566401b3a2a90fc27ee757e1",
+      "sourceRule": "private manifest binds the clean protocol source commit/tree; neither source nor manifest is builder input",
+      "outputRule": "two fresh nonnested git-init repositories with identical one-root commit/tree, core.autocrlf=false, no remotes, and exact allowlisted bytes only"
+    }
   },
   "cliRuntime": {
     "launchCommand": "pwsh -NoProfile -File",
@@ -52,9 +62,9 @@
     ],
     "roleLaunchRule": "every model-bearing role invocation is a fresh external Codex CLI subprocess using the frozen binary/auth/invariant argv, role-specific exact raw prompt bytes on stdin, --ephemeral, no resume, and distinct process and thread.started IDs; the bundled two-invocation contract and supervisor instantiate this rule for builders",
     "schemaPath": "experiment/schemas/cli-runtime-contract.schema.json",
-    "schemaSha256": "c18db758a6b40194e64c88d3842522ade28ff831806c6315e3c5348e92934c33",
+    "schemaSha256": "bb6c1ca1e91e07d2304c4d014910d6dca031aef2eabf144403f8f8de84905ecb",
     "runnerPath": "scripts/run-cli-builders.ps1",
-    "runnerSha256": "24653c35386be28f09aa5719617ca5ab612a67c1fb8700bd7503abe72569ff25",
+    "runnerSha256": "55891b9b32633e6bf1c823a271d9cd8496469fcb9a3a55fcc106f979c44e625e",
     "binaryPath": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe",
     "binaryVersion": "codex-cli 0.145.0-alpha.18",
     "binarySha256": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
@@ -92,7 +102,7 @@
     "freshnessRule": "builders launch concurrently in two separate OS processes with distinct thread.started IDs, --ephemeral, and no resume",
     "metadataRule": "model and reasoning are authoritatively pinned in argv after a harmless support check; provider is pinned by ChatGPT auth plus no OSS/local-provider option; trusted JSONL observations are recorded when present and conflicts invalidate; agent self-report is never evidence",
     "estimandRule": "descriptive randomized pilot under the pinned CLI deployment configuration; no strong causal or provider-wide generalization is claimed",
-    "isolationRule": "audited procedural boundary, not kernel-enforced proof: independent full clones with remotes disabled, nonnested non-reparse opaque paths, clean bound input commit/tree, separate temp/cache/dependency/port/evidence roots, workspace-write CLI sandbox, strict JSONL reconciliation, and invalidation on missing or out-of-scope evidence",
+    "isolationRule": "audited procedural boundary, not kernel-enforced proof: builders receive only independently initialized one-root neutral projections whose explicit path/byte manifest, aggregate content hash, projection commit/tree, allowlist, schema, and preparation script are verified before model launch; source history/context and private manifest remain outside; remotes are disabled; roots are nonnested; temp/cache/dependency/port/evidence are separate; workspace-write CLI sandbox and strict JSONL reconciliation apply",
     "successRule": "each process starts, receives stdin, exits zero before the external deadline, emits exactly one thread.started and turn.completed, exposes or explains absent usage, uses a distinct thread ID, reconciles raw JSONL and hashes, and finishes with a clean committed clone",
     "roleRuntime": {
       "schemaPath": "experiment/schemas/role-runtime-contract.schema.json",
@@ -188,7 +198,7 @@
     "packageMappingSchemaSha256": "2d0a96f27d43f511c26b57a49dfef5c05acfe0f5dfb1f8419f724d524513fb74",
     "packageInputRule": "exact X/Y/Z randomized order and B0/T0/Tfinal set; core.autocrlf=false clean full-clone sources must match exact refs, committed Git commit/tree, one frozen public-gate-set hash, and schema-bound private provenance markers; source, output, mapping, and private manifest paths remain separate and nonnested; evaluator-facing manifests omit source role/ref/commit/tree",
     "rubricSha256": "f0f4b5b918a9a50183455bf237a90706dcac58ce3cf708996bdc9ceb3b0978ef",
-    "frozenGateSetSha256": "ac6ad587fc42e4bf423134fddb1ab5704a9924cff968523c5e61cccba8b4a70e",
+    "frozenGateSetSha256": "b3d6f38a6b8f9350213d17c26fa891dfc4cfab52231d8277398b726cf294984c",
     "rubricItems": [
       {
         "id": "A1",

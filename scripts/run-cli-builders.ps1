@@ -83,6 +83,17 @@ if ((Get-Sha256 $schemaPath) -ne $contract.contractSchemaSha256) { throw "Runtim
 Assert-JsonSchema $schemaPath $contractFullPath "Runtime contract"
 $lock = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $lockPath -Raw)
 Assert-PowerShellHost $lock
+$builderManifestPath = [System.IO.Path]::GetFullPath($contract.builderInputManifestPath)
+$builderManifestSchemaPath = [System.IO.Path]::GetFullPath($contract.builderInputManifestSchemaPath)
+$builderAllowlistPath = [System.IO.Path]::GetFullPath($contract.builderInputAllowlistPath)
+$builderPreparationScriptPath = [System.IO.Path]::GetFullPath($contract.builderInputPreparationScriptPath)
+if ((Get-Sha256 $builderManifestPath) -ne $contract.builderInputManifestSha256) { throw "Builder input manifest hash mismatch" }
+if ((Get-Sha256 $builderManifestSchemaPath) -ne $contract.builderInputManifestSchemaSha256 -or $contract.builderInputManifestSchemaSha256 -ne $lock.builderInputManifestSchemaSha256) { throw "Builder input manifest schema binding mismatch" }
+if ((Get-Sha256 $builderAllowlistPath) -ne $contract.builderInputAllowlistSha256 -or $contract.builderInputAllowlistSha256 -ne $lock.builderInputAllowlistSha256) { throw "Builder input allowlist binding mismatch" }
+if ((Get-Sha256 $builderPreparationScriptPath) -ne $contract.builderInputPreparationScriptSha256 -or $contract.builderInputPreparationScriptSha256 -ne $lock.builderInputPreparationScriptSha256) { throw "Builder input preparation script binding mismatch" }
+Assert-JsonSchema $builderManifestSchemaPath $builderManifestPath "Builder input manifest"
+$builderManifest = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $builderManifestPath -Raw)
+if ($builderManifest.sourceCommit -ne $contract.sourceCommonStartCommit -or $builderManifest.sourceTree -ne $contract.sourceCommonStartTree -or $builderManifest.projectionCommit -ne $contract.commonStartCommit -or $builderManifest.projectionTree -ne $contract.commonStartTree -or $builderManifest.projectionSha256 -ne $contract.builderInputProjectionSha256 -or $builderManifest.allowlistSha256 -ne $contract.builderInputAllowlistSha256) { throw "Builder input manifest diverges from runtime contract" }
 $expectedPromptSha256 = if ($contract.smokeMode) { $lock.runnerSmokePromptSha256 } else { $lock.neutralBuilderPromptSha256 }
 if ($lock.cliBinarySha256 -ne $contract.cliSha256 -or $lock.cliRuntimeSchemaSha256 -ne $contract.contractSchemaSha256 -or $lock.cliRunnerSha256 -ne (Get-Sha256 $PSCommandPath) -or $expectedPromptSha256 -ne $contract.promptSha256) { throw "Contract does not match frozen lock runtime bindings" }
 if (($contract.invariantArgv -join "`0") -ne ($ExpectedInvariant -join "`0")) { throw "Invariant argv or ordering mismatch" }
@@ -112,6 +123,20 @@ foreach ($spec in $contract.invocations) {
   if (-not [System.IO.Directory]::Exists((Join-Path $workdir ".git"))) { throw "Builder input must be an independent full clone" }
   if ((Invoke-Git $workdir @("remote")).Length -ne 0) { throw "Builder clone remotes must be disabled" }
   if ((Invoke-Git $workdir @("rev-parse", "HEAD")) -ne $contract.commonStartCommit -or (Invoke-Git $workdir @("rev-parse", "HEAD^{tree}")) -ne $contract.commonStartTree) { throw "Builder common-start commit/tree mismatch" }
+  if ((Invoke-Git $workdir @("rev-list", "--count", "HEAD")) -ne "1" -or (Invoke-Git $workdir @("rev-list", "--parents", "-n", "1", "HEAD")).Split(" ").Count -ne 1) { throw "Builder input must be a source-history-free root commit" }
+  if ((Invoke-Git $workdir @("config", "--get", "core.autocrlf")) -ne "false") { throw "Builder clone must pin core.autocrlf=false" }
+  $trackedPaths = @((Invoke-Git $workdir @("ls-files")) -split "`n" | Where-Object { $_ -ne "" })
+  $manifestPaths = @($builderManifest.files | ForEach-Object { $_.path })
+  if (($trackedPaths -join "`0") -ne ($manifestPaths -join "`0")) { throw "Builder tracked paths diverge from the private allowlist manifest" }
+  $projectionMaterial = [System.Text.StringBuilder]::new()
+  foreach ($record in $builderManifest.files) {
+    $filePath = Join-Path $workdir ($record.path.Replace("/", [System.IO.Path]::DirectorySeparatorChar))
+    if (-not [System.IO.File]::Exists($filePath) -or (Get-Sha256 $filePath) -ne $record.sha256 -or ([System.IO.FileInfo]$filePath).Length -ne $record.bytes) { throw "Builder projected file does not match manifest: $($record.path)" }
+    [void]$projectionMaterial.Append("$($record.path)`0$($record.sha256)`0$($record.bytes)`n")
+  }
+  $projectionBytes = [System.Text.UTF8Encoding]::new($false).GetBytes($projectionMaterial.ToString())
+  $projectionHash = [System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::HashData($projectionBytes)).Replace("-", "").ToLowerInvariant()
+  if ($projectionHash -ne $contract.builderInputProjectionSha256) { throw "Builder projection content hash mismatch" }
   if ((Invoke-Git $workdir @("status", "--porcelain=v1")).Length -ne 0) { throw "Builder clone must start clean" }
   if (Test-PathsNestedOrEqual $workdir $evidenceRoot) { throw "Evidence root and candidate clone must be separate and nonnested" }
   foreach ($outputPath in @($spec.finalPath, $spec.stdoutPath, $spec.stderrPath, $spec.evidencePath, $spec.tempRoot, $spec.cacheRoot, $spec.dependencyRoot)) {

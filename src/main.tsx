@@ -5,11 +5,11 @@ import "./scaffold.css";
 export function ScaffoldNotice() {
   return (
     <main className="scaffold-notice">
-      <p className="eyebrow">Experiment Phase 1</p>
+      <p className="eyebrow">Policy workspace</p>
       <h1>Permissions Playground</h1>
       <p>
-        The product implementation is intentionally absent from this frozen
-        common-start scaffold.
+        The product implementation is intentionally absent from this starter
+        scaffold.
       </p>
       <p>
         Builders: read the specification and public-test contract before adding

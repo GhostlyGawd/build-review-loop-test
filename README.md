@@ -1,6 +1,6 @@
 # Permissions Playground review-loop experiment
 
-This repository is the prospective common-start scaffold for protocol version 2.4.0-draft. It tests a treatment-only review loop after two independent builders create the same React permissions-policy playground from identical raw prompt bytes under a supervised external Codex CLI runtime.
+This repository is the private prospective source scaffold for protocol version 2.4.0-draft. Before builder launch, a deterministic allowlist projects only neutral Permissions Playground task files into two byte-identical, freshly initialized one-root Git repositories. Builders never receive this repository, its history, README, experiment material, skills, hidden material, or evidence.
 
 ## Status
 
@@ -30,8 +30,9 @@ npm run dev
 
 ```mermaid
 flowchart LR
-  S[Frozen common start] --> A[Neutral build A]
-  S --> C[Neutral build B]
+  S[Private source common start] --> I[Allowlisted neutral projection]
+  I --> A[Neutral build A]
+  I --> C[Neutral build B]
   A --> Z[Seal both initial snapshots]
   C --> Z
   Z --> R[32-byte CSPRNG assignment]
@@ -55,6 +56,7 @@ The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact t
 - [`experiment/golden-run/`](experiment/golden-run/): synthetic prospective execution-mode conformance record
 - [`experiment/rubric.md`](experiment/rubric.md): unchanged 100-point 50/15/15/10/10 rubric
 - [`experiment/prompts/neutral-builder.md`](experiment/prompts/neutral-builder.md) and [`experiment/builder-config.json`](experiment/builder-config.json): identical neutral construction inputs
+- [`experiment/builder-input-allowlist.json`](experiment/builder-input-allowlist.json), [`experiment/schemas/builder-input-manifest.schema.json`](experiment/schemas/builder-input-manifest.schema.json), and [`scripts/prepare-builder-input.mjs`](scripts/prepare-builder-input.mjs): hash-bound source-to-product projection policy, private manifest contract, and deterministic two-repository preparer
 - [`experiment/treatment-loop-algorithm.md`](experiment/treatment-loop-algorithm.md): exact frozen skill-v1 flow
 - [`experiment/schemas/`](experiment/schemas/): machine-readable artifact contracts and the authoritative finding schema
 - [`experiment/templates/`](experiment/templates/): prospective, non-evidentiary artifact examples
@@ -62,7 +64,7 @@ The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact t
 
 ## Architecture and boundaries
 
-The scaffold contains protocol documents, schemas, test contracts, public tests, parameterized supervisors, a deterministic blinding packager, and a Vite placeholder. Invoke neutral construction as `pwsh -NoProfile -File scripts/run-cli-builders.ps1 -ContractPath <absolute-contract.json>`. Invoke one reviewer, fixer, tester, or evaluator as `pwsh -NoProfile -File scripts/run-cli-role.ps1 -ContractPath <absolute-role-contract.json>`. Both runners require the frozen PowerShell 7 host, schema-validate the complete runtime contract before any Codex launch, use frozen `gpt-5.4`/`xhigh` argv, raw stdin, fresh external processes, and content-addressed evidence. Builder-visible context contains no assignment envelope or task-leaf wrapper. `smokeMode: true` is reserved for the exact committed harmless runner-smoke prompt; normal construction accepts only the neutral builder prompt. Although this CLI exposes `--output-schema`, role argv omits it until a distinct pre-injection schema is frozen: the authoritative final schema requires observed runtime identity, which the supervisor—not the model—must inject.
+The scaffold contains protocol documents, schemas, test contracts, public tests, parameterized supervisors, a deterministic builder-input projector, a deterministic blinding packager, and a Vite placeholder. First prepare two neutral repositories with `node scripts/prepare-builder-input.mjs` and the exact bound source commit/tree, allowlist, destinations, and private manifest arguments. Then invoke neutral construction as `pwsh -NoProfile -File scripts/run-cli-builders.ps1 -ContractPath <absolute-contract.json>`. The builder runner validates the private manifest, projection-policy hashes, exact tracked path/byte set, aggregate projection hash, identical one-root commit/tree, disabled remotes, and `core.autocrlf=false` before any model process starts. Invoke one reviewer, fixer, tester, or evaluator as `pwsh -NoProfile -File scripts/run-cli-role.ps1 -ContractPath <absolute-role-contract.json>`. Both runners require the frozen PowerShell 7 host, schema-validate the complete runtime contract before any Codex launch, use frozen `gpt-5.4`/`xhigh` argv, raw stdin, fresh external processes, and content-addressed evidence. `smokeMode: true` is reserved for the exact committed harmless runner-smoke prompt; normal construction accepts only the neutral builder prompt. Although this CLI exposes `--output-schema`, role argv omits it until a distinct pre-injection schema is frozen: the authoritative final schema requires observed runtime identity, which the supervisor—not the model—must inject.
 
 Create evaluator inputs with `node scripts/package-blinded-snapshots.mjs --mapping <private-mapping.json> --output-root <fresh-output-directory> --manifest <private-manifest.json>`. Prepare each clean independent source clone with `git -c core.autocrlf=false clone ...` and retain `core.autocrlf=false`; this keeps frozen gate bytes stable before history-free export. The mapping supplies the exact X/Y/Z order, B0/T0/Tfinal source clones, source refs, commit/tree bindings, frozen public-gate-set hash, and exact private provenance markers (candidate/run IDs, evidence paths, and role-artifact names). Generic product or dependency vocabulary is allowed; exact private markers and Git/protocol/evidence artifacts are rejected. The manifest must remain outside the output root.
 

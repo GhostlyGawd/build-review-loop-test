@@ -45,7 +45,175 @@ const snapshot = (number) => ({
   packageProcedure: "frozen-test-procedure",
 });
 
+const runGit = (cwd, args, env = {}) =>
+  spawnSync("git", args, {
+    cwd,
+    encoding: "utf8",
+    env: { ...process.env, ...env },
+  });
+
+const createProjectionFixture = (entries, contents, layout = {}) => {
+  const temporaryRoot = mkdtempSync(
+    path.join(os.tmpdir(), "builder-projection-"),
+  );
+  const source = path.join(temporaryRoot, "source");
+  mkdirSync(source);
+  for (const [relative, content] of Object.entries(contents)) {
+    const absolute = path.join(source, ...relative.split("/"));
+    mkdirSync(path.dirname(absolute), { recursive: true });
+    writeFileSync(absolute, content);
+  }
+  const allowlist = path.join(source, "fixture-allowlist.json");
+  writeFileSync(
+    allowlist,
+    `${JSON.stringify({ version: "1.0.0", files: entries }, null, 2)}\n`,
+  );
+  assert.equal(runGit(source, ["init", "--initial-branch=source"]).status, 0);
+  assert.equal(
+    runGit(source, ["config", "user.name", "Projection Test"]).status,
+    0,
+  );
+  assert.equal(
+    runGit(source, ["config", "user.email", "projection@invalid.local"]).status,
+    0,
+  );
+  assert.equal(runGit(source, ["add", "--all"]).status, 0);
+  assert.equal(runGit(source, ["commit", "-m", "source fixture"]).status, 0);
+  const sourceCommit = runGit(source, ["rev-parse", "HEAD"]).stdout.trim();
+  const sourceTree = runGit(source, ["rev-parse", "HEAD^{tree}"]).stdout.trim();
+  const destinationA = layout.destinationAInsideSource
+    ? path.join(source, "builder-a")
+    : path.join(temporaryRoot, "builder-a");
+  const destinationB = layout.destinationBInsideA
+    ? path.join(destinationA, "builder-b")
+    : path.join(temporaryRoot, "builder-b");
+  const manifest = layout.manifestInsideA
+    ? path.join(destinationA, "manifest.json")
+    : path.join(temporaryRoot, "private", "manifest.json");
+  const result = spawnSync(
+    process.execPath,
+    [
+      path.join(root, "scripts/prepare-builder-input.mjs"),
+      "--source",
+      source,
+      "--destination-a",
+      destinationA,
+      "--destination-b",
+      destinationB,
+      "--allowlist",
+      allowlist,
+      "--manifest",
+      manifest,
+      "--source-commit",
+      sourceCommit,
+      "--source-tree",
+      sourceTree,
+    ],
+    { encoding: "utf8" },
+  );
+  return {
+    temporaryRoot,
+    sourceCommit,
+    destinationA,
+    destinationB,
+    manifest,
+    result,
+  };
+};
+
 describe("protocol 2.4.0-draft cross-contract validation", () => {
+  it("projects only allowlisted bytes into identical one-root builder repositories", () => {
+    const fixture = createProjectionFixture(
+      [{ source: "product.txt", destination: "product.txt" }],
+      {
+        "product.txt": "neutral product task\n",
+        "experiment/secret.txt": "SEALED_HIDDEN_SENTINEL\n",
+      },
+    );
+    try {
+      assert.equal(fixture.result.status, 0, fixture.result.stderr);
+      const manifest = JSON.parse(readFileSync(fixture.manifest, "utf8"));
+      assert.deepEqual(
+        manifest.files.map(({ path: filePath }) => filePath),
+        ["product.txt"],
+      );
+      assert.equal(
+        existsSync(path.join(fixture.destinationA, "experiment")),
+        false,
+      );
+      const aCommit = runGit(fixture.destinationA, [
+        "rev-parse",
+        "HEAD",
+      ]).stdout.trim();
+      const bCommit = runGit(fixture.destinationB, [
+        "rev-parse",
+        "HEAD",
+      ]).stdout.trim();
+      assert.equal(aCommit, bCommit);
+      assert.equal(
+        runGit(fixture.destinationA, [
+          "rev-list",
+          "--count",
+          "HEAD",
+        ]).stdout.trim(),
+        "1",
+      );
+      assert.notEqual(aCommit, fixture.sourceCommit);
+      assert.equal(runGit(fixture.destinationA, ["remote"]).stdout.trim(), "");
+      assert.equal(
+        runGit(fixture.destinationA, [
+          "config",
+          "--get",
+          "core.autocrlf",
+        ]).stdout.trim(),
+        "false",
+      );
+    } finally {
+      rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects projected experiment, skill, hidden, evidence, role, git, and lineage contamination", () => {
+    const cases = [
+      ["experiment/private.txt", "neutral\n"],
+      ["skills/private.txt", "neutral\n"],
+      ["sealed-hidden-suite/private.txt", "neutral\n"],
+      ["evidence/private.txt", "neutral\n"],
+      ["role-artifacts/private.txt", "neutral\n"],
+      [".git/private.txt", "neutral\n"],
+      ["product.txt", "LINEAGE_SENTINEL\n"],
+    ];
+    for (const [destination, content] of cases) {
+      const fixture = createProjectionFixture(
+        [{ source: "input.txt", destination }],
+        { "input.txt": content },
+      );
+      try {
+        assert.notEqual(fixture.result.status, 0, destination);
+      } finally {
+        rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("rejects nested source, builder, and private-manifest paths", () => {
+    for (const layout of [
+      { destinationAInsideSource: true },
+      { destinationBInsideA: true },
+      { manifestInsideA: true },
+    ]) {
+      const fixture = createProjectionFixture(
+        [{ source: "input.txt", destination: "input.txt" }],
+        { "input.txt": "neutral\n" },
+        layout,
+      );
+      try {
+        assert.notEqual(fixture.result.status, 0);
+      } finally {
+        rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+      }
+    }
+  });
   it("accepts the prospective scaffold and seeded assignment algorithms", () => {
     assert.deepEqual(validateScaffold().failures, []);
     assert.deepEqual(

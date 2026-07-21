@@ -459,8 +459,8 @@ export function validateNeutralBuilderPrompt(promptText) {
   const required = [
     "The operator writes this entire file byte-for-byte to raw standard input for each fresh CLI execution.",
     "The CLI `-C` argument supplies the isolated checkout and is not model context.",
-    "You are a neutral builder. The current checkout is the frozen common-start commit.",
-    "No prefix, suffix, placeholder substitution, candidate label, deadline timestamp, path wrapper, prompt-embedded runtime override, or added guidance is permitted.",
+    "You are a neutral builder. Implement the Permissions Playground defined by `docs/permissions-playground-spec.md` and `docs/public-test-contract.md`.",
+    "This repository is a source-history-free neutral product task projection containing only the files you are permitted to inspect.",
   ];
   return required
     .filter((clause) => !promptText.includes(clause))
@@ -531,6 +531,14 @@ export function validateCliRuntimeContract(
     failures.push("CLI ChatGPT auth attestation mismatch");
   if (contract.contractSchemaSha256 !== lock.cliRuntimeSchemaSha256)
     failures.push("CLI contract schema does not match frozen lock");
+  if (
+    contract.builderInputManifestSchemaSha256 !==
+      lock.builderInputManifestSchemaSha256 ||
+    contract.builderInputAllowlistSha256 !== lock.builderInputAllowlistSha256 ||
+    contract.builderInputPreparationScriptSha256 !==
+      lock.builderInputPreparationScriptSha256
+  )
+    failures.push("CLI builder-input projection commitments mismatch");
   if (!Array.isArray(contract.invocations) || contract.invocations.length !== 2)
     return [...failures, "CLI runtime requires exactly two invocations"];
   for (const field of [
@@ -1071,7 +1079,8 @@ export function validateCanonicalContract(contract) {
   ];
   if (
     contract.builderFreeze?.promptSha256 !==
-      "5c9f6a87c18295f500a228a5c31fa4afafd74d8122c3cf3e8f8b112e50c88db0" ||
+      fileSha256("experiment/prompts/neutral-builder.md") ||
+    contract.builderFreeze?.promptSha256 !== lock.neutralBuilderPromptSha256 ||
     contract.builderFreeze?.smokePromptSha256 !==
       fileSha256("experiment/prompts/runner-smoke.md") ||
     contract.builderFreeze?.smokePromptSha256 !==
@@ -1079,7 +1088,13 @@ export function validateCanonicalContract(contract) {
     contract.builderFreeze?.configSha256 !==
       "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4" ||
     contract.builderFreeze?.rule !==
-      "each builder receives the exact raw prompt bytes on stdin under an otherwise identical frozen external CLI execution; only opaque invocation ID and runtime coordinate paths differ"
+      "each builder receives the exact raw prompt bytes and a byte-identical source-history-free neutral product projection; only opaque invocation ID and runtime coordinate paths differ" ||
+    contract.builderFreeze?.inputProjection?.allowlistSha256 !==
+      lock.builderInputAllowlistSha256 ||
+    contract.builderFreeze?.inputProjection?.manifestSchemaSha256 !==
+      lock.builderInputManifestSchemaSha256 ||
+    contract.builderFreeze?.inputProjection?.preparationScriptSha256 !==
+      lock.builderInputPreparationScriptSha256
   )
     failures.push("canonical builder prompt/config commitments diverge");
   if (
@@ -1549,6 +1564,8 @@ export function validateScaffold() {
     "experiment/golden-run/invalid-current.json",
     "experiment/lock.json",
     "experiment/builder-config.json",
+    "experiment/builder-package.json",
+    "experiment/builder-input-allowlist.json",
     "experiment/treatment-loop-algorithm.md",
     "experiment/prompts/neutral-builder.md",
     "experiment/prompts/runner-smoke.md",
@@ -1561,6 +1578,7 @@ export function validateScaffold() {
     "experiment/schemas/outcome.schema.json",
     "experiment/schemas/experiment-status.schema.json",
     "experiment/schemas/cli-runtime-contract.schema.json",
+    "experiment/schemas/builder-input-manifest.schema.json",
     "experiment/schemas/role-runtime-contract.schema.json",
     "experiment/schemas/cli-supervision-evidence.schema.json",
     "experiment/schemas/blinded-package-manifest.schema.json",
@@ -1574,6 +1592,7 @@ export function validateScaffold() {
     "experiment/templates/blinded-package-manifest.json",
     "experiment/templates/blinded-package-mapping.json",
     "scripts/run-cli-builders.ps1",
+    "scripts/prepare-builder-input.mjs",
     "scripts/run-cli-role.ps1",
     "scripts/package-blinded-snapshots.mjs",
     "tests/public/evaluate.test.ts",
@@ -1700,6 +1719,17 @@ export function validateScaffold() {
   const actualConfigHash = sha256(
     readFileSync(path.join(root, "experiment/builder-config.json"), "utf8"),
   );
+  const actualBuilderAllowlistHash = sha256(
+    readFileSync(path.join(root, "experiment/builder-input-allowlist.json")),
+  );
+  const actualBuilderManifestSchemaHash = sha256(
+    readFileSync(
+      path.join(root, "experiment/schemas/builder-input-manifest.schema.json"),
+    ),
+  );
+  const actualBuilderPreparationScriptHash = sha256(
+    readFileSync(path.join(root, "scripts/prepare-builder-input.mjs")),
+  );
   const actualAlgorithmHash = sha256(algorithmText);
   const actualCliSchemaHash = sha256(
     readFileSync(
@@ -1795,6 +1825,9 @@ export function validateScaffold() {
     neutralBuilderPromptSha256: actualPromptHash,
     runnerSmokePromptSha256: actualSmokePromptHash,
     neutralBuilderConfigSha256: actualConfigHash,
+    builderInputAllowlistSha256: actualBuilderAllowlistHash,
+    builderInputManifestSchemaSha256: actualBuilderManifestSchemaHash,
+    builderInputPreparationScriptSha256: actualBuilderPreparationScriptHash,
     powerShellHostPath: String.raw`C:\Users\rhenm\AppData\Local\pwsh7\pwsh.exe`,
     powerShellVersion: "7.6.2",
     powerShellHostSha256:

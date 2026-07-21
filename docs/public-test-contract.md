@@ -14,7 +14,7 @@ The public suite dynamically imports the required modules only after activation,
 - default deny, enabled filtering, inheritance, specificity, tied deny precedence, sorted winners, and input immutability;
 - required regions, checker initial state, live result, all 36 matrix cells, enable/delete/reset behavior, add behavior, and core accessible names.
 
-Public assertions are minimum acceptance evidence, not a complete rubric. Passing them does not guarantee the hidden suite or human rubric score. Hidden cases are held outside this repository; only their SHA-256 digest belongs in `experiment/lock.json`.
+Public assertions are minimum acceptance evidence, not a complete quality review. Passing them does not guarantee that every edge case or usability requirement is satisfied.
 
 Builders may add tests but MUST NOT edit, skip, delete, or weaken `tests/public/**`, `scripts/run-public-tests.mjs`, or the activation file list. Operators must invalidate an arm if that occurs before blinded evaluation.
 

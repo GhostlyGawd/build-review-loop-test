@@ -18,6 +18,9 @@
     "neutralBuilderPromptSha256",
     "runnerSmokePromptSha256",
     "neutralBuilderConfigSha256",
+    "builderInputAllowlistSha256",
+    "builderInputManifestSchemaSha256",
+    "builderInputPreparationScriptSha256",
     "powerShellHostPath",
     "powerShellVersion",
     "powerShellHostSha256",
@@ -72,6 +75,9 @@
     "neutralBuilderPromptSha256": { "$ref": "#/$defs/sha256" },
     "runnerSmokePromptSha256": { "$ref": "#/$defs/sha256" },
     "neutralBuilderConfigSha256": { "$ref": "#/$defs/sha256" },
+    "builderInputAllowlistSha256": { "$ref": "#/$defs/sha256" },
+    "builderInputManifestSchemaSha256": { "$ref": "#/$defs/sha256" },
+    "builderInputPreparationScriptSha256": { "$ref": "#/$defs/sha256" },
     "powerShellHostPath": {
       "const": "C:\\Users\\rhenm\\AppData\\Local\\pwsh7\\pwsh.exe"
     },
