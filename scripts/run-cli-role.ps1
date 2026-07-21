@@ -27,6 +27,13 @@ function Assert-PowerShellHost($Lock) {
   $hostPath = [System.IO.Path]::GetFullPath([System.Environment]::ProcessPath)
   if (-not $hostPath.Equals([System.IO.Path]::GetFullPath($Lock.powerShellHostPath), [System.StringComparison]::OrdinalIgnoreCase) -or $PSVersionTable.PSVersion.ToString() -ne $Lock.powerShellVersion -or (Get-Sha256 $hostPath) -ne $Lock.powerShellHostSha256) { throw "PowerShell host path/version/hash mismatch" }
 }
+function Assert-JsonSchema([string]$SchemaPath, [string]$JsonPath, [string]$Label) {
+  $schemaCheck = 'const fs=require("node:fs");const Ajv=require("ajv/dist/2020").default;const schema=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));const value=JSON.parse(fs.readFileSync(process.argv[2],"utf8"));const validate=new Ajv({allErrors:true,strict:true,strictTypes:false,validateFormats:false}).compile(schema);if(!validate(value)){process.stderr.write(JSON.stringify(validate.errors));process.exit(1);}'
+  $protocolRoot = Split-Path -Parent (Split-Path -Parent $SchemaPath)
+  Push-Location $protocolRoot
+  try { $result = Invoke-NativeCapture "node" @("-e", $schemaCheck, $SchemaPath, $JsonPath) } finally { Pop-Location }
+  if ($result.ExitCode -ne 0) { throw "$Label schema invalid: $($result.Stderr.Trim())" }
+}
 function Invoke-Git([string]$Workdir, [string[]]$Arguments) { $output = (& git -C $Workdir @Arguments 2>&1 | Out-String).Trim(); if ($LASTEXITCODE -ne 0) { throw "git failed in $Workdir`: $output" }; return $output }
 function Resolve-Beneath([string]$Root, [string]$Candidate) {
   $resolved = [System.IO.Path]::GetFullPath($Candidate)
@@ -61,6 +68,7 @@ $lockPath = [System.IO.Path]::GetFullPath($contract.lockPath); $schemaPath = [Sy
 $runnerPath = [System.IO.Path]::GetFullPath($contract.runnerPath); $evidenceSchemaPath = [System.IO.Path]::GetFullPath($contract.evidenceSchemaPath)
 $promptTemplatePath = [System.IO.Path]::GetFullPath($contract.promptTemplatePath); $artifactSchemaPath = [System.IO.Path]::GetFullPath($contract.artifactSchemaPath)
 if ((Get-Sha256 $lockPath) -ne $contract.lockSha256 -or (Get-Sha256 $schemaPath) -ne $contract.contractSchemaSha256 -or (Get-Sha256 $runnerPath) -ne $contract.runnerSha256 -or (Get-Sha256 $evidenceSchemaPath) -ne $contract.evidenceSchemaSha256 -or (Get-Sha256 $promptTemplatePath) -ne $contract.promptTemplateSha256 -or (Get-Sha256 $artifactSchemaPath) -ne $contract.artifactSchemaSha256) { throw "Frozen lock, runner, prompt, or schema hash mismatch" }
+Assert-JsonSchema $schemaPath $contractFullPath "Runtime contract"
 $lock = ConvertFrom-JsonLiteral (Get-Content -LiteralPath $lockPath -Raw)
 Assert-PowerShellHost $lock
 $policy = $RolePolicy[$contract.role]

@@ -2,7 +2,7 @@
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-conformance",
   "protocolVersion": "2.4.0",
-  "canonicalContractSha256": "32d8a954523d0ad4048a8ea113e5d21262ee6dff73cc4390082a300d688a9b74",
+  "canonicalContractSha256": "541985e02a49b79910282a6e7f26e43fbde3ae500ebfcdf9cef6d031f1a74b49",
   "status": "valid",
   "activeInvalidation": null,
   "invalidAttempts": [

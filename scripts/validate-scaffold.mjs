@@ -1115,6 +1115,8 @@ export function validateCanonicalContract(contract) {
       fileSha256("experiment/schemas/cli-supervision-evidence.schema.json") ||
     contract.cliRuntime?.roleRuntime?.evidenceSchemaSha256 !==
       lock.supervisionEvidenceSchemaSha256 ||
+    contract.cliRuntime?.roleRuntime?.outputSchemaPolicy !==
+      "codex exec supports --output-schema, but authoritative final schemas require supervisor-observed runtime identity; omit the flag until distinct frozen pre-injection schemas exist, then inject observed identity and validate the authoritative final schema" ||
     contract.evaluation?.packageScriptSha256 !==
       fileSha256("scripts/package-blinded-snapshots.mjs") ||
     contract.evaluation?.packageScriptSha256 !==

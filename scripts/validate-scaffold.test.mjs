@@ -331,6 +331,7 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       assert.match(source, /\[System\.Environment\]::ProcessPath/);
       assert.match(source, /RedirectStandardError = \$true/);
       assert.match(source, /Invoke-NativeCapture \$contract\.cliPath/);
+      assert.match(source, /Assert-JsonSchema \$schemaPath \$contractFullPath/);
     }
     const hostBytes = readFileSync(lock.powerShellHostPath);
     assert.equal(sha256(hostBytes), lock.powerShellHostSha256);
@@ -383,6 +384,100 @@ describe("protocol 2.4.0-draft cross-contract validation", () => {
       { encoding: "utf8" },
     );
     assert.equal(stderrAuthCheck.status, 0, stderrAuthCheck.stderr);
+  });
+
+  it("rejects invalid builder and role contracts before any Codex launch", () => {
+    const temp = mkdtempSync(
+      path.join(os.tmpdir(), "protocol-contract-preflight-"),
+    );
+    try {
+      const lock = readJson("experiment/lock.json");
+      const lockedPath = (relative) => path.join(root, relative);
+      const bytesHash = (relative) =>
+        sha256(readFileSync(lockedPath(relative)));
+      const invalidId = `c${"3".repeat(32)}`;
+      const cases = [];
+
+      const builder = clone(
+        readJson("experiment/golden-run/golden-run.json").cliRuntimeContract,
+      );
+      builder.lockPath = lockedPath("experiment/lock.json");
+      builder.lockSha256 = bytesHash("experiment/lock.json");
+      builder.contractSchemaPath = lockedPath(
+        "experiment/schemas/cli-runtime-contract.schema.json",
+      );
+      builder.contractSchemaSha256 = bytesHash(
+        "experiment/schemas/cli-runtime-contract.schema.json",
+      );
+      builder.invocations[0].invocationId = invalidId;
+      builder.evidenceRoot = path.join(temp, "builder-evidence-must-not-exist");
+      const builderPath = path.join(temp, "invalid-builder.json");
+      writeFileSync(builderPath, JSON.stringify(builder));
+      cases.push([
+        "scripts/run-cli-builders.ps1",
+        builderPath,
+        builder.evidenceRoot,
+      ]);
+
+      const role = clone(
+        readJson("experiment/templates/role-runtime-contract.json"),
+      );
+      role.invocationId = invalidId;
+      role.lockPath = lockedPath("experiment/lock.json");
+      role.lockSha256 = bytesHash("experiment/lock.json");
+      role.contractSchemaPath = lockedPath(
+        "experiment/schemas/role-runtime-contract.schema.json",
+      );
+      role.contractSchemaSha256 = bytesHash(
+        "experiment/schemas/role-runtime-contract.schema.json",
+      );
+      role.runnerPath = lockedPath("scripts/run-cli-role.ps1");
+      role.runnerSha256 = bytesHash("scripts/run-cli-role.ps1");
+      role.evidenceSchemaPath = lockedPath(
+        "experiment/schemas/cli-supervision-evidence.schema.json",
+      );
+      role.evidenceSchemaSha256 = bytesHash(
+        "experiment/schemas/cli-supervision-evidence.schema.json",
+      );
+      role.promptTemplatePath = lockedPath(
+        "experiment/prompts/blinded-reviewer.md",
+      );
+      role.promptTemplateSha256 = bytesHash(
+        "experiment/prompts/blinded-reviewer.md",
+      );
+      role.artifactSchemaPath = lockedPath(
+        "experiment/schemas/review.schema.json",
+      );
+      role.artifactSchemaSha256 = bytesHash(
+        "experiment/schemas/review.schema.json",
+      );
+      role.evidenceRoot = path.join(temp, "role-evidence-must-not-exist");
+      const rolePath = path.join(temp, "invalid-role.json");
+      writeFileSync(rolePath, JSON.stringify(role));
+      cases.push(["scripts/run-cli-role.ps1", rolePath, role.evidenceRoot]);
+
+      for (const [runner, contractPath, evidenceRoot] of cases) {
+        const result = spawnSync(
+          lock.powerShellHostPath,
+          [
+            "-NoProfile",
+            "-File",
+            lockedPath(runner),
+            "-ContractPath",
+            contractPath,
+          ],
+          { cwd: root, encoding: "utf8" },
+        );
+        assert.notEqual(result.status, 0, runner);
+        assert.match(
+          `${result.stdout}\n${result.stderr}`,
+          /Runtime contract schema invalid/,
+        );
+        assert.equal(existsSync(evidenceRoot), false);
+      }
+    } finally {
+      rmSync(temp, { recursive: true, force: true });
+    }
   });
 
   it("rejects binary, argv-order, resume, and config drift", () => {

@@ -54,7 +54,7 @@
     "schemaPath": "experiment/schemas/cli-runtime-contract.schema.json",
     "schemaSha256": "c18db758a6b40194e64c88d3842522ade28ff831806c6315e3c5348e92934c33",
     "runnerPath": "scripts/run-cli-builders.ps1",
-    "runnerSha256": "e3ca39f132c0daf0af05470478d9ca57ace232609b2dd453b06f1dfeee4b1db9",
+    "runnerSha256": "24653c35386be28f09aa5719617ca5ab612a67c1fb8700bd7503abe72569ff25",
     "binaryPath": "C:\\Users\\rhenm\\.codex\\plugins\\.plugin-appserver\\codex.exe",
     "binaryVersion": "codex-cli 0.145.0-alpha.18",
     "binarySha256": "20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4",
@@ -98,7 +98,7 @@
       "schemaPath": "experiment/schemas/role-runtime-contract.schema.json",
       "schemaSha256": "25a30d43ceb77e7bd4b908f8e577dc6ea0c7f9eb41c61f7c8c77af83f528632f",
       "runnerPath": "scripts/run-cli-role.ps1",
-      "runnerSha256": "d7a29efbf890c07a44e0e60bcbe7206855cf7fa603a4e272e67d986d3ef3202a",
+      "runnerSha256": "385830cc00bebca1541040dababf9496610064d94eb252a02c8de7d77cf6cea3",
       "evidenceSchemaPath": "experiment/schemas/cli-supervision-evidence.schema.json",
       "evidenceSchemaSha256": "f6c18acea89f5cfac3b2fe6ad84871f563e217d884b14ecb29e6606bb99dcd89",
       "promptTemplateSha256": {
@@ -114,6 +114,7 @@
         "evaluator": "12a769a0868261e28299b5a7feef71626ea6e1ee51bfb0eb59ce65bbec05e6aa"
       },
       "promptSubstitutionRule": "exact role-specific key set; single-line bounded values; candidate/cycle/snapshot, fixer handoff, and evaluator package/sequence/rubric/schema/hidden-suite values must equal their contract bindings",
+      "outputSchemaPolicy": "codex exec supports --output-schema, but authoritative final schemas require supervisor-observed runtime identity; omit the flag until distinct frozen pre-injection schemas exist, then inject observed identity and validate the authoritative final schema",
       "reviewerPolicy": "read-only snapshot",
       "fixerPolicy": "authorized isolated full-clone write followed by clean commit",
       "testerPolicy": "workspace-write disposable copy; no mutation transfer",
