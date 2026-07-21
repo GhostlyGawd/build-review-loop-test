@@ -51,6 +51,7 @@ Run:
 python scripts/validate_artifacts.py tests/fixtures/golden-run.json --mode execution --expect-golden
 python scripts/validate_artifacts.py tests/fixtures/invalid-current.json --mode execution
 python -m unittest scripts/test_validate_artifacts.py -v
+python ../../validation/manifest_tool.py --repo ../.. --source HEAD
 ```
 
 Invalidate on any frozen-byte, host, binary, auth, model/reasoning, argv, prompt, runtime, path, process/thread, lifecycle, JSONL, usage, artifact, snapshot, assignment, gate, package, evaluator sequence, seal, or evidence-chain mismatch. Preserve sanitized invalid evidence. Do not silently weaken the design, launch a replacement runtime, publish, push, open a PR, deploy, tag, release, or change repository settings without separate authorization.

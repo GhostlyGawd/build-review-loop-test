@@ -19,6 +19,12 @@ assert SPEC and SPEC.loader
 validator = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(validator)
 
+MANIFEST_MODULE_PATH = MODULE_PATH.parents[3] / "validation" / "manifest_tool.py"
+MANIFEST_SPEC = importlib.util.spec_from_file_location("manifest_tool", MANIFEST_MODULE_PATH)
+assert MANIFEST_SPEC and MANIFEST_SPEC.loader
+manifest_tool = importlib.util.module_from_spec(MANIFEST_SPEC)
+MANIFEST_SPEC.loader.exec_module(manifest_tool)
+
 
 class ValidatorTests(unittest.TestCase):
     @classmethod
@@ -123,6 +129,33 @@ class ValidatorTests(unittest.TestCase):
 
     def test_bundled_public_sources_have_exact_hashes(self) -> None:
         self.assertEqual([], validator.validate_bundles())
+
+    def test_manifest_uses_git_blobs_not_crlf_smudged_worktree_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            (repo / "skills").mkdir()
+            (repo / "validation").mkdir()
+            (repo / ".gitattributes").write_bytes(b"* text=auto eol=lf\n")
+            target = repo / "skills" / "example.txt"
+            target.write_bytes(b"alpha\nbeta\n")
+            (repo / "validation" / "note.txt").write_bytes(b"canonical\n")
+            commands = (
+                ["git", "init", "--initial-branch=main"],
+                ["git", "config", "user.name", "Manifest Test"],
+                ["git", "config", "user.email", "manifest@invalid.local"],
+                ["git", "add", "--all"],
+                ["git", "commit", "-m", "fixture"],
+            )
+            for command in commands:
+                result = subprocess.run(command, cwd=repo, capture_output=True, text=True, check=False)
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+            manifest = manifest_tool.render_manifest(repo, "HEAD")
+            (repo / "MANIFEST.sha256").write_bytes(manifest.encode("utf-8"))
+            canonical = hashlib.sha256(b"alpha\nbeta\n").hexdigest()
+            self.assertIn(f"{canonical}  skills/example.txt", manifest)
+            target.write_bytes(b"alpha\r\nbeta\r\n")
+            self.assertEqual([], manifest_tool.validate_manifest(repo, "HEAD"))
+            self.assertEqual([], manifest_tool.validate_manifest(repo, "index"))
 
     def test_pinned_powershell_host_exists_with_exact_version_and_hash(self) -> None:
         host = Path(validator.PWSH_PATH)

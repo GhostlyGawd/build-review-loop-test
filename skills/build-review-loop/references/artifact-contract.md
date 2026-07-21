@@ -41,3 +41,7 @@ Canonical JSON accepts only null, booleans, safe integers, strings, arrays, and 
 Evidence sequence starts at 0 with null predecessor; each later predecessor equals the prior canonical artifact hash. A completed run is exactly valid or invalid. Valid requires null active invalidation, three sealed evaluations, and outcome. Invalid requires structured active invalidation and null evaluations/outcome. Never score an active invalidation.
 
 Templates are non-executable. Execution rejects zero/sentinel/provisional values, duplicate runtime identity, wrong model/reasoning/argv, inherited history/resume, missing lifecycle/usage treatment, unsafe paths, package provenance leakage, broken seals, and any canonical divergence.
+
+## Portable repository manifest
+
+`MANIFEST.sha256` hashes canonical Git/index blob bytes, never smudged worktree bytes. Generation and validation use `validation/manifest_tool.py`; entries cover `.gitattributes`, `skills/`, and `validation/`, exclude the manifest itself, and are sorted by repository path. The committed LF policy improves checkout consistency, but correctness does not depend on checkout line endings: an LF Git blob still validates when a local worktree file is CRLF.

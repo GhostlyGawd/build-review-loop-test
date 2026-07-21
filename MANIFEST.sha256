@@ -1,8 +1,10 @@
 # Frozen SHA-256 manifest for build-review-loop skill v1 / public protocol 2.4.0-draft.
-# Hashes cover exact skill sources, byte-identical public fixtures, source parity, and validation evidence.
+# Hashes cover canonical Git blobs for attributes, skill sources, public fixtures, parity, and evidence.
 # Excluded: this manifest (to avoid self-reference), ignored bytecode, and unrelated repository files.
-08e55099d0f936a48b5359a41e4818dba855e1e9b259860ac994a203ba5b434c  skills/build-review-loop/agents/openai.yaml
-a89a162f922622bbdc081f430e7dff63938d065c6113dc513be87d1bce43a1fe  skills/build-review-loop/references/artifact-contract.md
+d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c  .gitattributes
+ea25649e9b4b69cc8a05059e13a29d15ef6289f462f58d3069df997652476a54  skills/build-review-loop/SKILL.md
+ee593caa63d7d0f5c160414581babb4762c0978ef136107f0ec55bb70c09dc94  skills/build-review-loop/agents/openai.yaml
+afe98f81a2b37617ccdc79b15dc0f3dc559ca99ad7bcc8f93cf405c3d9f6afd2  skills/build-review-loop/references/artifact-contract.md
 ee2e0620aa9a7d55ef047dda9d6d947ee750ebd3bb3bc1f149a229eb11adbe40  skills/build-review-loop/references/blinded-evaluator.md
 4d9d8397fc068cdf511e99bae6980ed2d2ef5410e5128385043f1c426cdb8bd5  skills/build-review-loop/references/blinded-package-manifest.schema.json
 c35470675fadf7157d954216bba53f88b226786c204ab2d6ce575b31450acadf  skills/build-review-loop/references/blinded-package-manifest.template.json
@@ -44,10 +46,10 @@ f0d6937137661ef750fe435afbe4ca1cba8ce727ed7bdf0986e98a9c1d476f06  skills/build-r
 68e186914a0dd99e0b91f0851d45f8081086fffadae8d2949050e29ea1b832b3  skills/build-review-loop/scripts/prepare-builder-input.mjs
 b2e848a193c28d93893829a3dceeba323999193a0d96acee8848d0eff06e70b7  skills/build-review-loop/scripts/run-cli-builders.ps1
 f78ec27cc30f66a58464be6f5b60a4437808b97ec85186916171ee22e9b6b3b4  skills/build-review-loop/scripts/run-cli-role.ps1
-3350b3a13ec53743050d64eeaa439cffb1733200699fea91825fa86b7c0303bb  skills/build-review-loop/scripts/test_validate_artifacts.py
+41343ff41ef7440774ca216367ea9b226426243ab5ad247f39ce5ddb5728b91a  skills/build-review-loop/scripts/test_validate_artifacts.py
 2ab400c362b0291653e164764a7159a6ae206fdeec12812217d514d7e96f4ceb  skills/build-review-loop/scripts/validate_artifacts.py
-1133df2b7908d332bc20082e594f3beabc952e633f513170534d4365bf7b1dec  skills/build-review-loop/SKILL.md
 39f6b6401bb404b0f1654cde25c50418fe3f0a2d9bc7e387de311101b926b39f  skills/build-review-loop/tests/fixtures/golden-run.json
 7abd35f57da85143a955c6497b83e9f7b81acf3b21fe5c16080911983fdc1415  skills/build-review-loop/tests/fixtures/invalid-current.json
+06539fbea74c7992d5324cf2ca2caaf12f615a76840a77627c8282a92f34d9d5  validation/manifest_tool.py
 6a31b071d752fe24a4fba0643492482623307f2184ba2e5ff69e4a629bc230e9  validation/source-parity.json
-1c65fa0c14abd6905878b5a301ece5612d9687d04119ef19a1dc30e75eead20b  validation/validation-evidence.txt
+ae6cd9dfcd26e8a2def941400aae632c39ced0d1a95478f6094aac4b1111a432  validation/validation-evidence.txt
