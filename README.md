@@ -1,15 +1,15 @@
 # Permissions Playground review-loop experiment
 
-This repository is the prospective source scaffold for protocol version 2.6.0. Before builder launch, a deterministic allowlist projects only neutral Permissions Playground task files into two byte-identical, freshly initialized one-root Git repositories. Builders never receive this repository, its history, README, experiment material, skills, hidden material, or evidence.
+This repository is the prospective source scaffold for protocol version 2.7.0. Before builder launch, a deterministic allowlist projects only neutral Permissions Playground task files into two byte-identical, freshly initialized one-root Git repositories. Builders never receive this repository, its history, README, experiment material, skills, hidden material, or evidence.
 
 ## Status
 
-- Phase: protocol 2.6.0 locked, before builder exposure
+- Phase: protocol 2.7.0 locked, before replacement builder exposure
 - Product: intentionally not implemented on this branch
 - Public contract tests: committed but gated until all required implementation files exist
 - Hidden tests: sealed externally; the existing v2 commitment remains unchanged
 - Treatment algorithm: exact skill-v1 flow incorporated and content-addressed
-- Experiment lock: 2.6.0 execution repair, including a no-model permission probe and supervisor-owned commits
+- Experiment lock: 2.7.0 actual-exec permission repair, including an exact harmless model-bearing capability probe and supervisor-owned commits
 - License: none has been granted; no license file is included
 
 Do not present this branch as a completed application or executable experiment. A passing scaffold check establishes internal consistency only.
@@ -62,10 +62,11 @@ The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact t
 - [`experiment/templates/`](experiment/templates/): prospective, non-evidentiary artifact examples
 - [`experiment/lock.json`](experiment/lock.json): protocol 2.6 commitments and sanitized preflight binding
 - [`experiment/preflight/aborted-lock-2.4.0.json`](experiment/preflight/aborted-lock-2.4.0.json): sanitized record of the earlier prelaunch candidate/tester gate mismatch
-- [`experiment/preflight/aborted-lock-2.5.0.json`](experiment/preflight/aborted-lock-2.5.0.json): sanitized record of the sandbox/commit contradiction; two invalid builder turns occurred before assignment, with no treatment or evaluation
+- [`experiment/preflight/aborted-lock-2.5.0.json`](experiment/preflight/aborted-lock-2.5.0.json): sanitized record of the sandbox/commit contradiction
+- [`experiment/preflight/aborted-lock-2.6.0.json`](experiment/preflight/aborted-lock-2.6.0.json): sanitized record of the actual-exec read-only failure; two invalid replacement builder turns occurred before assignment, with no treatment or evaluation
 - [`experiment/preflight/`](experiment/preflight/): source-parity inventory and sanitized preflight commitments
 
-Protocol 2.6 preserves the neutral candidate projection and post-build randomization. The CLI remains frozen at `-a never` with network disabled. Models write only authorized worktree files; the hash-bound trusted supervisor creates commits after validating lifecycle evidence and frozen paths. Before replacement builders run, a no-model sandbox probe must demonstrate ordinary writes and Git/Node/npm execution, protected Git metadata, unchanged private/outside canaries, and a clean hook-free supervisor commit.
+Protocol 2.7 preserves the neutral candidate projection and post-build randomization. The CLI remains frozen at `-a never` with network disabled and uses the explicit Windows elevated sandbox backend. Models write only authorized worktree files; the hash-bound trusted supervisor creates commits after validating lifecycle evidence and frozen paths. Before replacement builders run, a harmless actual `codex exec` capability probe must use the same pinned binary, model, reasoning, approval, sandbox, configuration overrides, environment-key behavior, and add-dir shape as a builder; it must demonstrate ordinary writes and Git/Node/npm execution, protected Git metadata, unchanged private/outside canaries, and a clean hook-free supervisor commit. The earlier no-model sandbox probe remains secondary evidence only.
 
 ## Architecture and boundaries
 

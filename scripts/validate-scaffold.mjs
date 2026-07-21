@@ -619,14 +619,51 @@ export const cliInvariantArgv = [
   "gpt-5.4",
   "-c",
   'model_reasoning_effort="xhigh"',
+  "-c",
+  'windows.sandbox="elevated"',
+  "-c",
+  "sandbox_workspace_write.network_access=false",
   "exec",
   "--ephemeral",
   "--ignore-user-config",
+  "--ignore-rules",
   "--skip-git-repo-check",
   "--sandbox",
   "workspace-write",
   "--json",
 ];
+export function validateActualExecPermissionProbe(probe, lock) {
+  const failures = [];
+  const ajv = new Ajv2020({
+    allErrors: true,
+    strict: true,
+    strictTypes: false,
+    validateFormats: false,
+  });
+  const validate = ajv.compile(
+    readJson("experiment/schemas/actual-exec-permission-probe.schema.json"),
+  );
+  if (!validate(probe))
+    failures.push(
+      `actual-exec permission probe schema failure: ${ajv.errorsText(validate.errors)}`,
+    );
+  if (JSON.stringify(probe.invariantArgv) !== JSON.stringify(cliInvariantArgv))
+    failures.push("actual-exec probe argv differs from builder invariant argv");
+  if (
+    JSON.stringify(probe.environmentKeys) !==
+      JSON.stringify(["TEMP", "TMP", "NPM_CONFIG_CACHE", "CODEX_DEPENDENCY_ROOT", "PORT"]) ||
+    JSON.stringify(probe.addDirRoles) !==
+      JSON.stringify(["tempRoot", "cacheRoot", "dependencyRoot"])
+  )
+    failures.push("actual-exec probe environment/add-dir shape diverges");
+  if (
+    probe.promptSha256 !== lock.actualExecProbePromptSha256 ||
+    probe.cliSha256 !== lock.cliBinarySha256 ||
+    probe.valid !== true
+  )
+    failures.push("actual-exec probe lock binding mismatch");
+  return failures;
+}
 const cliTail = (invocation) => [
   "--add-dir",
   invocation.tempRoot,
@@ -1105,9 +1142,14 @@ export function validateRoleSupervisionEvidence(
     "gpt-5.4",
     "-c",
     'model_reasoning_effort="xhigh"',
+    "-c",
+    'windows.sandbox="elevated"',
+    "-c",
+    "sandbox_workspace_write.network_access=false",
     "exec",
     "--ephemeral",
     "--ignore-user-config",
+    "--ignore-rules",
     "--skip-git-repo-check",
     "--sandbox",
     contract.sandboxMode,
@@ -1984,6 +2026,10 @@ export function validateScaffold() {
     "experiment/preflight/operational-parent-inventory.json",
     "experiment/preflight/final-lock-evidence.json",
     "experiment/preflight/aborted-lock-2.5.0.json",
+    "experiment/preflight/aborted-lock-2.6.0.json",
+    "experiment/preflight/actual-exec-permission-probe-2.7.0.json",
+    "experiment/prompts/actual-exec-capability-probe.md",
+    "experiment/schemas/actual-exec-permission-probe.schema.json",
     "experiment/builder-config.json",
     "experiment/builder-package.json",
     "experiment/builder-input-allowlist.json",
@@ -2017,6 +2063,7 @@ export function validateScaffold() {
     "scripts/canonicalize-paths.mjs",
     "scripts/prepare-builder-input.mjs",
     "scripts/run-cli-role.ps1",
+    "scripts/verify-cli-exec-permissions.ps1",
     "scripts/package-blinded-snapshots.mjs",
     "tests/public/evaluate.test.ts",
     "tests/public/ui.test.tsx",
@@ -2253,8 +2300,14 @@ export function validateScaffold() {
   );
   const actualPermissionProbeHash = sha256Bytes(
     readFileSync(
-      path.join(root, "experiment/preflight/permission-probe-2.6.0.json"),
+      path.join(
+        root,
+        "experiment/preflight/actual-exec-permission-probe-2.7.0.json",
+      ),
     ),
+  );
+  const actualPermissionProbe = readJson(
+    "experiment/preflight/actual-exec-permission-probe-2.7.0.json",
   );
   const actualReviewerPromptHash = sha256(
     readFileSync(path.join(root, "experiment/prompts/blinded-reviewer.md")),
@@ -2418,6 +2471,7 @@ export function validateScaffold() {
       operationalParentInventory,
       lock,
     ),
+    ...validateActualExecPermissionProbe(actualPermissionProbe, lock),
     ...validateCanonicalContract(canonicalContract),
     ...validateGoldenRun(goldenRun, canonicalContract, lock),
     ...validateExperimentConclusion(invalidCurrent),
@@ -2559,6 +2613,6 @@ if (isEntrypoint) {
     process.exit(1);
   }
   console.log(
-    `Protocol 2.6.0 locked scaffold validation passed (${schemaPairCount} schema/data pairs; P-bound preflight and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.7.0 locked scaffold validation passed (${schemaPairCount} schema/data pairs; P-bound preflight and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }

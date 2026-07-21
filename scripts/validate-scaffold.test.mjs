@@ -24,6 +24,7 @@ import {
   roleWaitFromAbsoluteDeadline,
   root,
   validateArtifactMode,
+  validateActualExecPermissionProbe,
   validateCliRuntimeContract,
   validateCliSupervisionEvidence,
   validateAssignmentSemantics,
@@ -455,7 +456,31 @@ const createRoleRunnerFixture = () => {
   };
 };
 
-describe("protocol 2.6.0 locked cross-contract validation", () => {
+describe("protocol 2.7.0 locked cross-contract validation", () => {
+  it("binds actual-exec permissions to the builder runtime dimensions", () => {
+    const lock = readJson("experiment/lock.json");
+    const probe = readJson(
+      "experiment/preflight/actual-exec-permission-probe-2.7.0.json",
+    );
+    const builderConfig = readJson("experiment/builder-config.json");
+    assert.deepEqual(validateActualExecPermissionProbe(probe, lock), []);
+    assert.deepEqual(probe.invariantArgv, builderConfig.invariantArgv);
+    const builderRunner = readFileSync(
+      path.join(root, "scripts/run-cli-builders.ps1"),
+      "utf8",
+    );
+    for (const literal of [
+      'windows.sandbox="elevated"',
+      "sandbox_workspace_write.network_access=false",
+      "--ignore-rules",
+      'Environment["TEMP"]',
+      'Environment["TMP"]',
+      'Environment["NPM_CONFIG_CACHE"]',
+      'Environment["CODEX_DEPENDENCY_ROOT"]',
+      'Environment["PORT"]',
+    ])
+      assert.ok(builderRunner.includes(literal), literal);
+  });
   it("seals allowed candidate changes without hooks and rejects frozen or in-worktree indexes", () => {
     const temporaryRoot = mkdtempSync(
       path.join(root, "node_modules", "supervisor-commit-"),
@@ -1726,9 +1751,14 @@ describe("protocol 2.6.0 locked cross-contract validation", () => {
       "gpt-5.4",
       "-c",
       'model_reasoning_effort="xhigh"',
+      "-c",
+      'windows.sandbox="elevated"',
+      "-c",
+      "sandbox_workspace_write.network_access=false",
       "exec",
       "--ephemeral",
       "--ignore-user-config",
+      "--ignore-rules",
       "--skip-git-repo-check",
       "--sandbox",
       "read-only",

@@ -22,9 +22,13 @@ CLI_TEMPLATE_PATH = SKILL_ROOT / "references" / "cli-runtime-contract.template.j
 CLI_RUNNER_PATH = SKILL_ROOT / "scripts" / "run-cli-builders.ps1"
 CANONICAL_PATH_HELPER_PATH = SKILL_ROOT / "scripts" / "canonicalize-paths.mjs"
 COMMIT_HELPER_PATH = SKILL_ROOT / "scripts" / "commit-candidate.ps1"
-PERMISSION_PROBE_SCRIPT_PATH = SKILL_ROOT / "scripts" / "verify-cli-permissions.ps1"
-PERMISSION_PROBE_PATH = SKILL_ROOT / "references" / "permission-probe-2.6.0.json"
-ABORTED_25_PATH = SKILL_ROOT / "references" / "aborted-lock-2.5.0.json"
+PERMISSION_PROBE_SCRIPT_PATH = SKILL_ROOT / "scripts" / "verify-cli-exec-permissions.ps1"
+PERMISSION_PROBE_PATH = SKILL_ROOT / "references" / "actual-exec-permission-probe-2.7.0.json"
+PERMISSION_PROBE_SCHEMA_PATH = SKILL_ROOT / "references" / "actual-exec-permission-probe.schema.json"
+SECONDARY_PERMISSION_PROBE_SCRIPT_PATH = SKILL_ROOT / "scripts" / "verify-cli-permissions.ps1"
+SECONDARY_PERMISSION_PROBE_PATH = SKILL_ROOT / "references" / "permission-probe-2.6.0.json"
+ACTUAL_EXEC_PROMPT_PATH = SKILL_ROOT / "references" / "actual-exec-capability-probe.md"
+ABORTED_26_PATH = SKILL_ROOT / "references" / "aborted-lock-2.6.0.json"
 ROLE_SCHEMA_PATH = SKILL_ROOT / "references" / "role-runtime-contract.schema.json"
 ROLE_TEMPLATE_PATH = SKILL_ROOT / "references" / "role-runtime-contract.template.json"
 ROLE_RUNNER_PATH = SKILL_ROOT / "scripts" / "run-cli-role.ps1"
@@ -58,25 +62,29 @@ ROLE_PROMPT_PATHS = {
     "tester": SKILL_ROOT / "references" / "tester.md",
     "evaluator": SKILL_ROOT / "references" / "blinded-evaluator.md",
 }
-CONTRACT_CANONICAL_SHA256 = "32fdf618ca9a9b7106b9c862b9c4ebaa3f49c18b2dd0f130ff35fe8a1b0998ac"
-GOLDEN_CANONICAL_SHA256 = "6950fb99c852aaa272520287eed817b12e854ee4bc60e25f7959076f4bb7b7d0"
-INVALID_CANONICAL_SHA256 = "f7bfdf80c0db87ba4d3f4c1ad82cdd0e05274a2a088df4b08e49712791744717"
-CONTRACT_RAW_SHA256 = "77e0e66df68fac3a1f568761f749134cf55d79e832c6091211aecac6591d0241"
-GOLDEN_RAW_SHA256 = "9780dbf38e78a65cf3c57bd0456306822a6771bc7a16ce09ab79953869db59b7"
-INVALID_RAW_SHA256 = "e1ea1eee4a4c9373683fc88f67b76aeeff707cd9bef04c5725f2b06f7df1f51c"
-CLI_SCHEMA_SHA256 = "4524410734f2e710be193472d316e422416605f9a0f18e5d41f3a9d71038a391"
-CLI_TEMPLATE_RAW_SHA256 = "d0ac2fab6db1be3625c00d26bd165513adecb89dd04d04f048068c9cf7148fc5"
-CLI_RUNNER_SHA256 = "74761f2c2d37c346cb35fbebe6ba43aa91de3b6a9da387de7dd4e8d8d211d2e1"
+CONTRACT_CANONICAL_SHA256 = "803ef84dadde7280c338ff0fd886e2dd532edf04d746527dd697e1310b38bb2e"
+GOLDEN_CANONICAL_SHA256 = "d28aa435c343c473dd025f82263fe406fb6c3a083beed9c186a01148ae2fd63d"
+INVALID_CANONICAL_SHA256 = "049bf6fde3315383d0f4f431952c7d30886e9aef8b82b09fbf26b061d0302f7e"
+CONTRACT_RAW_SHA256 = "8638231a471a442b8a024e0e8ad9757b443f5f3ec9576040c282804a02985ff6"
+GOLDEN_RAW_SHA256 = "8f753e48dba64afb9ea144e234446df2b8e133929c191c9b16b190f0a09ab543"
+INVALID_RAW_SHA256 = "3fbeb3a38f2689a3990ac13de999aadb9dfa4a2131fcd5e0b3f156a4998a9941"
+CLI_SCHEMA_SHA256 = "af1442dcf1cb0ffa8d7f3d0d082b6b43ed75924e8bea4970bedbf080adba6316"
+CLI_TEMPLATE_RAW_SHA256 = "7bdeea71d9765d044a689debd8ef561bdd70159dcc140026089e9f2c9523a263"
+CLI_RUNNER_SHA256 = "a87972d1f12f301c51ec531ce3a5f4b611cf4d10dc8d62e9f2e5ef687c1a9fd0"
 CANONICAL_PATH_HELPER_SHA256 = "194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e"
 COMMIT_HELPER_SHA256 = "813e0f79c92aa997a803e6b3822d45ab5ba58f501faeb1a496f59c7e21ed351f"
-PERMISSION_PROBE_SCRIPT_SHA256 = "770fe1ec68a3b599b497d08346e1caf19064a5d3c90b2d418fdba22f1914f893"
-PERMISSION_PROBE_SHA256 = "7d7b716012aa95d79eafcd3a22d4ce81e998172e6fe3584ea091d7ae9d7fec0c"
-ABORTED_25_SHA256 = "30fd68984b0625467d5a7c64ac50256365d5db0b5f924cb2c7590d5546d7d571"
-ROLE_SCHEMA_SHA256 = "19823bc0fb835d3ac6e4b788f1e7bd87a05e2cb187c016c815b1b2828f9cd8ad"
+PERMISSION_PROBE_SCRIPT_SHA256 = "da1dc96f2bf02a8419d658de3a4d23bafc1fc8f550b283a61184c728b1e1975d"
+PERMISSION_PROBE_SHA256 = "3a302500033ecaaa284a7b6a833ceee94c62a72b4c995d94fe38d89f9d65b688"
+PERMISSION_PROBE_SCHEMA_SHA256 = "e22b85b6c20de96de404a63816d862d6ad5198715515016016c93fee64c0b9cd"
+SECONDARY_PERMISSION_PROBE_SCRIPT_SHA256 = "770fe1ec68a3b599b497d08346e1caf19064a5d3c90b2d418fdba22f1914f893"
+SECONDARY_PERMISSION_PROBE_SHA256 = "7d7b716012aa95d79eafcd3a22d4ce81e998172e6fe3584ea091d7ae9d7fec0c"
+ACTUAL_EXEC_PROMPT_SHA256 = "6a0bfb5c28aea871ab7bece541da24745cd0543a662a8059bffa9887411a0da5"
+ABORTED_26_SHA256 = "bb8696bcb50d7a6febec9924d2402e2a1a595315e6730c55dd4799bf4e5c01e0"
+ROLE_SCHEMA_SHA256 = "11bfdd9d33cdfa0fa0053d74c6e2222180fa6aa02b9a7a12123cf5af24875a06"
 ROLE_TEMPLATE_RAW_SHA256 = "2218c2edbe53d793a7874e7adcc28cde63386b13219dce5455a88d1a30d5f6f3"
-ROLE_RUNNER_SHA256 = "88f4d547ca40242d35f04a9904935b78473cb9fab6c689443aca3442713992ad"
-EVIDENCE_SCHEMA_SHA256 = "0130b72e0499967de44bca248391976db1d757a6650f173cf6aec98cb9ed9d3d"
-EVIDENCE_TEMPLATE_RAW_SHA256 = "7226677ea997b6e9b409ebdf2192540ffcf8995fd1db7b90ee9c3663dde56899"
+ROLE_RUNNER_SHA256 = "e0bcef63b939e961bbe7ded794658948d70251c73c0dbaacaadb7691b168eca2"
+EVIDENCE_SCHEMA_SHA256 = "b722627806b07254e995d5ae3a38ba921d69abba46651e41132fd8b9d7691d32"
+EVIDENCE_TEMPLATE_RAW_SHA256 = "545627764d7f0a2eb51c310a5929c4656f19ce4d673fb1588315d98a0759faaa"
 PACKAGE_SCHEMA_SHA256 = "4d9d8397fc068cdf511e99bae6980ed2d2ef5410e5128385043f1c426cdb8bd5"
 PACKAGE_TEMPLATE_RAW_SHA256 = "c35470675fadf7157d954216bba53f88b226786c204ab2d6ce575b31450acadf"
 MAPPING_SCHEMA_SHA256 = "2d0a96f27d43f511c26b57a49dfef5c05acfe0f5dfb1f8419f724d524513fb74"
@@ -84,20 +92,24 @@ MAPPING_TEMPLATE_RAW_SHA256 = "680da1c7b4bfe0e9eb1f056b712e9cc796e9be536097a36db
 PACKAGER_SHA256 = "98ef96dd16f37a14fa4a56b324a0274dd3aa29010d296244e695fe42663478d7"
 BUILDER_PROMPT_SHA256 = "5ed878d3be56824f94d3a72a40606c111dbfdfc1631bdf98b6ca7fe75ffebd56"
 SMOKE_PROMPT_SHA256 = "135c5fc59fe72b4b37d924cd6f1a14e4f2a3b7b59711cc12294e81f52cbfd6a2"
-BUILDER_CONFIG_SHA256 = "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4"
+BUILDER_CONFIG_SHA256 = "8d64a062c76ba8bdbd436b99d42cd7566ae2601821e009315afe8e37800f323b"
 BUILDER_ALLOWLIST_SHA256 = "37af679c4f3f71cbd9e28b810897d4ff82c7c47cf4421a9d661b8b90947aef5b"
 BUILDER_MANIFEST_SCHEMA_SHA256 = "b044646ede4fef4543a4950e5842f51997dc3b65e6bfabad7eeb1ff84caf0bb5"
 BUILDER_PREPARER_SHA256 = "68e186914a0dd99e0b91f0851d45f8081086fffadae8d2949050e29ea1b832b3"
 BUNDLE_EXTRA_HASHES = {
     BUILDER_PACKAGE_PATH: "be233b856939e83840a4807c22f59e8883643c2dd80cddb90166db655cd98143",
-    PROTOCOL_LOCK_PATH: "6135e51107cfe943a9d1925cc2c5872d76c519ef798b5068404b921940a5592d",
-    EXPERIMENT_LOCK_SCHEMA_PATH: "39720dec5ea22443f36ea96aa3979449ed8e91adb2ee0a625cbfb37ca32f1859",
-    PROTOCOL_PATH: "3887e5b73ba644da38eeb172fab6a083cac540e4059c0f3a0fd42b052f5ed533",
+    PROTOCOL_LOCK_PATH: "5c463b371a2974cae2694f8707f4b1bce447b7ff6e20d54b8462bbee1109964f",
+    EXPERIMENT_LOCK_SCHEMA_PATH: "625e7eeda8914b19bd5619428e876f2e00aab1d39447fb9c734decb4a8f8a292",
+    PROTOCOL_PATH: "f613e5bb051d864c2a38082a1701d057815936f7bb4b88f2119cb0a123c3c9e9",
     GOLDEN_README_PATH: "7cb32b826cbd0919fa7eaf65154de833da7fe9c830a24451f3063b2dde672b55",
     COMMIT_HELPER_PATH: COMMIT_HELPER_SHA256,
     PERMISSION_PROBE_SCRIPT_PATH: PERMISSION_PROBE_SCRIPT_SHA256,
     PERMISSION_PROBE_PATH: PERMISSION_PROBE_SHA256,
-    ABORTED_25_PATH: ABORTED_25_SHA256,
+    PERMISSION_PROBE_SCHEMA_PATH: PERMISSION_PROBE_SCHEMA_SHA256,
+    SECONDARY_PERMISSION_PROBE_SCRIPT_PATH: SECONDARY_PERMISSION_PROBE_SCRIPT_SHA256,
+    SECONDARY_PERMISSION_PROBE_PATH: SECONDARY_PERMISSION_PROBE_SHA256,
+    ACTUAL_EXEC_PROMPT_PATH: ACTUAL_EXEC_PROMPT_SHA256,
+    ABORTED_26_PATH: ABORTED_26_SHA256,
     PROJECTION_PATHS[0]: "2c281ab2fc936c659323a135234622fb2c8ea1baa720fc411cca1e995b321424",
     PROJECTION_PATHS[1]: "880acfdd79d16f24b1849ed6491198926ed49b6df89af2f4cac99defe8d78e9c",
     PROJECTION_PATHS[2]: "e85aee3135740a7b5501030af2dc3ffe7c16f50d93812499759a6f60c7238ee9",
@@ -114,7 +126,8 @@ PWSH_VERSION = "7.6.2"
 PWSH_SHA256 = "99ec38d8c4910fd5f2feeeec4dedb5076ff39a08ca21e12642822bc8d989e316"
 CLI_INVARIANT_ARGV = (
     "-a", "never", "-m", "gpt-5.4", "-c", 'model_reasoning_effort="xhigh"',
-    "exec", "--ephemeral", "--ignore-user-config", "--skip-git-repo-check",
+    "-c", 'windows.sandbox="elevated"', "-c", "sandbox_workspace_write.network_access=false",
+    "exec", "--ephemeral", "--ignore-user-config", "--ignore-rules", "--skip-git-repo-check",
     "--sandbox", "workspace-write", "--json",
 )
 MODEL_ROLE_PROMPT_SHA256 = {
@@ -382,7 +395,7 @@ def validate_contract(contract: Any) -> list[str]:
     require(contract.get("costPolicy", {}).get("maxTokens") is None and
             contract.get("costPolicy", {}).get("maxTokensUnavailableReasonRequired") is True,
             "canonical nullable maxTokens policy diverges", errors)
-    require(contract.get("protocolVersion") == "2.6.0",
+    require(contract.get("protocolVersion") == "2.7.0",
             "canonical protocol version diverges", errors)
     require(contract.get("builderFreeze") == {
         "promptSha256": BUILDER_PROMPT_SHA256,
@@ -1324,7 +1337,7 @@ def validate_execution(fixture: Any) -> list[str]:
         return sorted(set(errors))
     validate_conclusion(fixture, errors)
     require(fixture.get("fixtureVersion") == "1.0.0", "run: fixtureVersion diverges", errors)
-    require(fixture.get("protocolVersion") == "2.6.0", "run: protocolVersion diverges", errors)
+    require(fixture.get("protocolVersion") == "2.7.0", "run: protocolVersion diverges", errors)
     if fixture.get("status") == "invalid":
         invalid_fields = {
             "fixtureVersion", "fixtureKind", "protocolVersion",
