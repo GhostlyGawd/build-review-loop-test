@@ -64,6 +64,14 @@ const snapshot = (number) => ({
   packageProcedure: "frozen-test-procedure",
 });
 
+const supervisorJsonHelperBlock = (relative) => {
+  const source = readFileSync(path.join(root, relative), "utf8");
+  const start = source.indexOf("# SUPERVISOR_JSON_HELPER_START");
+  const end = source.indexOf("# SUPERVISOR_JSON_HELPER_END");
+  assert.ok(start >= 0 && end > start, `${relative} helper markers missing`);
+  return source.slice(start, end + "# SUPERVISOR_JSON_HELPER_END".length);
+};
+
 const runGit = (cwd, args, env = {}) =>
   spawnSync("git", args, {
     cwd,
@@ -473,6 +481,139 @@ const createRoleRunnerFixture = () => {
 };
 
 describe("protocol 2.7.0 locked cross-contract validation", () => {
+  it("parses populated supervisor JSON and fails closed on malformed, empty, or nonzero helper results", () => {
+    const builderBlock = supervisorJsonHelperBlock(
+      "scripts/run-cli-builders.ps1",
+    );
+    const roleBlock = supervisorJsonHelperBlock("scripts/run-cli-role.ps1");
+    assert.equal(roleBlock, builderBlock);
+    for (const relative of [
+      "scripts/run-cli-builders.ps1",
+      "scripts/run-cli-role.ps1",
+    ]) {
+      const source = readFileSync(path.join(root, relative), "utf8");
+      assert.doesNotMatch(
+        source,
+        /candidateCommitScriptPath[^\r\n]*\|\s*ConvertFrom-JsonLiteral/u,
+      );
+      assert.match(source, /Convert-RequiredJsonHelperOutput/u);
+    }
+
+    const temporaryRoot = mkdtempSync(
+      path.join(root, "node_modules", "supervisor-json-helper-"),
+    );
+    const workdir = path.join(temporaryRoot, "candidate");
+    const indexPath = path.join(temporaryRoot, "private", "index");
+    const harnessPath = path.join(temporaryRoot, "harness.ps1");
+    mkdirSync(workdir);
+    try {
+      for (const args of [
+        ["init", "--initial-branch=fixture"],
+        ["config", "core.autocrlf", "false"],
+        ["config", "user.name", "Supervisor JSON Test"],
+        ["config", "user.email", "supervisor-json@invalid.local"],
+      ])
+        assert.equal(runGit(workdir, args).status, 0);
+      writeFileSync(path.join(workdir, "base.txt"), "base\n");
+      assert.equal(runGit(workdir, ["add", "--all"]).status, 0);
+      assert.equal(runGit(workdir, ["commit", "-m", "fixture"]).status, 0);
+      const parent = runGit(workdir, ["rev-parse", "HEAD"]).stdout.trim();
+      writeFileSync(path.join(workdir, "change.txt"), "change\n");
+      writeFileSync(
+        harnessPath,
+        [
+          "param([string]$Mode,[string]$CommitScript,[string]$Workdir,[string]$ExpectedParent,[string]$IndexPath)",
+          '$ErrorActionPreference = "Stop"',
+          "function ConvertFrom-JsonLiteral([string]$Json) { return $Json | ConvertFrom-Json -DateKind String }",
+          builderBlock,
+          'if ($Mode -eq "success") {',
+          "  $LASTEXITCODE = 0",
+          '  $output = @(& $CommitScript -Workdir $Workdir -ExpectedParent $ExpectedParent -TemporaryIndexPath $IndexPath -Message "Seal helper regression" -Timestamp "2026-07-21T00:00:00Z")',
+          '  $value = Convert-RequiredJsonHelperOutput $output $LASTEXITCODE "Candidate commit helper"',
+          '  if ($null -eq $value.commit) { exit 91 }',
+          '  $value | ConvertTo-Json -Compress',
+          "  exit 0",
+          "}",
+          "try {",
+          '  if ($Mode -eq "malformed") { [void](Convert-RequiredJsonHelperOutput @("{") 0 "Candidate commit helper") }',
+          '  elseif ($Mode -eq "empty") { [void](Convert-RequiredJsonHelperOutput @() 0 "Candidate commit helper") }',
+          '  elseif ($Mode -eq "nonzero") { [void](Convert-RequiredJsonHelperOutput @("{`"commit`":`"ignored`"}") 7 "Candidate commit helper") }',
+          "  else { exit 92 }",
+          "  exit 93",
+          '} catch { [Console]::Error.Write($_.Exception.Message); exit 23 }',
+          "",
+        ].join("\n"),
+      );
+      const lock = readJson("experiment/lock.json");
+      const invoke = (mode) =>
+        spawnSync(
+          lock.powerShellHostPath,
+          [
+            "-NoProfile",
+            "-File",
+            harnessPath,
+            "-Mode",
+            mode,
+            "-CommitScript",
+            path.join(root, "scripts/commit-candidate.ps1"),
+            "-Workdir",
+            workdir,
+            "-ExpectedParent",
+            parent,
+            "-IndexPath",
+            indexPath,
+          ],
+          { encoding: "utf8" },
+        );
+      const success = invoke("success");
+      assert.equal(success.status, 0, success.stderr);
+      const committed = JSON.parse(success.stdout);
+      assert.equal(committed.parent, parent);
+      assert.equal(
+        runGit(workdir, ["rev-parse", "HEAD"]).stdout.trim(),
+        committed.commit,
+      );
+      assert.equal(runGit(workdir, ["status", "--porcelain=v1"]).stdout, "");
+
+      for (const [mode, diagnostic] of [
+        ["malformed", /malformed JSON/i],
+        ["empty", /empty output/i],
+        ["nonzero", /exited nonzero with code 7/i],
+      ]) {
+        const result = invoke(mode);
+        assert.equal(result.status, 23, `${mode}: ${result.stderr}`);
+        assert.match(result.stderr, diagnostic);
+      }
+    } finally {
+      rmSync(temporaryRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("preserves the exact five-stage candidate tester gate", () => {
+    const schema = readJson("experiment/schemas/test.schema.json");
+    const componentResults = schema.properties.componentResults;
+    assert.equal(componentResults.minItems, 5);
+    assert.equal(componentResults.maxItems, 5);
+    assert.deepEqual(
+      componentResults.prefixItems.map((entry) => entry.$ref),
+      [
+        "#/$defs/formatCheck",
+        "#/$defs/lint",
+        "#/$defs/typecheck",
+        "#/$defs/publicTests",
+        "#/$defs/build",
+      ],
+    );
+    const contract = readJson("experiment/canonical-contract.json");
+    assert.deepEqual(contract.gates.componentCommands, [
+      "npm run format:check",
+      "npm run lint",
+      "npm run typecheck",
+      "npm run test:public",
+      "npm run build",
+    ]);
+    assert.equal(contract.gates.testerCommand, "npm run check");
+  });
   it("retries only the exact CLR startup crash signature", () => {
     const exact = {
       status: exactClrInternalErrorStatus,

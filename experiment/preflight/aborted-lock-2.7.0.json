@@ -1,0 +1,30 @@
+{
+  "recordVersion": "1.0.0",
+  "protocolVersion": "2.7.0",
+  "lockCommit": "e2c892e3b88702fcbd9a2049926d4a28b94efa4a",
+  "disposition": "invalidated-before-assignment",
+  "defect": {
+    "code": "supervisor-json-pipeline-binding-failure",
+    "privateEvidenceSha256Prefixes": ["3e444573", "bf8dd33c"],
+    "neutralPromptSha256": "5ed878d3be56824f94d3a72a40606c111dbfdfc1631bdf98b6ca7fe75ffebd56",
+    "runtimeContractSha256Prefix": "b80136af",
+    "runnerSha256": "a87972d1f12f301c51ec531ce3a5f4b611cf4d10dc8d62e9f2e5ef687c1a9fd0",
+    "summary": "Two fresh neutral builders ran concurrently under the exact frozen runtime and each exited zero with one completed turn. The trusted commit helper created one clean child commit per candidate, but the frozen builder runner piped the helper JSON into a function whose parameter did not accept pipeline input. Both supervision records therefore stored null supervisor commit bindings and the runner correctly marked the construction invalid. The same deterministic parsing defect existed in the frozen fixer handoff path."
+  },
+  "executionState": {
+    "actualExecGatePassed": true,
+    "candidateLaunches": 2,
+    "modelInvocations": 2,
+    "validInitialBuilds": 0,
+    "worktreeChanges": 2,
+    "childCommits": 2,
+    "evidenceBoundChildCommits": 0,
+    "assignmentSeedDrawn": false,
+    "assignmentPerformed": false,
+    "treatmentStarted": false,
+    "evaluationStarted": false,
+    "outcomeDataProduced": false,
+    "hiddenSuiteAccessed": false
+  },
+  "replacementPolicy": "Preserve protocol 2.7.0 history and preregister a corrected successor that parses supervisor helper output explicitly, fails closed on empty, malformed, or nonzero helper results, and regression-tests both builder and fixer bindings before any replacement builder launch."
+}

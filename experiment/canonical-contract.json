@@ -1,6 +1,6 @@
 {
   "contractVersion": "1.4.0",
-  "protocolVersion": "2.7.0",
+  "protocolVersion": "2.8.0",
   "normativeSource": "experiment/protocol.md",
   "canonicalJson": {
     "id": "utf8-sorted-json-v1",
@@ -62,9 +62,9 @@
     ],
     "roleLaunchRule": "every model-bearing role invocation is a fresh external Codex CLI subprocess using the frozen binary/auth/invariant argv, role-specific exact raw prompt bytes on stdin, --ephemeral, no resume, and distinct process and thread.started IDs; the bundled two-invocation contract and supervisor instantiate this rule for builders",
     "schemaPath": "experiment/schemas/cli-runtime-contract.schema.json",
-    "schemaSha256": "af1442dcf1cb0ffa8d7f3d0d082b6b43ed75924e8bea4970bedbf080adba6316",
+    "schemaSha256": "528afafa2841bca334223709ca8cbeed0ffc075395e043fe951d72c5410eaa8b",
     "runnerPath": "scripts/run-cli-builders.ps1",
-    "runnerSha256": "a87972d1f12f301c51ec531ce3a5f4b611cf4d10dc8d62e9f2e5ef687c1a9fd0",
+    "runnerSha256": "27aad97dd9a82df4436eef538b9f5c234c653f385c934e4e6e33f69e9574e44a",
     "canonicalPathHelperPath": "scripts/canonicalize-paths.mjs",
     "canonicalPathHelperSha256": "194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e",
     "candidateCommitScriptPath": "scripts/commit-candidate.ps1",
@@ -134,11 +134,11 @@
     "successRule": "each process starts, receives stdin, exits zero before the external deadline, emits exactly one thread.started and turn.completed, reconciles raw JSONL and hashes, then the trusted supervisor rejects frozen-path drift and creates one hook-free child commit through an external index; success ends with a clean exactly-one-child clone",
     "roleRuntime": {
       "schemaPath": "experiment/schemas/role-runtime-contract.schema.json",
-      "schemaSha256": "11bfdd9d33cdfa0fa0053d74c6e2222180fa6aa02b9a7a12123cf5af24875a06",
+      "schemaSha256": "8299ae086c66368543916d510fea3ffef0203bfda996f916715df27782756521",
       "runnerPath": "scripts/run-cli-role.ps1",
-      "runnerSha256": "e0bcef63b939e961bbe7ded794658948d70251c73c0dbaacaadb7691b168eca2",
+      "runnerSha256": "890f057b8433322f1875e79cb045bf8701c944418e02f8f29094290fa482bf1e",
       "evidenceSchemaPath": "experiment/schemas/cli-supervision-evidence.schema.json",
-      "evidenceSchemaSha256": "b722627806b07254e995d5ae3a38ba921d69abba46651e41132fd8b9d7691d32",
+      "evidenceSchemaSha256": "934d2229bead568ef70eeb3334e4125d7999ee23d5f7a4976fbfbf4d5bfa5d58",
       "promptTemplateSha256": {
         "reviewer": "5bd94cc7c44165acae23675f82d74ece6bab0b4dab31f387d338d1c9a5e7dcae",
         "fixer": "7949487ec366fa042f11ab6264575826eabb875b429c4560783f03c8f1c17f99",
