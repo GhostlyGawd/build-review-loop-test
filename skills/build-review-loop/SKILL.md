@@ -1,6 +1,6 @@
 ---
 name: build-review-loop
-description: Run or audit the provisional protocol-v2.4 neutral-build versus treatment-only review-loop pilot with pinned external Codex CLI subprocesses, post-build random assignment, bounded fresh reviewer/fixer/tester roles, canonical evidence, and mapping-blinded B0/T0/Tfinal evaluation. Use when executing, validating, packaging, or diagnosing this exact public experiment without changing its frozen runtime or evaluation design.
+description: Run or audit the provisional protocol-v2.5 neutral-build versus treatment-only review-loop pilot with pinned external Codex CLI subprocesses, post-build random assignment, bounded fresh reviewer/fixer/tester roles, canonical evidence, and mapping-blinded B0/T0/Tfinal evaluation. Use when executing, validating, packaging, or diagnosing this exact public experiment without changing its frozen runtime or evaluation design.
 ---
 
 # Build Review Loop
@@ -9,7 +9,7 @@ Treat this as one provisional, descriptive pilot under a pinned deployment. Make
 
 ## Freeze the public boundary
 
-1. Bind [canonical-contract.json](references/canonical-contract.json) at canonical SHA-256 `604741c82d917d2cb5901ba4b1c046d29e2091ce4c91a68a514b713a24348b01`.
+1. Bind [canonical-contract.json](references/canonical-contract.json) at canonical SHA-256 `2303f8fc8963fdfa132ee84acd8388e7a081f6a1cbdd5907c37ea8077f62a9c3`.
 2. Bind byte-exact [neutral-builder.md](references/neutral-builder.md), [runner-smoke.md](references/runner-smoke.md), [builder-config.json](references/builder-config.json), runtime schemas/templates, role prompts/artifact schemas, both PowerShell runners, the blinded mapping/manifest schemas, and the packager. Never substitute the harmless smoke prompt for a builder prompt.
 3. Require the frozen PowerShell 7 host and invoke each runner with `-NoProfile -File`. Require the frozen Codex binary, ChatGPT authentication, `gpt-5.4`, `xhigh`, exact argv order, `--ephemeral`, `--ignore-user-config`, and no resume.
 4. Keep the root orchestration-only. Every builder, reviewer, fixer, tester, and evaluator is a fresh external CLI subprocess with exact raw prompt bytes on stdin. Do not use in-process collaboration, inherited transcripts, resumed threads, or extra turns for model roles.
@@ -31,7 +31,7 @@ Read [role-prompts.md](references/role-prompts.md). For every required reviewer,
 
 - Reviewer: read-only snapshot; fresh current-cycle context; emit exact findings.
 - Fixer: authorized isolated full-clone write; receive only current findings; finish with one clean child commit.
-- Tester: disposable workspace-write copy; run immutable `npm run check`; transfer no mutations.
+- Tester: disposable workspace-write copy; run immutable candidate `npm run check` with exactly format, lint, typecheck, public tests, and build; transfer no mutations.
 
 Stop before fixer/tester on verified zero findings. Otherwise run fresh fixer then tester. Stop at zero findings or after cycle 5 under the registered semantics. Bind every role artifact to supervisor-observed identity and actual OS-exit chronology. Charge all pre-launch delay to the monotonic budget and strict UTC prompt deadline; allow two seconds only for completion observation or process-tree termination.
 

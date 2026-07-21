@@ -54,20 +54,20 @@ ROLE_PROMPT_PATHS = {
     "tester": SKILL_ROOT / "references" / "tester.md",
     "evaluator": SKILL_ROOT / "references" / "blinded-evaluator.md",
 }
-CONTRACT_CANONICAL_SHA256 = "604741c82d917d2cb5901ba4b1c046d29e2091ce4c91a68a514b713a24348b01"
-GOLDEN_CANONICAL_SHA256 = "27d1f5ae5338926e5b51641d1fe08199fe3f1d84037d6cc94fe25412fe66a4d5"
-INVALID_CANONICAL_SHA256 = "67ff46e219d7dcacfe083db59c31785ca7ce496837f0b0c7ff602267af3b01e0"
-CONTRACT_RAW_SHA256 = "52f8be0515758293014a27745a70c14a6c6020b28a5a4300fadc8fa578f376fa"
-GOLDEN_RAW_SHA256 = "39f6b6401bb404b0f1654cde25c50418fe3f0a2d9bc7e387de311101b926b39f"
-INVALID_RAW_SHA256 = "7abd35f57da85143a955c6497b83e9f7b81acf3b21fe5c16080911983fdc1415"
-CLI_SCHEMA_SHA256 = "665016233b950a2f39f0bbee1f5f75b530980d3bcd979e543943cf976b0a2689"
+CONTRACT_CANONICAL_SHA256 = "2303f8fc8963fdfa132ee84acd8388e7a081f6a1cbdd5907c37ea8077f62a9c3"
+GOLDEN_CANONICAL_SHA256 = "e8379542e0380d15bbef577ef8d2f8b318c6ba23387cb92b97b6a04e5ec7c34c"
+INVALID_CANONICAL_SHA256 = "babdbd087f5ce4c14a344d6dc1fc5f3731751306d398f2736ab567ba45d7761e"
+CONTRACT_RAW_SHA256 = "f50d17a705086434cc1d8e922cfdaff73710bdc685927ba09444302b733ce660"
+GOLDEN_RAW_SHA256 = "4e5883870655738ceff286eee6679f29712c131d8ef1fcc48759443b757d2466"
+INVALID_RAW_SHA256 = "645ec3f60d0004e0f60c6ef559f6fa2de0b16f408a7d72b8c265993a44909fe3"
+CLI_SCHEMA_SHA256 = "3678f9482e5082b8ae19ff31c5dd1c4405d60bb75891d372d2b6dae5a1c0c716"
 CLI_TEMPLATE_RAW_SHA256 = "d0ac2fab6db1be3625c00d26bd165513adecb89dd04d04f048068c9cf7148fc5"
 CLI_RUNNER_SHA256 = "b2e848a193c28d93893829a3dceeba323999193a0d96acee8848d0eff06e70b7"
 CANONICAL_PATH_HELPER_SHA256 = "194af01d50aac44f741644e6f32bc73f75f72ccb118e9d721780ef2b2bc9ab0e"
-ROLE_SCHEMA_SHA256 = "ac620774663e6ce8dd9917f760f6f53eeb8063e70b88240999ffc6bef6184c5a"
+ROLE_SCHEMA_SHA256 = "7dfdbb16b8f3c760c123fdb3981d7253f28feb57e0c7751eced9f6bb4d650da3"
 ROLE_TEMPLATE_RAW_SHA256 = "2218c2edbe53d793a7874e7adcc28cde63386b13219dce5455a88d1a30d5f6f3"
 ROLE_RUNNER_SHA256 = "f78ec27cc30f66a58464be6f5b60a4437808b97ec85186916171ee22e9b6b3b4"
-EVIDENCE_SCHEMA_SHA256 = "b43690cdb988df31e3a778acf8021052fa0e9dae0767f518d9c8c126a8866556"
+EVIDENCE_SCHEMA_SHA256 = "6a6a79d47617208a49e75b6f48a4a67be083a7e6482e26923ccc99c863611af5"
 EVIDENCE_TEMPLATE_RAW_SHA256 = "ae5d0074c36067983e583fff943cebae528aadb11810cce66ae36229ef2b9863"
 PACKAGE_SCHEMA_SHA256 = "4d9d8397fc068cdf511e99bae6980ed2d2ef5410e5128385043f1c426cdb8bd5"
 PACKAGE_TEMPLATE_RAW_SHA256 = "c35470675fadf7157d954216bba53f88b226786c204ab2d6ce575b31450acadf"
@@ -82,9 +82,9 @@ BUILDER_MANIFEST_SCHEMA_SHA256 = "b044646ede4fef4543a4950e5842f51997dc3b65e6bfab
 BUILDER_PREPARER_SHA256 = "68e186914a0dd99e0b91f0851d45f8081086fffadae8d2949050e29ea1b832b3"
 BUNDLE_EXTRA_HASHES = {
     BUILDER_PACKAGE_PATH: "be233b856939e83840a4807c22f59e8883643c2dd80cddb90166db655cd98143",
-    PROTOCOL_LOCK_PATH: "450870be5209d8a6bfc6080a52869ae0ed543ee4a674d7eb7bff24acf36fb44d",
-    EXPERIMENT_LOCK_SCHEMA_PATH: "fc0c15cc2fe47db5e29e82e9f6ecc6ac56c0f961bfdca837826b0930874e5e0e",
-    PROTOCOL_PATH: "d3a5a5eb98d9d58b7dcb4b5aa895a007c72e40f8d7b9b1e58600ba58a6bb7349",
+    PROTOCOL_LOCK_PATH: "0851f46d3767cedb02e9d64f4b6bdefcae717e9a92ae9fd5ac71aaa8a28c4e89",
+    EXPERIMENT_LOCK_SCHEMA_PATH: "7262357967c8de61e7c7ac3ff5915165e1adbf6431b575a29521aba94ae8cf97",
+    PROTOCOL_PATH: "bbbaae6a1c7f277081c90d4dfba12938f053978717995486797218ea9a1ca99b",
     GOLDEN_README_PATH: "7cb32b826cbd0919fa7eaf65154de833da7fe9c830a24451f3063b2dde672b55",
     PROJECTION_PATHS[0]: "2c281ab2fc936c659323a135234622fb2c8ea1baa720fc411cca1e995b321424",
     PROJECTION_PATHS[1]: "880acfdd79d16f24b1849ed6491198926ed49b6df89af2f4cac99defe8d78e9c",
@@ -115,7 +115,7 @@ MODEL_ROLE_PROMPT_SHA256 = {
 ROLE_ARTIFACT_SCHEMA_SHA256 = {
     "reviewer": "66e47c9e4a0a8a4b1d5f09a73f09f753879b8f0f0d8219a1e4b187b88d3d791f",
     "fixer": "d92b46d65322b053699bdcc8e35a6f9d0c1c91d3dacccddbcfc569c673d7e96b",
-    "tester": "f0d6937137661ef750fe435afbe4ca1cba8ce727ed7bdf0986e98a9c1d476f06",
+    "tester": "e9774f5d6a718582b9871cfbf54519508c0f80424181f0bdeb35158b026fc2fd",
     "evaluator": "12a769a0868261e28299b5a7feef71626ea6e1ee51bfb0eb59ce65bbec05e6aa",
 }
 CANONICAL_DOMAIN = b"permissions-playground/canonical-json-v1\0"
@@ -165,8 +165,7 @@ ROLE_BUDGETS = {
 MODEL_ROLES = {"builder", "reviewer", "fixer", "tester", "evaluator"}
 PUBLIC_GATES = (
     "npm run format:check", "npm run lint", "npm run typecheck",
-    "npm run validate:scaffold", "npm run test:protocol",
-    "npm run test:public:if-implemented", "npm run build",
+    "npm run test:public", "npm run build",
 )
 TESTER_COMMAND = "npm run check"
 EVALUATOR_PUBLIC_COMMAND = "npm run test:public"
@@ -371,7 +370,7 @@ def validate_contract(contract: Any) -> list[str]:
     require(contract.get("costPolicy", {}).get("maxTokens") is None and
             contract.get("costPolicy", {}).get("maxTokensUnavailableReasonRequired") is True,
             "canonical nullable maxTokens policy diverges", errors)
-    require(contract.get("protocolVersion") == "2.4.0",
+    require(contract.get("protocolVersion") == "2.5.0",
             "canonical protocol version diverges", errors)
     require(contract.get("builderFreeze") == {
         "promptSha256": BUILDER_PROMPT_SHA256,
@@ -1293,7 +1292,7 @@ def validate_execution(fixture: Any) -> list[str]:
         return sorted(set(errors))
     validate_conclusion(fixture, errors)
     require(fixture.get("fixtureVersion") == "1.0.0", "run: fixtureVersion diverges", errors)
-    require(fixture.get("protocolVersion") == "2.4.0", "run: protocolVersion diverges", errors)
+    require(fixture.get("protocolVersion") == "2.5.0", "run: protocolVersion diverges", errors)
     if fixture.get("status") == "invalid":
         invalid_fields = {
             "fixtureVersion", "fixtureKind", "protocolVersion",
@@ -1590,7 +1589,7 @@ def validate_execution(fixture: Any) -> list[str]:
                     f"{location}: exitCode invalid", errors)
             require(valid_hash(test.get("rawOutputSha256")), f"{location}: rawOutputSha256 invalid", errors)
             results = test.get("componentResults")
-            require(isinstance(results, list) and len(results) == 7, f"{location}: seven component results required", errors)
+            require(isinstance(results, list) and len(results) == 5, f"{location}: five component results required", errors)
             if isinstance(results, list):
                 require([item.get("command") for item in results if isinstance(item, dict)] == list(PUBLIC_GATES),
                         f"{location}: component gates diverge", errors)
