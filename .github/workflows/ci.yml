@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  check:
+  hosted-integration-no-live-auth:
     runs-on: windows-latest
     timeout-minutes: 10
     env:
@@ -51,4 +51,75 @@ jobs:
           if ($pwshVersion -ne '7.6.2') {
             throw "PowerShell host version mismatch: $pwshVersion"
           }
-      - run: npm run check
+      - name: Install frozen Codex CLI without credentials
+        run: |
+          $codexPath = 'C:\Users\rhenm\.codex\plugins\.plugin-appserver\codex.exe'
+          $codexDirectory = Split-Path -Parent $codexPath
+          if (Test-Path -LiteralPath $codexPath) {
+            throw "Frozen Codex CLI destination already exists: $codexPath"
+          }
+          New-Item -ItemType Directory -Force -Path $codexDirectory | Out-Null
+
+          Invoke-WebRequest -Uri 'https://github.com/openai/codex/releases/download/rust-v0.145.0-alpha.18/codex-x86_64-pc-windows-msvc.exe' -OutFile $codexPath
+
+          $codexSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $codexPath).Hash.ToLowerInvariant()
+          if ($codexSha256 -ne '20d611ef1c9851f4da1cb4609beb6763904f72275cb91517b2400639ca1c28c4') {
+            throw "Codex CLI SHA-256 mismatch: $codexSha256"
+          }
+
+          $codexVersion = & $codexPath --version
+          if ($codexVersion -ne 'codex-cli 0.145.0-alpha.18') {
+            throw "Codex CLI version mismatch: $codexVersion"
+          }
+      - name: Check formatting
+        run: npm run format:check
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Validate frozen scaffold
+        run: npm run validate:scaffold
+      - name: Run credential-free protocol integration tests
+        run: |
+          $testNames = @(
+            'rejects ignored builder contamination before model launch',
+            'rejects private runtime inputs nested inside a builder before model launch',
+            'rejects every schema-valid builder containment overlap before evidence or model launch',
+            'rejects a junction-aliased builder workdir before model launch',
+            'canonicalizes real Windows 8.3 aliases and rejects aliased private builder input before model launch',
+            'rejects stale and malformed absolute role deadlines before evidence or model launch'
+          )
+          $testSource = Get-Content -Raw -LiteralPath 'scripts/validate-scaffold.test.mjs'
+          foreach ($testName in $testNames) {
+            $literal = 'it("' + $testName + '"'
+            $count = ([regex]::Matches($testSource, [regex]::Escape($literal))).Count
+            if ($count -ne 1) {
+              throw "Expected exactly one literal $literal, found $count"
+            }
+          }
+
+          $skipPattern = '^(?:rejects ignored builder contamination before model launch|rejects private runtime inputs nested inside a builder before model launch|rejects every schema-valid builder containment overlap before evidence or model launch|rejects a junction-aliased builder workdir before model launch|canonicalizes real Windows 8\.3 aliases and rejects aliased private builder input before model launch|rejects stale and malformed absolute role deadlines before evidence or model launch)$'
+          node --test --test-skip-pattern $skipPattern scripts/validate-scaffold.test.mjs
+      - name: Run public tests when implemented
+        run: npm run test:public:if-implemented
+      - name: Build
+        run: npm run build
+      - name: Record hosted integration boundary
+        if: always()
+        run: |
+          @'
+          ## Hosted integration boundary
+
+          This credential-free hosted integration runs 47/47 protocol tests. It is **not** canonical `npm run check`, **not** the locked 53/53 protocol execution, and **not** F2 execution or evidence.
+
+          The following live-auth-coupled tests are **NOT EXECUTED IN HOSTED CI**:
+
+          - `rejects ignored builder contamination before model launch`
+          - `rejects private runtime inputs nested inside a builder before model launch`
+          - `rejects every schema-valid builder containment overlap before evidence or model launch`
+          - `rejects a junction-aliased builder workdir before model launch`
+          - `canonicalizes real Windows 8.3 aliases and rejects aliased private builder input before model launch`
+          - `rejects stale and malformed absolute role deadlines before evidence or model launch`
+
+          The sealed local F2/P/A/B/C evidence remains authoritative. See `experiment/preflight/final-lock-evidence.json` and its domain-separated aggregate.
+          '@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
