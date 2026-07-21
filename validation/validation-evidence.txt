@@ -1,15 +1,23 @@
-build-review-loop prospective skill v1 validation
+build-review-loop skill v1 integrated public-contract conformance validation
 repository: GhostlyGawd/build-review-loop-test
 branch: experiment/skill-v1
-frozen start commit: 7a4eaea47e821531fc674febf533d4dfeabc78bf
-artifact schema_version: 2
+remediation parent: de1747fb46ed5b052e5507d2cd3c5c02cf87d73b
+public protocol source commit: 211ec41b165c9400a49bb4f55ec2ef2490c9655a
+protocol version: 2.1.0
 
-Governance orientation
-command: python C:\Users\rhenm\.codex\skills\portfolio-governance\scripts\portfolio_context.py GhostlyGawd/build-review-loop-test
-result: exit 0; live default branch main; private; unarchived; governance status untracked; audit commit 07bbef104ccaaa983a748821e21ccf2c045f5611
+Authorized public source adoption
+canonical contract source: experiment/canonical-contract.json
+canonical contract source/bundle Git blob: 5c4beff84222f99fb24d3ddb91ed99e341ad08bf
+canonical contract raw SHA-256: 984541ff7a9c947fe4236a13e308eacfabac892834c1175e674d4f8805406408
+canonical contract domain-separated SHA-256: 89b0d3776f2e54f5fba87cb041b4fae0518dbfd51a4b63150dd52a6d4c6478c6
+golden fixture source: experiment/golden-run/golden-run.json
+golden fixture source/bundle Git blob: 6479a0f88f945b572dbf41bb8cbfa333362172c5
+golden fixture raw SHA-256: 474a29066b8235a65d24c268e18dfba73fe6df649cebcdba8f7f98b9526ff5f0
+golden fixture domain-separated SHA-256: c92b1d1fcf4a45886580965c2ef6d81219ae16760e43b8e3f32420849412e0a8
+result: both bundled files are byte-identical to pinned Git blobs; validator enforces raw and canonical hashes
 
 Official agents metadata generator
-command: python C:\Users\rhenm\.codex\skills\.system\skill-creator\scripts\generate_openai_yaml.py .\skills\build-review-loop --interface "display_name=Build Review Loop" --interface "short_description=Run a blinded treatment-only review pilot" --interface "default_prompt=Use $build-review-loop to run a prospective blinded build-review pilot from a frozen common start."
+command: python C:\Users\rhenm\.codex\skills\.system\skill-creator\scripts\generate_openai_yaml.py .\skills\build-review-loop --interface "display_name=Build Review Loop" --interface "short_description=Run the public blinded review-loop pilot" --interface "default_prompt=Use $build-review-loop to run the public protocol-v2 neutral-build review-loop experiment."
 result: exit 0; [OK] Created agents/openai.yaml
 
 Official skill validation
@@ -20,20 +28,21 @@ Python syntax validation
 command: python -m py_compile .\skills\build-review-loop\scripts\validate_artifacts.py .\skills\build-review-loop\scripts\test_validate_artifacts.py
 result: exit 0
 
-Complete validator test suite
-command: python -m unittest discover -s .\skills\build-review-loop\scripts -p test_*.py -v
-result: exit 0; 16 tests ran; all passed
-positive cases: baseline zero cycles; treatment fresh-zero-findings convergence; treatment cycle-5 fix/test with unverified convergence; exact assignment recomputation; three-snapshot blind evaluation and primary/secondary deltas; exact token caps with absent/null unavailability reason; unavailable exact token cap as null with a nonempty reason
-negative cases: reversed assignment; assignment before both freezes; baseline cycle; duplicate semantic package; missing hidden suite; wrong rubric weight; null token cap without reason; exact token cap with non-null unavailability reason; estimated token cost; invalid severity; evidence mutation; malformed worker ID
+Exact public golden CLI validation
+command: python .\skills\build-review-loop\scripts\validate_artifacts.py .\skills\build-review-loop\tests\fixtures\golden-run.json --mode execution --expect-golden
+result: exit 0; OK: protocol-v2 execution artifact is canonically valid
 
-Validator CLI smoke
-command: python .\skills\build-review-loop\scripts\validate_artifacts.py --help
-result: exit 0; usage emitted
+Complete golden-first validator suite
+command: python -m unittest discover -s .\skills\build-review-loop\scripts -p test_*.py -v
+result: exit 0; 39 tests ran; all passed
+positive coverage: raw/canonical bundle hashes; exact golden function and subprocess CLI; canonical UTF-8 byte ordering/domain; exact assignment bytes; exact X/Y/Z rank bytes; template-mode sentinel allowance
+negative coverage: legacy/extra finding fields; legacy baseline stop; assignment/rank/mapping drift; sequence-1, predecessor, and canonical artifact-hash evidence drift; missing X/Y/Z evaluation, public/hidden results, or rubric item; rubric ID/order/anchor/maximum/subtotal/cap drift; evaluator command drift; all invoked role wall-budget drift; positive/estimated maxTokens; missing maxTokens reason; estimated unavailable telemetry; public gate/hidden commitment drift; duplicate workers; execution zero/sentinel data; golden mutation; non-history-free package; outcome arithmetic; incompatible fixer/tester worker shapes
 
 Patch hygiene
 command: git diff --check
 result: exit 0; no whitespace errors
 
 Scope checks
-result: no schema-version-1, seed-parity-v1, arms/X, arms/Y, two-label blind-evaluation contract, or superseded rubric category remains in the skill
-result: SKILL.md is under 500 lines and uses progressive references for isolation, role packets, and schema details
+result: executable/prose surfaces use public camelCase artifacts, baseline-zero-cycles, sequence-0 previousSha256, registered rank hashing, exact 20-item evaluation, nullable unavailable maxTokens, and fixed public/hidden commitments
+result: incompatible v1 names remain only as intentionally rejected negative-test inputs
+result: SKILL.md remains concise and delegates canonical detail to direct references

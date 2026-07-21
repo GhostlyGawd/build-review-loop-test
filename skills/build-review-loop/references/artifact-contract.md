@@ -1,128 +1,87 @@
-# Artifact contract (schema version 2)
+# Public protocol-v2 artifact contract
 
-Use UTF-8 JSON. Use sorted keys only where canonicalization is required. Do not persist secrets.
+Treat bundled [canonical-contract.json](canonical-contract.json) as authoritative. Its domain-separated canonical SHA-256 is `89b0d3776f2e54f5fba87cb041b4fae0518dbfd51a4b63150dd52a6d4c6478c6`. Use bundled `../tests/fixtures/golden-run.json` as the byte-identical integrated execution example; its canonical SHA-256 is `c92b1d1fcf4a45886580965c2ef6d81219ae16760e43b8e3f32420849412e0a8`. Do not invent alternate field names or layouts.
+
+## Frozen bindings and costs
+
+Bind these exact public commands:
 
 ```text
-RUN_DIR/
-  run.json
-  evidence.jsonl
-  builders/<candidate-id>/attestation.json
-  arms/baseline/arm.json
-  arms/treatment/arm.json
-  arms/treatment/cycles/01/review.json
-  arms/treatment/cycles/01/fix.json          # only for nonempty findings
-  arms/treatment/cycles/01/public-gates.json # after every fix
-  evaluation/package-map.json                # sealed from evaluator
-  evaluation/blind.json
-  evaluation/unblinded.json
+tester: npm run check
+components, in order:
+  npm run format:check
+  npm run lint
+  npm run typecheck
+  npm run validate:scaffold
+  npm run test:protocol
+  npm run test:public:if-implemented
+  npm run build
+evaluator public: npm run test:public
+evaluator hidden: node sealed-hidden-suite/run.mjs
+hidden ID: permissions-playground-sealed-v2
+hidden SHA-256: a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b
 ```
 
-## Run contract
+Freeze one turn and wall maxima: builder 2400, reviewer 900, fixer 1500, tester 900, evaluator 1800, unblinder 300, Git worker 600 seconds. Every cost record binds `environmentSha256`; model roles bind `modelConfigSha256`, while deterministic unblinder/Git roles may use null only with a reason. Require `maxTokens: null` and a nonempty `maxTokensUnavailableReason`. Use provider-reported nonnegative totals when available; otherwise keep `totalTokens` and `usd` null with `source: "unavailable"`.
 
-Require `run.json` to contain:
+## Assignment and stopping
+
+After both initial artifacts freeze, draw exactly 32 OS-CSPRNG bytes once. UTF-8-byte-sort candidate IDs as id0/id1. Hash, in order:
+
+```text
+b"build-review-loop-assignment-v2\x00"
++ raw seed bytes
++ uint64be(len(id0)) + id0
++ uint64be(len(id1)) + id1
+```
+
+Use `digest[0] & 1` as baseline index; the other is treatment. Record seed, digest, draw, mapping, generator, timestamp, and the two frozen evidence hashes. Baseline uses exactly `baseline-zero-cycles`, zero cycles, identical initial/final snapshots, and null convergence. Treatment stops on `zero-findings` or after the fifth nonempty review/fix/test as `max-cycles` with false convergence.
+
+## Exact findings
+
+Reject additional or missing fields. Require:
 
 ```json
 {
-  "schema_version": 2,
-  "experimental": true,
-  "portability_claim": false,
-  "valid": true,
-  "invalidation": null,
-  "common_start": {"commit": "40 lowercase hex", "tree": "40 lowercase hex"},
-  "builder_prompt_sha256": "64 lowercase hex",
-  "builder_config_sha256": "64 lowercase hex",
-  "delegation": {
-    "root_role": "orchestration_only",
-    "implementation": true, "review": true, "fix": true,
-    "test": true, "evaluation": true, "git": true
-  },
-  "role_policy": {
-    "builder": {"max_tokens": null, "max_tokens_unavailable_reason": "platform cannot impose an exact cap", "timeout_seconds": 1, "environment_sha256": "64 lowercase hex", "model_settings_sha256": "64 lowercase hex"},
-    "reviewer": {}, "fixer": {}, "tester": {}, "evaluator": {},
-    "unblinder": {}, "git_worker": {}
-  },
-  "public_gates": ["nonempty immutable command"],
-  "hidden_suites": ["nonempty sealed suite ID or command"],
-  "max_treatment_cycles": 5,
-  "assignment": {
-    "method": "sha256-baseline-treatment-v2",
-    "seed_hex": "64 lowercase hex",
-    "seed_generated_after_both_freezes": true,
-    "sorted_candidate_ids": ["candidate-a", "candidate-b"],
-    "baseline": "candidate-a or candidate-b",
-    "treatment": "the other candidate",
-    "event_sequence": 3
-  }
-}
-```
-
-Require all seven role-policy entries. Each freezes a positive integer `timeout_seconds` and hashes of exact environment and model-setting bytes. Require `max_tokens` explicitly. When the platform can enforce an exact cap, use a positive integer and keep `max_tokens_unavailable_reason` absent or JSON `null`. When it cannot, use JSON `null` and require a nonempty `max_tokens_unavailable_reason`; never estimate a cap. `token_cost` in worker artifacts is separate telemetry: require a nonnegative integer when measured or JSON `null` when unavailable; reject strings and estimates. A completed valid comparison uses `invalidation: null`; on any invalidation, preserve the evidence and reason but do not emit a valid comparison result.
-
-### Candidate assignment algorithm
-
-Generate `seed_hex` with a CSPRNG as exactly 32 random bytes only after both initial snapshots and attestations freeze. Candidate IDs must be distinct, nonempty UTF-8 strings without NUL. Sort their UTF-8 byte strings lexicographically as `id0`, `id1`. Compute:
-
-```text
-material = b"build-review-loop-assignment-v2\x00"
-         + bytes.fromhex(seed_hex)
-         + len(id0).to_bytes(8, "big") + id0
-         + len(id1).to_bytes(8, "big") + id1
-digest = SHA256(material)
-baseline = sorted_candidate_ids[digest[0] & 1]
-treatment = the other sorted candidate ID
-```
-
-This is the only candidate-assignment algorithm. Record the direct baseline/treatment mapping and sorted IDs so the validator can recompute it.
-
-## Builder attestations
-
-Each `builders/<candidate-id>/attestation.json` requires the candidate ID; a globally unique builder instance ID; `skill_exposed: false`; matching common start commit/tree and prompt/config hashes; an initial snapshot; `frozen: true`; a positive `freeze_event_sequence`; and token cost. Both attestations must name the same prompt/config hashes and common start. Their evidence events must precede the assignment event.
-
-## Arms and treatment cycles
-
-Each `arm.json` requires `role`, matching `candidate_id`, `initial_snapshot`, `final_snapshot`, `cycle_count`, `stop_reason`, `convergence_verified`, and token cost.
-
-- Baseline: initial equals final, cycle count is `0`, stop reason is `baseline_frozen`, convergence is JSON `null`, and no baseline `cycles` directory is allowed.
-- Treatment: use only cycles numbered contiguously from 1. Stop reason is `zero_findings` with convergence `true`, or `max_cycles` with convergence `false` and exactly five cycles.
-
-`review.json` requires the cycle, unique reviewer ID, `context: "current_snapshot_only"`, input snapshot, token cost, and `findings`. A finding has exactly these authoritative required fields (extensions are allowed):
-
-```json
-{
-  "id": "stable cycle-local ID",
+  "id": "cycle-1-reviewer-01",
   "severity": "critical|high|medium|low",
-  "title": "concise defect",
-  "evidence": "specific path, symbol, or observed behavior",
-  "impact": "why it matters",
-  "required_change": "bounded outcome",
-  "acceptance_check": "observable proof"
+  "title": "nonempty",
+  "evidence": ["specific evidence"],
+  "expected": "nonempty",
+  "actual": "nonempty",
+  "rubricItems": ["A1"],
+  "verification": "nonempty",
+  "duplicateOf": null
 }
 ```
 
-For nonempty findings, require `fix.json` with matching cycle, unique fixer ID, `context: "current_findings_only"`, input/output snapshots, all addressed finding IDs, changed paths, and token cost. Require `public-gates.json` with matching cycle/output snapshot, unique tester ID, token cost, and one ordered result per frozen public gate. A result contains exact `command`, integer `exit_code`, and nonempty `output_digest`. Allow no fix or gate file after an empty review. The final snapshot follows the last fix, or the empty review input snapshot. Cycle 5 with findings still requires its fix and gates.
+IDs match `^cycle-[1-5]-reviewer-[0-9]{2}$`; rubric items are unique registered IDs; `duplicateOf` is null or another registered finding ID.
 
-## Three-snapshot blind evaluation
+## Blind X/Y/Z evaluation
 
-Require `evaluation/package-map.json` to be sealed from the evaluator and to map `X`, `Y`, and `Z` bijectively to `baseline_final`, `treatment_initial`, and `treatment_final`, with each mapped snapshot matching the corresponding arm artifact. Require `randomization_method: "system_csprng_shuffle_v1"` and a SHA-256 digest of the raw randomization record; preserve that raw record outside the evaluator packet.
+Draw a separate 32-byte seed and record lowercase `seedHex`. Compute `digestSha256 = SHA256(UTF8("permissions-playground/protocol-v2/evaluation\n" + seedHex))`. For each snapshot name B0, T0, Tfinal, compute `SHA256(UTF8(digestSha256 + "\n" + snapshotName))`. Sort by lowercase rank digest, then UTF-8 snapshot name, and assign positions to X/Y/Z.
 
-Require `evaluation/blind.json` to contain a fresh evaluator ID, `blind_labels: ["X", "Y", "Z"]`, `history_free: true`, and `excluded_context` including `identities`, `assignment`, `mapping`, `history`, and `costs`. For every label, require results for every frozen public gate and hidden suite, plus this exact rubric:
+Each of the three evaluation artifacts requires exact `publicTests` and `hiddenTests` result objects, exactly 20 items in this order, written-anchor scores, exact maxima, evidence/rationale, section totals, uncapped/final totals, cap conditions, caps applied, uncertainties, and hashes:
 
-| Dimension | Points |
-| --- | ---: |
-| `functional_correctness` | 50 |
-| `robustness_security` | 15 |
-| `accessibility_usability` | 15 |
-| `test_effectiveness` | 10 |
-| `maintainability_documentation` | 10 |
+| Section | Items (`maximum`; anchors) | Maximum |
+| --- | --- | ---: |
+| `functional` | A1 (6; 0/3/6), A2 (8; 0/4/8), A3 (10; 0/4/7/10), A4 (10; 0/4/7/10), A5 (7; 0/4/7), A6 (7; 0/4/7), A7 (2; 0/1/2) | 50 |
+| `robustnessSecurity` | B1 (5; 0/3/5), B2 (5; 0/3/5), B3 (5; 0/3/5) | 15 |
+| `accessibilityUsability` | C1 (6; 0/3/6), C2 (4; 0/2/4), C3 (5; 0/3/5) | 15 |
+| `testEffectiveness` | D1 (4; 0/2/4), D2 (4; 0/2/4), D3 (2; 0/1/2) | 10 |
+| `maintainabilityDocs` | E1 (3; 0/1/2/3), E2 (3; 0/1/2/3), E3 (2; 0/1/2), E4 (2; 0/1/2) | 10 |
 
-Each dimension needs an integer score from zero through its weight and nonempty evidence. Require the declared total to equal the five scores and evaluator token cost to be measured or null. The evaluator may and must run both frozen suites; testing is an explicit exception to read-only comparison, but editing remains forbidden.
+Registered caps are `functional-section-10` when build/render fails, `default-allow-A2-A3-combined-4`, and overall `overall-security-50` for executable injection/unexpected network. Emit caps in that order. The outcome maps X/Y/Z bijectively to B0/T0/Tfinal, copies final totals, computes `primaryTfinalMinusB0` and `secondaryTfinalMinusT0`, and selects baseline on an exact B0/Tfinal tie.
 
-Require `evaluation/unblinded.json` to freeze after blind evaluation and contain the direct package mapping, copied totals by semantic snapshot, `primary_delta` equal to treatment-final minus baseline, and `secondary_delta` equal to treatment-final minus treatment-initial. Keep scoring unchanged during unblinding.
+## Canonical evidence and modes
 
-## Append-only evidence
+Canonical JSON accepts null, booleans, safe integers, strings, arrays, and objects. Sort object keys by ascending UTF-8 bytes; preserve arrays; use JSON escaping; emit no insignificant whitespace/trailing newline. Hash the bytes `b"permissions-playground/canonical-json-v1\x00" + canonical_json_utf8`.
 
-Write one JSON object per line with `sequence` starting at 1, `kind`, `payload`, `previous_event_hash`, and `event_hash`. The first previous hash is null; each later value equals the prior event hash. Compute `event_hash` as SHA-256 of canonical UTF-8 JSON for the event with `event_hash` omitted: recursively sort object keys and use separators `,` and `:` without insignificant whitespace.
+Evidence sequence begins at 0; first `previousSha256` is null; each later predecessor is the prior `artifactSha256`; every artifact hash uses the canonical algorithm. Execution mode rejects zero 40/64-character hashes or seeds, template/sentinel/placeholder/required-at-run strings, provisional locks, duplicate invocation IDs, and any public-contract divergence. Template mode is never executable.
 
-The validator cross-checks the two `builder_frozen` events and later `assignment` event against attestations and the assignment record. The chain proves internal order and mutation detection; retain storage history to support an append-only claim.
+Validate an integrated run:
 
-Run `python scripts/validate_artifacts.py RUN_DIR`. Exit 0 proves only this minimum structural contract, not genuine worker freshness, isolation, safety, CSPRNG quality, semantic finding correctness, or absence of undisclosed channels.
+```text
+python scripts/validate_artifacts.py RUN.json --mode execution
+python scripts/validate_artifacts.py tests/fixtures/golden-run.json --mode execution --expect-golden
+```

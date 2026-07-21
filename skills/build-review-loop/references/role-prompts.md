@@ -1,35 +1,37 @@
-# Role packets
+# Public protocol-v2 role packets
 
-Fill brackets only from frozen inputs. Give workers only their listed packet. Require schema-version-2 JSON outputs and completion/failure attestations. Apply each role's frozen budget, environment, and model-setting policy. Record an unenforceable exact token cap as JSON `null` with its nonempty unavailability reason; never estimate it.
+Fill brackets only from frozen inputs. Give each worker only its packet. Use one turn, its registered wall maximum, the frozen environment/model policy, `maxTokens: null`, and a nonempty unavailability reason. Require public schema field names and canonical evidence.
 
-## Builder (send byte-identically twice)
+## Builder (2400 seconds; send byte-identically twice)
 
-> Implement [TASK] from common start [COMMIT/TREE] in isolated directory [CANDIDATE_DIR]. Acceptance criteria: [CRITERIA]. Public gates: [PUBLIC_GATES]. Allowed paths: [PATHS]. Safety limits: [LIMITS]. Work independently and perform all implementation and Git actions required for your candidate. Do not inspect or communicate with another candidate. No build-review skill or comparison protocol is available to you. Freeze the result and report candidate ID, builder instance ID, snapshot commit/tree, prompt/config hashes, changed paths, measured token cost or null, and blockers. Do not rank or label the approach.
+> Implement [TASK] from [COMMON_START] in isolated [CANDIDATE_DIR]. Criteria: [CRITERIA]. Immutable public gates: [GATES]. Allowed paths: [PATHS]. Safety: [LIMITS]. Work independently and perform implementation/Git actions. Do not inspect another candidate or any skill/comparison/assignment context. Freeze candidateLabel, workerId, promptSha256, configSha256, commit, treeSha256, and sealedAt. Do not rank the result.
 
-Hash the exact prompt and configuration bytes before dispatch. Do not add per-builder wrappers, names, hints, or metadata.
+Hash exact prompt/config bytes before dispatch. Add no candidate-specific wrappers or hints.
 
-## Reviewer (treatment only)
+## Reviewer (900 seconds; treatment only)
 
-> Review current snapshot [SNAPSHOT] against [TASK], [CRITERIA], and [PUBLIC_GATES]. You are fresh and have no provenance or prior-cycle context. Do not edit, fix, run tests, inspect other snapshots, or infer authorship. Return only independently supported actionable findings using the authoritative schema, or an empty findings array. Report measured token cost or null.
+> Review [SNAPSHOT] against [TASK], [CRITERIA], and frozen public materials. You are fresh and history-free. Do not edit, fix, inspect other snapshots, infer provenance, or receive prior cycles. Return findings only, each with exactly id, severity, title, evidence, expected, actual, rubricItems, verification, duplicateOf. IDs are cycle-[1-5]-reviewer-[0-9]{2}; severities are critical/high/medium/low. Return an empty findings array only when independently verified.
 
-## Fixer (treatment only)
+Emit the complete public review artifact: candidateLabel, cycle, snapshotCommit, roleInstanceId, workerId, startedAt, completedAt, checksRun, evidenceExamined, coverageGaps, findings.
 
-> At current snapshot [SNAPSHOT], address only [CURRENT_FINDINGS] under [TASK], [CRITERIA], [PATHS], and [LIMITS]. You have no prior-cycle or other-candidate context. Make the smallest coherent implementation and Git changes. Do not alter gates. Report addressed IDs, blockers, changed paths, new snapshot commit/tree, and measured token cost or null.
+## Fixer (1500 seconds; treatment only)
 
-## Public-gate tester (treatment only)
+> At [SNAPSHOT], address only [CURRENT_FINDINGS] under frozen scope/safety. You have no other cycle/candidate history. Do not change gates. Emit the public fix artifact with candidateLabel, cycle, roleInstanceId, workerId, startCommit, finalCommit, timestamps, ordered dispositions, changedFiles, checks, remainingDefects, deviations.
 
-> At [SNAPSHOT], run every frozen public gate exactly: [PUBLIC_GATES]. Do not edit, repair, add tests, inspect other snapshots, or change commands. Record each command, working directory, exit code, output digest, and measured token cost or null.
+## Tester (900 seconds; treatment only)
 
-Run a fresh tester after every fix, including the cycle-5 fix.
+> At [SNAPSHOT], run immutable `npm run check` without edits or repair. Record the seven ordered component commands/results, overall exit code, rawOutputSha256, timestamps, snapshot/worker/role IDs, and `workingTreeClean: true` in the public test artifact.
 
-## Blind evaluator
+Use a fresh tester after every fix, including cycle 5.
 
-> Evaluate three anonymous, history-free packages X, Y, and Z against [TASK] and [CRITERIA]. You may inspect each snapshot and must run every frozen public gate [PUBLIC_GATES] and hidden suite [HIDDEN_SUITES] for each package. Do not edit snapshots or seek identities, assignment, mapping, histories, findings, fixes, costs, or cycle counts. Score each package exactly on functional_correctness/50, robustness_security/15, accessibility_usability/15, test_effectiveness/10, and maintainability_documentation/10 with evidence. Return frozen per-package results, totals, and measured token cost or null; do not rank semantic candidates.
+## Blind evaluator (1800 seconds)
 
-## Unblinder
+> Evaluate anonymous history-free X/Y/Z in one fresh turn. Verify frozen commitments; run `npm run test:public` and `node sealed-hidden-suite/run.mjs` for each package in equivalent clean Node 22 environments. Do not seek mapping, assignment, histories, identities, prompts, costs, cycles, or skill. Emit one exact evaluation artifact per label with publicTests, hiddenTests, A1..E4 items in registered order at written anchors/maxima, five sectionTotals, uncappedTotal, capConditions, capsApplied, finalTotal, uncertainties, and hashes. Do not unblind or rank semantic snapshots.
 
-> After blind results freeze, apply sealed [PACKAGE_MAP] without changing scores. Copy totals for baseline_final, treatment_initial, and treatment_final. Compute treatment_final minus baseline as primary_delta and treatment_final minus treatment_initial as secondary_delta.
+## Unblinder (300 seconds)
 
-## Git worker
+> After X/Y/Z artifacts freeze, apply [SEALED_MAPPING] without changing scores. Emit the public outcome: packageMapping, B0/T0/Tfinal scores, Tfinal−B0, Tfinal−T0, tie-to-baseline selection, evaluation hashes, worker IDs, and evidence hash.
 
-> Perform only the authorized Git operation in [WORKTREE]. Verify exact paths, ref, scope, and status; report commit/tree/ref and cleanliness. Do not create or merge a PR, tag, release, publish, deploy, or alter remote settings without separate authorization.
+## Git worker (600 seconds)
+
+> Perform only [AUTHORIZED_GIT_OPERATION] in [WORKTREE]. Verify exact paths/ref/scope/status and report commit/tree/ref/cleanliness. Do not create/merge a PR, tag, release, publish, deploy, or alter remote settings without separate authorization.

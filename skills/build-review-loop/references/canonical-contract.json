@@ -1,0 +1,160 @@
+{
+  "contractVersion": "1.0.0",
+  "protocolVersion": "2.1.0",
+  "normativeSource": "experiment/protocol.md",
+  "canonicalJson": {
+    "id": "utf8-sorted-json-v1",
+    "domain": "permissions-playground/canonical-json-v1\u0000",
+    "rules": [
+      "values are limited to null, booleans, safe integers, strings, arrays, and objects",
+      "object keys are sorted by ascending UTF-8 byte order",
+      "arrays preserve order",
+      "strings use JSON.stringify escaping",
+      "no insignificant whitespace or trailing newline is emitted",
+      "SHA-256 input is the domain bytes followed by the canonical JSON bytes"
+    ]
+  },
+  "finding": {
+    "schema": "experiment/schemas/finding.schema.json",
+    "requiredFields": [
+      "id",
+      "severity",
+      "title",
+      "evidence",
+      "expected",
+      "actual",
+      "rubricItems",
+      "verification",
+      "duplicateOf"
+    ],
+    "severities": ["critical", "high", "medium", "low"],
+    "idPattern": "^cycle-[1-5]-reviewer-[0-9]{2}$"
+  },
+  "stopping": {
+    "baselineStopReason": "baseline-zero-cycles",
+    "treatmentZeroFindings": "zero-findings",
+    "treatmentMaxCycles": "max-cycles",
+    "maximumCycles": 5
+  },
+  "assignment": {
+    "seedBytes": 32,
+    "candidateOrdering": "ascending UTF-8 bytes",
+    "domainHex": "6275696c642d7265766965772d6c6f6f702d61737369676e6d656e742d763200",
+    "material": [
+      "domain bytes",
+      "32 raw seed bytes",
+      "uint64be byte length of id0",
+      "id0 UTF-8 bytes",
+      "uint64be byte length of id1",
+      "id1 UTF-8 bytes"
+    ],
+    "digest": "SHA-256(material)",
+    "baselineIndex": "digest[0] & 1",
+    "treatmentIndex": "1 - baselineIndex"
+  },
+  "evaluationRandomization": {
+    "seedBytes": 32,
+    "domainUtf8": "permissions-playground/protocol-v2/evaluation\n",
+    "digestMaterial": "domain UTF-8 bytes followed by 64 lowercase seed-hex ASCII bytes",
+    "snapshotNames": ["B0", "T0", "Tfinal"],
+    "rankMaterial": "64 lowercase digest-hex ASCII bytes followed by newline and snapshot-name UTF-8 bytes",
+    "rankDigest": "SHA-256(rankMaterial)",
+    "ordering": "ascending lowercase rank digest, then ascending snapshot-name UTF-8 bytes",
+    "labelsByRank": ["X", "Y", "Z"]
+  },
+  "evidenceChain": {
+    "sequenceStartsAt": 0,
+    "sequenceStep": 1,
+    "firstPreviousSha256": null,
+    "linkRule": "entry[n].previousSha256 equals entry[n-1].artifactSha256",
+    "artifactHash": "SHA-256 over utf8-sorted-json-v1 canonical bytes of the artifact payload"
+  },
+  "evaluation": {
+    "packageLabels": ["X", "Y", "Z"],
+    "snapshotRoles": ["B0", "T0", "Tfinal"],
+    "rubricItems": [
+      { "id": "A1", "maximum": 6, "anchors": [0, 3, 6] },
+      { "id": "A2", "maximum": 8, "anchors": [0, 4, 8] },
+      { "id": "A3", "maximum": 10, "anchors": [0, 4, 7, 10] },
+      { "id": "A4", "maximum": 10, "anchors": [0, 4, 7, 10] },
+      { "id": "A5", "maximum": 7, "anchors": [0, 4, 7] },
+      { "id": "A6", "maximum": 7, "anchors": [0, 4, 7] },
+      { "id": "A7", "maximum": 2, "anchors": [0, 1, 2] },
+      { "id": "B1", "maximum": 5, "anchors": [0, 3, 5] },
+      { "id": "B2", "maximum": 5, "anchors": [0, 3, 5] },
+      { "id": "B3", "maximum": 5, "anchors": [0, 3, 5] },
+      { "id": "C1", "maximum": 6, "anchors": [0, 3, 6] },
+      { "id": "C2", "maximum": 4, "anchors": [0, 2, 4] },
+      { "id": "C3", "maximum": 5, "anchors": [0, 3, 5] },
+      { "id": "D1", "maximum": 4, "anchors": [0, 2, 4] },
+      { "id": "D2", "maximum": 4, "anchors": [0, 2, 4] },
+      { "id": "D3", "maximum": 2, "anchors": [0, 1, 2] },
+      { "id": "E1", "maximum": 3, "anchors": [0, 1, 2, 3] },
+      { "id": "E2", "maximum": 3, "anchors": [0, 1, 2, 3] },
+      { "id": "E3", "maximum": 2, "anchors": [0, 1, 2] },
+      { "id": "E4", "maximum": 2, "anchors": [0, 1, 2] }
+    ],
+    "sectionItems": {
+      "functional": ["A1", "A2", "A3", "A4", "A5", "A6", "A7"],
+      "robustnessSecurity": ["B1", "B2", "B3"],
+      "accessibilityUsability": ["C1", "C2", "C3"],
+      "testEffectiveness": ["D1", "D2", "D3"],
+      "maintainabilityDocs": ["E1", "E2", "E3", "E4"]
+    },
+    "sectionMaxima": {
+      "functional": 50,
+      "robustnessSecurity": 15,
+      "accessibilityUsability": 15,
+      "testEffectiveness": 10,
+      "maintainabilityDocs": 10
+    },
+    "requiredTestResults": ["publicTests", "hiddenTests"],
+    "primaryDelta": "Tfinal - B0",
+    "secondaryDelta": "Tfinal - T0",
+    "mainSelection": "higher of B0 and Tfinal; exact tie selects baseline"
+  },
+  "roles": {
+    "builder": { "wallSecondsMaximum": 2400, "modelConfigHash": "required" },
+    "reviewer": { "wallSecondsMaximum": 900, "modelConfigHash": "required" },
+    "fixer": { "wallSecondsMaximum": 1500, "modelConfigHash": "required" },
+    "tester": { "wallSecondsMaximum": 900, "modelConfigHash": "required" },
+    "evaluator": { "wallSecondsMaximum": 1800, "modelConfigHash": "required" },
+    "unblinder": {
+      "wallSecondsMaximum": 300,
+      "modelConfigHash": "nullable-with-reason"
+    },
+    "git_worker": {
+      "wallSecondsMaximum": 600,
+      "modelConfigHash": "nullable-with-reason"
+    }
+  },
+  "costPolicy": {
+    "turnLimit": 1,
+    "maxTokens": null,
+    "maxTokensUnavailableReasonRequired": true,
+    "environmentSha256Required": true,
+    "workerIdsUniqueAcrossInvocations": true
+  },
+  "gates": {
+    "testerCommand": "npm run check",
+    "componentCommands": [
+      "npm run format:check",
+      "npm run lint",
+      "npm run typecheck",
+      "npm run validate:scaffold",
+      "npm run test:protocol",
+      "npm run test:public:if-implemented",
+      "npm run build"
+    ],
+    "evaluatorPublicCommand": "npm run test:public"
+  },
+  "hiddenSuite": {
+    "id": "permissions-playground-sealed-v2",
+    "command": "node sealed-hidden-suite/run.mjs",
+    "sha256": "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b"
+  },
+  "validationModes": {
+    "template": "allows documented template-only sentinel values and is never executable",
+    "execution": "rejects zero hashes, zero seeds, sentinel IDs or snapshots, required-at-run text, duplicate worker IDs, template equality, provisional locks, and any contract divergence"
+  }
+}

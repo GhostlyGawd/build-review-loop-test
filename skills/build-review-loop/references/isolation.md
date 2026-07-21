@@ -13,11 +13,11 @@
 - Keep the baseline immutable and worker-free until blind evaluation.
 - Create a new history-free reviewer, fixer, and tester whenever the treatment cycle requires that role. Never fork them from conversations containing prior roles or cycles.
 - Build reviewer packets from the current treatment snapshot and frozen public inputs only. Build fixer packets from only the current findings and snapshot.
-- Keep hidden suites sealed until the evaluator packet. The evaluator receives three anonymous snapshot packages, frozen suite definitions, and no mapping, provenance, history, findings, fixes, identities, or costs.
+- Keep the hidden suite sealed until the evaluator packet. The evaluator receives anonymous B0/T0/Tfinal packages labeled only X/Y/Z, exact frozen public materials, and no mapping, provenance, history, findings, fixes, identities, prompts, costs, cycles, or skill.
 - Delegate Git work to dedicated workers. The root may select, dispatch, verify, stop, and record, but may not implement, review, fix, test, evaluate, or operate Git.
 
 ## Detect contamination
 
-Before every handoff, record snapshot commit/tree, allowed paths, worker ID, packet hash, frozen role policy, and clean/dirty state. Invalidate for mismatched starts, byte-unequal builder inputs, skill exposure, early assignment, shared mutable paths, cross-candidate reads, baseline mutation, worker reuse, changed gates, unexpected network/remotes, inherited role history, evaluator leakage, or evidence-chain failure.
+Before every handoff, record snapshot commit/tree, allowed paths, worker ID, packet hash, frozen one-turn wall budget, cost/environment/model binding, and clean/dirty state. Invalidate for mismatched starts, byte-unequal builder inputs, skill exposure, early assignment/redraw, shared mutable paths, cross-candidate reads, baseline mutation, worker reuse, changed gates/commitments/rubric, unexpected network/remotes, inherited role history, evaluator leakage, sentinel execution data, or evidence-chain failure.
 
 Quarantine processes and credentials on suspected leakage. Preserve sanitized evidence and stop when isolation cannot be restored without changing the frozen protocol. Cleanup is separately authorized destructive work: validate exact candidate paths first and never recursively delete a repository root, home directory, unresolved variable, or broad glob.

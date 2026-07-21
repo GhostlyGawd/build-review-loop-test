@@ -1,4 +1,4 @@
 interface:
   display_name: "Build Review Loop"
-  short_description: "Run a blinded treatment-only review pilot"
-  default_prompt: "Use $build-review-loop to run a prospective blinded build-review pilot from a frozen common start."
+  short_description: "Run the public blinded review-loop pilot"
+  default_prompt: "Use $build-review-loop to run the public protocol-v2 neutral-build review-loop experiment."

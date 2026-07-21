@@ -1,11 +1,13 @@
-# Frozen SHA-256 manifest for prospective build-review-loop skill v1 / artifact schema version 2.
-# Hashes cover the exact bytes of every skill source file and the validation evidence listed below.
-# Excluded: this manifest (to avoid self-reference), ignored bytecode, and repository files outside the skill/evidence scope.
-3981cd9427c9601ad34bb33b4384a90f83083d4d7cad1d287a0198e5d9205a17  skills/build-review-loop/SKILL.md
-5eede7f9edbf316ad94c2653f6fcaea2a9b31fb87225265ff0b15b9ca7ac03fa  skills/build-review-loop/agents/openai.yaml
-56c4f185a64a3ab6e1e19413a12958081530919f81641681468c7b878d8363b1  skills/build-review-loop/references/artifact-contract.md
-3803d2350c3b889b3a1dcc51704cdf4d74bd6e3c33764bc8558222f2dde1486a  skills/build-review-loop/references/isolation.md
-e50c7ecf4d54c6d9e65797a4cc4b8b8adcb626047ad3c60eb8ecc23f6c9b0a7c  skills/build-review-loop/references/role-prompts.md
-925c7d35f4177cea09b92dc7564d133a69cee8f57221eaa3c7993fdc6bc258c4  skills/build-review-loop/scripts/test_validate_artifacts.py
-cb0571316d322f9927f3e34dee27d53656cddae65334fba4be054ce24e7a731a  skills/build-review-loop/scripts/validate_artifacts.py
-1efaec5da1b4005eba9b6023ce7e5696e40596ffa89d2c89d8d3694cb329d751  validation/validation-evidence.txt
+# Frozen SHA-256 manifest for build-review-loop skill v1 / public protocol 2.1.0 conformance.
+# Hashes cover exact skill sources, byte-identical public fixtures, and validation evidence.
+# Excluded: this manifest (to avoid self-reference), ignored bytecode, and unrelated repository files.
+737c47dcbc589cd2c088e63b04b3de77d0c50a1f2178fdbcc01eaaaffc1d8ba3  skills/build-review-loop/SKILL.md
+79541d1012d172730f3bd97eff8f18cc1c07caac1f9939a73185003bf1cf3a61  skills/build-review-loop/agents/openai.yaml
+47938e1aac74f603231cb10eebd9ef50d470e588875490c3da72c560d714d858  skills/build-review-loop/references/artifact-contract.md
+984541ff7a9c947fe4236a13e308eacfabac892834c1175e674d4f8805406408  skills/build-review-loop/references/canonical-contract.json
+524076655e171ff4c4d55b6fe32aaa502de2cdc29d7df2efc2bc117d0a2a0668  skills/build-review-loop/references/isolation.md
+68eb221900de546fa8fb0198b2651a4233a72cc4dc64d3d67faf6bca3fa0f862  skills/build-review-loop/references/role-prompts.md
+e8bf374ef984be01a375d8bcdae500b47c490652e004a5c67410cf909f96c209  skills/build-review-loop/scripts/test_validate_artifacts.py
+edca810a55c257ae9ed3807ba7be4c2541c9c6ea7e01b68ca730ee648753a10c  skills/build-review-loop/scripts/validate_artifacts.py
+474a29066b8235a65d24c268e18dfba73fe6df649cebcdba8f7f98b9526ff5f0  skills/build-review-loop/tests/fixtures/golden-run.json
+41a4ea27901d6be5683999c2185599d1ce123b11b78120e370271cdb0035c057  validation/validation-evidence.txt

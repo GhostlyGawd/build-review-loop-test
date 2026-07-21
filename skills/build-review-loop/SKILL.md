@@ -1,47 +1,43 @@
 ---
 name: build-review-loop
-description: Run a prospective experimental build/review pilot with two neutral builders, concealed post-freeze baseline/treatment assignment, a frozen zero-cycle baseline, treatment-only review/fix/test cycles, and blind three-snapshot evaluation. Use when testing whether a bounded iterative review loop improves one of two independently built solutions from the same frozen start while preserving auditable isolation and evidence.
+description: Run the prospective public protocol-v2 neutral-build versus treatment-only review experiment with post-freeze assignment, a zero-cycle baseline, bounded fresh review/fix/test cycles, canonical evidence, and blind B0/T0/Tfinal evaluation. Use when testing whether the frozen review loop improves one of two isolated builds while preserving the public canonical contract and auditable blindness.
 ---
 
 # Build Review Loop
 
-Treat this as a breaking, experimental protocol with no portability claim. Keep the root orchestration-only. Delegate every implementation, review, fix, test, evaluation, and Git action to bounded workers. Stop before building if fresh agents or isolated filesystems are unavailable.
+Treat this as an experimental protocol with no portability claim. Keep the root orchestration-only. Delegate every implementation, review, fix, test, evaluation, unblinding, validation, and Git action. Stop before building when fresh workers or isolated filesystems are unavailable.
 
-## Freeze and build
+## Bind the public contract
 
-1. Freeze the task, acceptance criteria, allowed paths, public and hidden suites, five-cycle limit, safety limits, role budgets, environment, model-setting policy, common start commit/tree, and artifact directory. Read [isolation.md](references/isolation.md).
-2. Have a delegated Git worker create two new isolated filesystems at the same common start. Do not use the root checkout for either candidate.
-3. Send byte-identical neutral prompt bytes and configuration bytes to two fresh builders. Do not expose this skill or mention baseline, treatment, comparison strategy, expected approaches, or the other builder.
-4. Freeze both initial snapshots and attestations. Only afterward generate a 32-byte CSPRNG seed and use the one assignment algorithm in [artifact-contract.md](references/artifact-contract.md) to map the two opaque candidate IDs directly to `baseline` and `treatment`.
+1. Read [artifact-contract.md](references/artifact-contract.md) and its bundled [canonical-contract.json](references/canonical-contract.json). Require canonical SHA-256 `89b0d3776f2e54f5fba87cb041b4fae0518dbfd51a4b63150dd52a6d4c6478c6`.
+2. Freeze the task, common start, preregistration lock, neutral prompt/config bytes, environment/model hashes, allowed implementation paths, safety limits, exact gates, hidden-suite commitment, and artifact paths. Read [isolation.md](references/isolation.md).
+3. Freeze one-turn wall budgets: builder 2400s, reviewer 900s, fixer 1500s, tester 900s, evaluator 1800s, unblinder 300s, and Git worker 600s. Record `maxTokens: null` with a nonempty unavailability reason; never invent a ceiling or telemetry.
+4. Have a delegated Git worker create two new isolated filesystems at the same common start. Send byte-identical neutral prompt/config bytes to two fresh builders. Do not expose this skill, assignment, comparison strategy, or the other candidate.
+5. Freeze both initial snapshots and canonical evidence. Only afterward draw exactly 32 OS-CSPRNG bytes once and apply the registered assignment bytes to map one candidate to baseline and the other to treatment.
 
-## Preserve the baseline
+## Run the registered arms
 
-Freeze the assigned baseline at its initial snapshot. Run no review, fix, test, or cycle worker against it before evaluation. Record `stop_reason: "baseline_frozen"`, zero cycles, and `convergence_verified: null`.
+Freeze the baseline at B0 with no cycle workers. Require `stopReason: "baseline-zero-cycles"`, `cycles: []`, and `convergence: null`.
 
-## Improve only the treatment
+For treatment cycles 1 through 5, use [role-prompts.md](references/role-prompts.md):
 
-Use the bounded packets in [role-prompts.md](references/role-prompts.md). For cycles 1 through 5:
+1. Start a fresh, history-free reviewer on the current snapshot. Emit findings with exactly the nine public fields and registered IDs/severities/rubric items.
+2. On zero findings, stop before fixer/tester with decision and stop reason `zero-findings` and convergence `true`.
+3. Otherwise start a fresh current-findings-only fixer, then a fresh tester that runs immutable `npm run check` and its seven registered component gates.
+4. After a cycle-5 fix/test, stop with `max-cycles` and convergence `false`; do not infer convergence.
 
-1. Start a fresh, history-free reviewer with only the current treatment snapshot and frozen public inputs. Record findings using the single authoritative finding schema.
-2. On zero findings, stop immediately with `stop_reason: "zero_findings"` and `convergence_verified: true`. Do not start a fixer or tester.
-3. Otherwise start a fresh fixer with only the current snapshot, current-cycle findings, frozen task inputs, and safety bounds. Then start a fresh tester to run every immutable public gate exactly.
-4. After a cycle-5 fix and public test, stop with `stop_reason: "max_cycles"` and `convergence_verified: false`. Do not claim convergence without a later fresh zero-findings review, which the five-cycle limit forbids.
+## Evaluate and unblind
 
-## Evaluate blindly
+Export exactly three history-free packages: B0, T0, and Tfinal. With a separate one-time 32-byte OS-CSPRNG seed, apply the registered rank-hash bytes to label them X/Y/Z. Seal mapping, assignment, histories, identities, prompts, costs, and the skill from the fresh evaluator.
 
-After treatment stops, construct three history-free packages from the baseline final, treatment initial, and treatment final snapshots. Randomize them to `X`, `Y`, and `Z`; seal the mapping, identities, assignment, cycle history, findings, fixes, and costs from a fresh evaluator.
+In one fresh evaluator turn, verify commitments; run `npm run test:public` and `node sealed-hidden-suite/run.mjs` for every package; and emit three exact public evaluation artifacts. Score all 20 registered items at written anchors, calculate the five section totals, and apply only registered caps. After all three artifacts freeze, delegate unblinding to compute Tfinal−B0, Tfinal−T0, and the tie-to-baseline selection.
 
-The evaluator may inspect snapshots and must run the frozen public and hidden suites for all three packages. It must score each package on exactly `functional_correctness`/50, `robustness_security`/15, `accessibility_usability`/15, `test_effectiveness`/10, and `maintainability_documentation`/10 as defined in [artifact-contract.md](references/artifact-contract.md). Unblind only after `blind.json` freezes; compute the primary treatment-final minus baseline score and secondary treatment-final minus treatment-initial score without changing evaluator scores.
+## Chain and validate evidence
 
-## Preserve and validate evidence
+- Canonicalize with `utf8-sorted-json-v1`: domain-separated SHA-256, UTF-8 byte-sorted object keys, order-preserving arrays, safe integers, JSON string escaping, and no whitespace or trailing newline.
+- Start evidence sequence at 0 with `previousSha256: null`; each later predecessor equals the prior `artifactSha256`. Never mutate emitted evidence.
+- Keep immutable gate/hidden commitments, raw output hashes, prompt/config hashes, snapshots, artifacts, worker IDs, costs, and invalidations. Record unavailable transcripts and telemetry as JSON `null`, never estimates.
+- Have a delegated validator run `python scripts/validate_artifacts.py RUN.json --mode execution`. Use `--expect-golden` only for the bundled conformance fixture. Template mode is non-executable; execution mode rejects zero hashes/seeds and sentinel/provisional values.
+- Delegate final Git packaging. Do not open/merge a PR, publish, deploy, tag, release, or change repository settings without separate authorization.
 
-- Emit append-only chained events using the canonical SHA-256 rule in the artifact contract. Never edit or reorder an emitted event.
-- Freeze an enforceable role `max_tokens` as a positive integer. If the platform cannot impose an exact cap, use JSON `null` with a nonempty unavailability reason; never estimate a cap.
-- Record provider token telemetry only when measured. Use JSON `null` when unavailable; never estimate it.
-- Keep prompt/config hashes, initial attestations, snapshots, worker IDs, assignment, findings, fixes, suite results, scores, and invalidations. Redact secrets and record redactions.
-- Have a delegated validator run `python scripts/validate_artifacts.py RUN_DIR`. A nonzero exit invalidates the evidence; it does not establish an outcome.
-- Delegate final Git packaging. Do not open or merge a PR, publish, deploy, tag, release, or change repository settings without separate authorization.
-
-## Stop or invalidate
-
-Stop safely for missing authorization, unsafe or destructive work, secrets, unexpected external effects, a dirty or mismatched start, unavailable isolation, or unavailable fresh workers. Invalidate the affected candidate—or the comparison when fairness or blindness is lost—after prompt/config inequality, early assignment, skill exposure to a builder, cross-candidate access, shared mutable state, baseline modification or cycles, changed gates, role reuse, hidden-history leakage, evidence mutation, unverifiable snapshots, or evaluator access to sealed context. Preserve sanitized evidence and do not substitute a winner.
+Stop safely and invalidate on prompt/config inequality, early assignment, redraw, skill exposure, cross-candidate access, shared mutable state, baseline cycles, changed gates/commitments/rubric, role reuse, history leakage, budget overrun, evidence mismatch, sentinel execution data, unverifiable snapshots, or evaluator access to sealed context. Preserve sanitized evidence and do not substitute an outcome.
