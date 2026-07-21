@@ -51,10 +51,10 @@ Adversarial additions
 
 Exact protocol-source suite
 command: npm run test:protocol
-working directory: build-review-loop-protocol-v2 at f957cdf3054b8055a3d4b90d7cae0fbb8c79394c
-result: PASS, 52 tests, 0 failures
+working directory: prospective protocol 2.5 finalization based on skill seal a40895bac8e6a8775e33bc5a6d7242f0b1993361
+result: PASS, 53 tests, 0 failures
 coverage includes projected-input contamination, ignored files, every schema-valid builder/role containment overlap, junction and Windows 8.3 aliases, deadline parsing and pre-wait charging, exact runtime/prompt/evidence bindings, deterministic blinded packaging, and all integrated contract mutations.
-host note: two earlier complete attempts encountered transient PowerShell CLR TaskbarJumpList startup failures in different subprocesses. Each affected case passed in isolation, and the final complete 52-test run passed with POWERSHELL_TELEMETRY_OPTOUT=1 and POWERSHELL_UPDATECHECK=Off.
+host note: one earlier complete attempt encountered a transient PowerShell CLR startup failure in one subprocess. The affected case passed in isolation, and the final complete 53-test run passed with POWERSHELL_TELEMETRY_OPTOUT=1 and POWERSHELL_UPDATECHECK=Off.
 candidate access: none; packaging/projection tests use temporary synthetic repositories.
 
 Static validation
