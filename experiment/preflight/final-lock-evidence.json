@@ -1,6 +1,6 @@
 {
   "evidenceVersion": "1.0.0",
-  "supersedesFinalizationCommit": "a45a257a1039c6de2729d23fff2ef427ce59e784",
+  "supersedesFinalizationCommit": "e2c892e3b88702fcbd9a2049926d4a28b94efa4a",
   "aggregation": {
     "algorithm": "sha256",
     "canonicalization": "UTF-8 JSON with object keys sorted by UTF-8 byte order, arrays retained in order, and no insignificant whitespace",
@@ -8,28 +8,28 @@
     "excludedTopLevelProperty": "gateAggregateSha256"
   },
   "protocolParent": {
-    "commit": "889de57980cf8e39109c8a95ea6348aafdac3cfb",
-    "tree": "feed01bfd5c440024d7cffa12290474b4f852dbd",
-    "lockSha256": "aa2ce55dc05ca8b48a2c6a0a0be80ab7c2435819463ce202313b187ed397349c"
+    "commit": "211537a7e1271230e8d49e719f68fc41b22ca81f",
+    "tree": "fdaada153ae9bf93e91605c150ecfb25b684d301",
+    "lockSha256": "c2e8952bd9fbeba0f934a72ce293a31bb9181c74d71f8908ea5c507077450d0b"
   },
   "treatmentSkill": {
-    "commit": "dedfc28a2f547bf477077e7363369363a9b3ed1e",
-    "tree": "f76f80397fdc0bfced6f8d1cb3b6b33731a28e2e",
+    "commit": "da810ac0ae3ff7bb06c013c7a95df4a4ecc07b00",
+    "tree": "986e0d071884601ee639e4685c9f1e5283f8a922",
     "manifestFile": "MANIFEST.sha256",
-    "manifestSha256": "3da24722c37b4c427a032d20661e9678e1dcee1c49319c6596fb4afaa3af285a",
-    "manifestEntryCount": 62,
+    "manifestSha256": "2241d3e33efbe6cdff34e0a61b985c7385828e73f15056fcd18db9c3d4ccc0da",
+    "manifestEntryCount": 63,
     "manifestCommentLineCount": 3,
-    "manifestPhysicalLineCount": 65,
+    "manifestPhysicalLineCount": 66,
     "manifestByteSource": "canonical-git-blob",
-    "manifestToolSha256": "e215d9c8999612c1adfd6f6d563571795ac595dce88f523cfa1d413d42b27671",
+    "manifestToolSha256": "2e245f4e7992b67072bdc0fb244c3b46e0ca9b716c47b8a5ad8b2a74c2c181f1",
     "attributesSha256": "23302dd90b8bb74b44d365fafef8df20f809b61cb347023951ecf60a88a29651",
-    "sourceParitySha256": "7e7b7ccff4fae31983e9814a00211c1f925f881d798316370cc891cd421434a8",
-    "sourceParityFileCount": 49,
+    "sourceParitySha256": "41ca0ff4271b1c0a2771ef8c1ae4d30a9a4077fc5ee16f9406c3a1008182a4ba",
+    "sourceParityFileCount": 50,
     "sourceParityAllMatch": true
   },
   "abortedPrelaunch": {
-    "path": "experiment/preflight/aborted-lock-2.6.0.json",
-    "sha256": "bb8696bcb50d7a6febec9924d2402e2a1a595315e6730c55dd4799bf4e5c01e0",
+    "path": "experiment/preflight/aborted-lock-2.7.0.json",
+    "sha256": "2cbbf2713990c26500ec58b5b78cbb2c7e11e03d6e259ff28575de506b741710",
     "disposition": "invalidated-before-assignment",
     "activityCount": 2
   },
@@ -150,5 +150,5 @@
       }
     }
   },
-  "gateAggregateSha256": "fbf668e322f3ab915a60ad8f88315d9d89da5b6326d45289ac8795730753a20d"
+  "gateAggregateSha256": "9bc9b5cc4466fb9fb0ac29223cf3230e4cc371e668917daf4d953896db0dd32f"
 }
