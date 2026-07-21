@@ -4,9 +4,7 @@ Fill brackets only from frozen inputs. Give each worker only its packet. Use one
 
 ## Builder (2400 seconds; send byte-identically twice)
 
-> Implement [TASK] from [COMMON_START] in isolated [CANDIDATE_DIR]. Criteria: [CRITERIA]. Immutable public gates: [GATES]. Allowed paths: [PATHS]. Safety: [LIMITS]. Work independently and perform implementation/Git actions. Do not inspect another candidate or any skill/comparison/assignment context. Freeze candidateLabel, workerId, promptSha256, configSha256, commit, treeSha256, and sealedAt. Do not rank the result.
-
-Hash exact prompt/config bytes before dispatch. Require prompt SHA-256 `7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82` and config SHA-256 `caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b` against both canonical and lock commitments. Add no candidate-specific wrappers or hints.
+Dispatch the entire bundled [neutral-builder.md](neutral-builder.md) without substitution, prefix, suffix, path wrapper, timestamp, or added guidance, together with byte-identical [builder-config.json](builder-config.json). The only per-builder input is its strict opaque assignment envelope at the prompt's direct task-leaf path. Validate prompt/config/schema and common-start bindings before reading repository contents. Listing the coordination directory or reading a sibling assignment invalidates the experiment.
 
 ## Reviewer (900 seconds; treatment only)
 

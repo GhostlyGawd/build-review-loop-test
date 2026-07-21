@@ -1,6 +1,6 @@
 # Public protocol-v2 artifact contract
 
-Treat bundled [canonical-contract.json](canonical-contract.json) as authoritative. Its domain-separated canonical SHA-256 is `05a869d36aca6c9c146c56fa8f6432438d5c7e2c87fd944f822f660747e0d6f5`. Use bundled `../tests/fixtures/golden-run.json` as the byte-identical valid-with-history execution example; its canonical SHA-256 is `e53d8ecffdd1717e369acf312b2ba649726c511d7d31b1a58346cf734b7ffc69`. The byte-identical `../tests/fixtures/invalid-current.json` example has canonical SHA-256 `2911016d16fca74949d93f1b9488d0d09013ac4658f412d3b8d4789e2f7969ff`. Do not invent alternate field names or layouts.
+Treat bundled [canonical-contract.json](canonical-contract.json) as authoritative. Its domain-separated canonical SHA-256 is `4b8c4753aca6a83025e72a0a76680bf78895b0e3be94cd64fed8c06c123b1b01`. Use bundled `../tests/fixtures/golden-run.json` as the byte-identical valid-with-history execution example; its canonical SHA-256 is `58231f1acf65fbc572602712da4247521aeba4beefafa1f520444bdeafd1f062`. The byte-identical `../tests/fixtures/invalid-current.json` example has canonical SHA-256 `90b7950bdf2daa14842bacce85e103e8cf305301e80958110f774dc53636f95d`. Do not invent alternate field names or layouts.
 
 ## Frozen bindings and costs
 
@@ -24,7 +24,13 @@ hidden SHA-256: a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b
 
 Freeze one turn and wall maxima: builder 2400, reviewer 900, fixer 1500, tester 900, evaluator 1800, unblinder 300, Git worker 600 seconds. Every cost record binds `environmentSha256`; model roles bind `modelConfigSha256`, while deterministic unblinder/Git roles may use null only with a reason. Require `maxTokens: null` and a nonempty `maxTokensUnavailableReason`. Use provider-reported nonnegative totals when available; otherwise keep `totalTokens` and `usd` null with `source: "unavailable"`.
 
-Every builder freeze must bind prompt SHA-256 `7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82` and config SHA-256 `caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b`. Each value must equal both the canonical commitment and its corresponding preregistration lock commitment; equality between builders alone is insufficient.
+Every builder freeze must bind exact [neutral-builder.md](neutral-builder.md) SHA-256 `28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39`, exact [builder-config.json](builder-config.json) SHA-256 `8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606`, and one separately attested envelope hash. The [assignment-envelope.schema.json](assignment-envelope.schema.json) raw SHA-256 is `a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21`. Each commitment must equal the canonical and preregistration lock values; equality between builders alone is insufficient.
+
+## Opaque assignment envelopes
+
+Each envelope contains exactly the 11 schema fields and no task, arm, treatment, comparison, timestamp, ranking, prior-run, or hint field. The pair shares schema version, common-start commit/tree, and prompt/config/schema hashes. Its 24-character opaque worker keys, 24-character candidate IDs, safe absolute worktrees, build branches, and base branches are pairwise distinct; the worktrees are canonical non-nested children of `C:\Users\rhenm\Documents\Codex\2026-07-20`, outside the coordination directory, and all four branches differ.
+
+Attest each envelope separately with exactly `opaqueCandidateId` and its domain-separated canonical `envelopeSha256`. Bind each builder freeze and run to that hash and schema hash. Assignment files live only at `C:\Users\rhenm\Documents\Codex\2026-07-20\pilot-002-builder-assignments\<task-leaf>.json`, where the task leaf matches `^[a-z0-9_]+$`. A builder reads its direct file once; listing the directory or reading a sibling is an experiment invalidation.
 
 ## Assignment and stopping
 
@@ -90,4 +96,6 @@ python scripts/validate_artifacts.py RUN.json --mode execution
 python scripts/validate_artifacts.py tests/fixtures/golden-run.json --mode execution --expect-golden
 python scripts/validate_artifacts.py tests/fixtures/invalid-current.json --mode execution
 python scripts/validate_artifacts.py TEMPLATE.json --mode template
+python scripts/validate_artifacts.py tests/fixtures/golden-run.json --mode envelope
+python scripts/validate_artifacts.py FIRST.json --mode envelope --second SECOND.json
 ```

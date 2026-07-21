@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghostlygawd.example/schemas/assignment-envelope.schema.json",
+  "title": "Opaque neutral-builder workspace assignment envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "opaqueWorkerKey",
+    "opaqueCandidateId",
+    "absoluteWorktreePath",
+    "buildBranch",
+    "baseBranch",
+    "commonStartCommit",
+    "commonStartTree",
+    "promptSha256",
+    "configSha256",
+    "envelopeSchemaSha256"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "opaqueWorkerKey": { "type": "string", "pattern": "^[a-z0-9]{24}$" },
+    "opaqueCandidateId": { "type": "string", "pattern": "^[a-z0-9]{24}$" },
+    "absoluteWorktreePath": {
+      "type": "string",
+      "pattern": "^[A-Za-z]:\\\\[^\\r\\n]+$"
+    },
+    "buildBranch": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._/-]{2,127}$"
+    },
+    "baseBranch": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._/-]{2,127}$"
+    },
+    "commonStartCommit": { "$ref": "#/$defs/sha1" },
+    "commonStartTree": { "$ref": "#/$defs/sha1" },
+    "promptSha256": { "$ref": "#/$defs/sha256" },
+    "configSha256": { "$ref": "#/$defs/sha256" },
+    "envelopeSchemaSha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

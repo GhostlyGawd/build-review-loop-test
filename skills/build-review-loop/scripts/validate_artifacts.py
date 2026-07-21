@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import ntpath
 import re
 import sys
 from datetime import datetime
@@ -16,16 +17,23 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = SKILL_ROOT / "references" / "canonical-contract.json"
 GOLDEN_PATH = SKILL_ROOT / "tests" / "fixtures" / "golden-run.json"
 INVALID_PATH = SKILL_ROOT / "tests" / "fixtures" / "invalid-current.json"
-CONTRACT_CANONICAL_SHA256 = "05a869d36aca6c9c146c56fa8f6432438d5c7e2c87fd944f822f660747e0d6f5"
-GOLDEN_CANONICAL_SHA256 = "e53d8ecffdd1717e369acf312b2ba649726c511d7d31b1a58346cf734b7ffc69"
-INVALID_CANONICAL_SHA256 = "2911016d16fca74949d93f1b9488d0d09013ac4658f412d3b8d4789e2f7969ff"
-CONTRACT_RAW_SHA256 = "199eb11d2350ee002c6e8811996c5c5368ec01dce9614df45d7118d328667d3f"
-GOLDEN_RAW_SHA256 = "fa17e10644d5d5d2958b040e4aca30348d3be737570a30f54aee985bb95f7869"
-INVALID_RAW_SHA256 = "ee2583b65c2961121cd2ac2fdb81657ace1de826a8bd71b7df62e48a05cd2db3"
-BUILDER_PROMPT_SHA256 = "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82"
-BUILDER_CONFIG_SHA256 = "caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b"
-LOCK_PROMPT_SHA256 = "7aa6ed9b0583ea2d5e555f26a354b2a9887851b2ded6e1930ec00772376e7b82"
-LOCK_CONFIG_SHA256 = "caf42a587e56b1b9ffcacf29047fbc69e80cba52188d6f4363a489ec84a5b40b"
+ENVELOPE_SCHEMA_PATH = SKILL_ROOT / "references" / "assignment-envelope.schema.json"
+NEUTRAL_PROMPT_PATH = SKILL_ROOT / "references" / "neutral-builder.md"
+BUILDER_CONFIG_PATH = SKILL_ROOT / "references" / "builder-config.json"
+CONTRACT_CANONICAL_SHA256 = "4b8c4753aca6a83025e72a0a76680bf78895b0e3be94cd64fed8c06c123b1b01"
+GOLDEN_CANONICAL_SHA256 = "58231f1acf65fbc572602712da4247521aeba4beefafa1f520444bdeafd1f062"
+INVALID_CANONICAL_SHA256 = "90b7950bdf2daa14842bacce85e103e8cf305301e80958110f774dc53636f95d"
+CONTRACT_RAW_SHA256 = "7588fb1e58ae89a06bcaf307895664d89bb83bd5c93f340f79715bd62153cc73"
+GOLDEN_RAW_SHA256 = "80d087b959ddf3fdfc9a211ccfb8903187164701bc48171898f2e37d89c84f5c"
+INVALID_RAW_SHA256 = "06c0aad89ddf2eee365688196e1324b26b49ad662e86c3432d76452a7846f72b"
+ENVELOPE_SCHEMA_SHA256 = "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21"
+BUILDER_PROMPT_SHA256 = "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39"
+BUILDER_CONFIG_SHA256 = "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606"
+LOCK_PROMPT_SHA256 = BUILDER_PROMPT_SHA256
+LOCK_CONFIG_SHA256 = BUILDER_CONFIG_SHA256
+LOCK_ENVELOPE_SCHEMA_SHA256 = ENVELOPE_SCHEMA_SHA256
+COORDINATION_DIRECTORY = r"C:\Users\rhenm\Documents\Codex\2026-07-20\pilot-002-builder-assignments"
+ASSIGNMENT_WORKSPACE_ROOT = r"C:\Users\rhenm\Documents\Codex\2026-07-20"
 CANONICAL_DOMAIN = b"permissions-playground/canonical-json-v1\0"
 ASSIGNMENT_DOMAIN = b"build-review-loop-assignment-v2\0"
 EVALUATION_DOMAIN = "permissions-playground/protocol-v2/evaluation\n"
@@ -81,6 +89,20 @@ EVALUATOR_PUBLIC_COMMAND = "npm run test:public"
 HIDDEN_ID = "permissions-playground-sealed-v2"
 HIDDEN_COMMAND = "node sealed-hidden-suite/run.mjs"
 HIDDEN_SHA256 = "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b"
+ENVELOPE_FIELDS = (
+    "schemaVersion", "opaqueWorkerKey", "opaqueCandidateId", "absoluteWorktreePath",
+    "buildBranch", "baseBranch", "commonStartCommit", "commonStartTree",
+    "promptSha256", "configSha256", "envelopeSchemaSha256",
+)
+ENVELOPE_DIFFERENCES = {
+    "opaqueWorkerKey", "opaqueCandidateId", "absoluteWorktreePath",
+    "buildBranch", "baseBranch",
+}
+ATTESTATION_FIELDS = ("opaqueCandidateId", "envelopeSha256")
+OPAQUE_ID = re.compile(r"^[a-z0-9]{24}$")
+BRANCH_NAME = re.compile(r"^[a-z0-9][a-z0-9._/-]{2,127}$")
+TASK_LEAF = re.compile(r"^[a-z0-9_]+$")
+WINDOWS_ABSOLUTE_PATH = re.compile(r"^[A-Za-z]:\\[^\r\n]+$")
 
 
 def load_json(path: Path) -> Any:
@@ -182,6 +204,28 @@ def evaluation_randomization(seed_hex: str) -> tuple[str, dict[str, str], dict[s
 
 def validate_bundles() -> list[str]:
     errors: list[str] = []
+    for path, expected, label in (
+        (ENVELOPE_SCHEMA_PATH, ENVELOPE_SCHEMA_SHA256, "assignment-envelope schema"),
+        (NEUTRAL_PROMPT_PATH, BUILDER_PROMPT_SHA256, "neutral builder prompt"),
+        (BUILDER_CONFIG_PATH, BUILDER_CONFIG_SHA256, "builder config"),
+    ):
+        try:
+            raw = path.read_bytes()
+        except OSError as exc:
+            errors.append(f"bundled {label} unreadable: {exc}")
+            continue
+        require(hashlib.sha256(raw).hexdigest() == expected,
+                f"bundled {label} raw bytes diverge", errors)
+        if path.suffix == ".json":
+            try:
+                json.loads(raw.decode("utf-8"))
+            except (UnicodeError, json.JSONDecodeError) as exc:
+                errors.append(f"bundled {label} invalid JSON: {exc}")
+        elif path == NEUTRAL_PROMPT_PATH:
+            try:
+                errors.extend(validate_neutral_builder_prompt(raw.decode("utf-8")))
+            except UnicodeError as exc:
+                errors.append(f"bundled {label} invalid UTF-8: {exc}")
     for path, raw_expected, canonical_expected, label in (
         (CONTRACT_PATH, CONTRACT_RAW_SHA256, CONTRACT_CANONICAL_SHA256, "canonical contract"),
         (GOLDEN_PATH, GOLDEN_RAW_SHA256, GOLDEN_CANONICAL_SHA256, "golden fixture"),
@@ -229,11 +273,32 @@ def validate_contract(contract: Any) -> list[str]:
     require(contract.get("costPolicy", {}).get("maxTokens") is None and
             contract.get("costPolicy", {}).get("maxTokensUnavailableReasonRequired") is True,
             "canonical nullable maxTokens policy diverges", errors)
+    require(contract.get("protocolVersion") == "2.3.0",
+            "canonical protocol version diverges", errors)
     require(contract.get("builderFreeze") == {
         "promptSha256": BUILDER_PROMPT_SHA256,
         "configSha256": BUILDER_CONFIG_SHA256,
-        "rule": "every builder freeze must equal both canonical hashes and the corresponding lock commitments",
+        "rule": "every builder freeze must equal both canonical prompt/config hashes, the corresponding lock commitments, and one separately attested assignment-envelope hash",
     }, "canonical builder prompt/config commitments diverge", errors)
+    require(contract.get("assignmentEnvelope") == {
+        "schemaVersion": "1.0.0",
+        "schemaPath": "experiment/schemas/assignment-envelope.schema.json",
+        "schemaSha256": ENVELOPE_SCHEMA_SHA256,
+        "fields": list(ENVELOPE_FIELDS),
+        "attestationFields": list(ATTESTATION_FIELDS),
+        "coordinationDirectory": COORDINATION_DIRECTORY,
+        "fileConvention": "<task-leaf>.json",
+        "taskLeafPattern": "^[a-z0-9_]+$",
+        "workspaceRoot": ASSIGNMENT_WORKSPACE_ROOT,
+        "allowedPairDifferences": [
+            "opaqueWorkerKey", "opaqueCandidateId", "absoluteWorktreePath",
+            "buildBranch", "baseBranch",
+        ],
+        "pairRule": "opaque worker keys, candidate IDs, worktree paths, build branches, and base branches are pairwise distinct; paths are safe absolute children of workspaceRoot and are not nested; every other field is identical",
+        "bindingRule": "promptSha256, configSha256, and envelopeSchemaSha256 equal the canonical and lock commitments; commonStartCommit and commonStartTree are identical across the pair",
+        "semanticExclusion": "the envelope contains no task semantics, arm/treatment/comparison information, timestamps, rankings, prior-run data, or hints",
+        "siblingAccessRule": "listing the coordination directory or reading a sibling assignment file is an experiment invalidation",
+    }, "canonical assignment-envelope contract diverges", errors)
     require(contract.get("invalidation") == {
         "completedStatuses": ["valid", "invalid"],
         "activeInvalidationFields": [
@@ -413,6 +478,167 @@ def resolve_artifact(value: Any, key: str) -> Any:
     return current
 
 
+def lower_windows_path(value: str) -> str:
+    return ntpath.normpath(value).casefold()
+
+
+def nested_windows_path(parent: str, candidate: str) -> bool:
+    try:
+        relative = ntpath.relpath(candidate, parent)
+    except ValueError:
+        return False
+    return relative not in {"", "."} and not relative.startswith("..") and not ntpath.isabs(relative)
+
+
+def validate_assignment_envelope(envelope: Any, errors: list[str], location: str,
+                                 source_path: str | None = None) -> None:
+    if not exact_fields(envelope, ENVELOPE_FIELDS, location, errors):
+        return
+    require(envelope.get("schemaVersion") == "1.0.0",
+            f"{location}: schemaVersion diverges", errors)
+    for field in ("opaqueWorkerKey", "opaqueCandidateId"):
+        require(isinstance(envelope.get(field), str) and
+                bool(OPAQUE_ID.fullmatch(envelope[field])),
+                f"{location}: {field} must be 24 lowercase alphanumeric characters", errors)
+    for field in ("buildBranch", "baseBranch"):
+        require(isinstance(envelope.get(field), str) and
+                bool(BRANCH_NAME.fullmatch(envelope[field])),
+                f"{location}: {field} invalid", errors)
+    for field in ("commonStartCommit", "commonStartTree"):
+        require(valid_hash(envelope.get(field), HEX40), f"{location}: {field} invalid", errors)
+    require(envelope.get("promptSha256") == BUILDER_PROMPT_SHA256 and
+            envelope.get("promptSha256") == LOCK_PROMPT_SHA256,
+            f"{location}: prompt commitment mismatch", errors)
+    require(envelope.get("configSha256") == BUILDER_CONFIG_SHA256 and
+            envelope.get("configSha256") == LOCK_CONFIG_SHA256,
+            f"{location}: config commitment mismatch", errors)
+    require(envelope.get("envelopeSchemaSha256") == ENVELOPE_SCHEMA_SHA256 and
+            envelope.get("envelopeSchemaSha256") == LOCK_ENVELOPE_SCHEMA_SHA256,
+            f"{location}: schema commitment mismatch", errors)
+
+    worktree = envelope.get("absoluteWorktreePath")
+    safe_worktree = False
+    if isinstance(worktree, str) and WINDOWS_ABSOLUTE_PATH.fullmatch(worktree):
+        normalized = ntpath.normpath(worktree)
+        try:
+            relative = ntpath.relpath(normalized, ASSIGNMENT_WORKSPACE_ROOT)
+        except ValueError:
+            relative = ".."
+        coordination = lower_windows_path(COORDINATION_DIRECTORY)
+        normalized_lower = lower_windows_path(normalized)
+        safe_worktree = (
+            ntpath.isabs(worktree) and normalized == worktree and relative not in {"", "."}
+            and not relative.startswith("..") and not ntpath.isabs(relative)
+            and normalized_lower != coordination
+            and not nested_windows_path(coordination, normalized_lower)
+        )
+    require(safe_worktree,
+            f"{location}: worktree path is not a safe canonical absolute path", errors)
+
+    if source_path is not None:
+        normalized_source = ntpath.normpath(source_path)
+        leaf, extension = ntpath.splitext(ntpath.basename(normalized_source))
+        require(
+            lower_windows_path(ntpath.dirname(normalized_source)) ==
+            lower_windows_path(COORDINATION_DIRECTORY)
+            and extension == ".json" and bool(TASK_LEAF.fullmatch(leaf)),
+            f"{location}: assignment file violates the frozen task-leaf path convention",
+            errors,
+        )
+
+
+def validate_assignment_envelope_pair(envelopes: Any, attestations: Any,
+                                      source_paths: list[str] | None = None) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(envelopes, list) or len(envelopes) != 2:
+        return ["assignment envelope pair must contain exactly two envelopes"]
+    paths = source_paths or []
+    for index, envelope in enumerate(envelopes):
+        validate_assignment_envelope(envelope, errors, f"assignmentEnvelopes[{index}]",
+                                     paths[index] if index < len(paths) else None)
+    if not all(isinstance(envelope, dict) for envelope in envelopes):
+        return sorted(set(errors))
+    left, right = envelopes
+    for field in ENVELOPE_FIELDS:
+        if field not in ENVELOPE_DIFFERENCES:
+            require(left.get(field) == right.get(field),
+                    f"assignment envelope pair mismatch at {field}", errors)
+    for field in ("opaqueWorkerKey", "opaqueCandidateId"):
+        require(left.get(field) != right.get(field),
+                f"assignment envelope pair duplicates {field}", errors)
+    worktrees = [envelope.get("absoluteWorktreePath") for envelope in envelopes]
+    if all(isinstance(path, str) for path in worktrees):
+        first, second = (lower_windows_path(path) for path in worktrees)
+        require(first != second and not nested_windows_path(first, second) and
+                not nested_windows_path(second, first),
+                "assignment envelope worktree paths must be distinct and nonnested", errors)
+    branches = [
+        left.get("buildBranch"), left.get("baseBranch"),
+        right.get("buildBranch"), right.get("baseBranch"),
+    ]
+    require(len(set(branches)) == 4,
+            "assignment envelope build/base branches must all be distinct", errors)
+
+    if not isinstance(attestations, list) or len(attestations) != 2:
+        errors.append("assignment envelopes require two separate attestations")
+        return sorted(set(errors))
+    candidates: set[Any] = set()
+    hashes: set[Any] = set()
+    for index, attestation in enumerate(attestations):
+        location = f"assignmentEnvelopeAttestations[{index}]"
+        if not exact_fields(attestation, ATTESTATION_FIELDS, location, errors):
+            continue
+        candidate = attestation.get("opaqueCandidateId")
+        envelope = next((item for item in envelopes
+                         if item.get("opaqueCandidateId") == candidate), None)
+        require(envelope is not None and attestation.get("envelopeSha256") == canonical_hash(envelope),
+                f"{location}: assignment envelope attestation hash mismatch", errors)
+        require(candidate not in candidates,
+                f"{location}: assignment envelope candidate is attested more than once", errors)
+        require(attestation.get("envelopeSha256") not in hashes,
+                f"{location}: assignment envelope hash is attested more than once", errors)
+        candidates.add(candidate)
+        hashes.add(attestation.get("envelopeSha256"))
+    require(candidates == {envelope.get("opaqueCandidateId") for envelope in envelopes},
+            "assignment envelope attestations must cover both candidates", errors)
+    return sorted(set(errors))
+
+
+def validate_neutral_builder_prompt(prompt_text: str) -> list[str]:
+    required = (
+        "No placeholder substitution, prefix, suffix, candidate label, deadline timestamp, per-builder path wrapper, or added guidance is permitted.",
+        "Read exactly that one assignment file by its direct path.",
+        "You MUST NOT list or enumerate the coordination directory, and you MUST NOT read any sibling assignment file.",
+        "Listing the directory or reading a sibling assignment is an experiment invalidation.",
+        "After validation, use only `absoluteWorktreePath` for every repository read, write, command, and Git operation.",
+    )
+    return [f"neutral builder assignment prose missing: {clause}"
+            for clause in required if clause not in prompt_text]
+
+
+def validate_run_envelope_binding(run: dict[str, Any], freeze: Any, location: str,
+                                  errors: list[str]) -> None:
+    source = run.get("assignmentEnvelopePath")
+    if isinstance(source, str):
+        normalized = ntpath.normpath(source)
+        leaf, extension = ntpath.splitext(ntpath.basename(normalized))
+        require(
+            lower_windows_path(ntpath.dirname(normalized)) ==
+            lower_windows_path(COORDINATION_DIRECTORY)
+            and extension == ".json" and bool(TASK_LEAF.fullmatch(leaf)),
+            f"{location}: assignment path violates the frozen task-leaf convention",
+            errors,
+        )
+    else:
+        errors.append(f"{location}: assignmentEnvelopePath required")
+    require(run.get("assignmentEnvelopeSchemaSha256") == ENVELOPE_SCHEMA_SHA256 and
+            run.get("assignmentEnvelopeSchemaSha256") == LOCK_ENVELOPE_SCHEMA_SHA256,
+            f"{location}: assignment envelope schema binding mismatch", errors)
+    require(isinstance(freeze, dict) and
+            run.get("assignmentEnvelopeSha256") == freeze.get("assignmentEnvelopeSha256"),
+            f"{location}: run/envelope binding mismatch", errors)
+
+
 ACTIVE_INVALIDATION_FIELDS = (
     "invalidationId", "scope", "code", "reason", "detectedAt",
     "evidenceSha256", "preservedArtifactSha256",
@@ -479,10 +705,15 @@ def validate_execution(fixture: Any) -> list[str]:
         return sorted(set(errors))
     validate_conclusion(fixture, errors)
     require(fixture.get("fixtureVersion") == "1.0.0", "run: fixtureVersion diverges", errors)
-    require(fixture.get("protocolVersion") == "2.2.0", "run: protocolVersion diverges", errors)
+    require(fixture.get("protocolVersion") == "2.3.0", "run: protocolVersion diverges", errors)
+    errors.extend(validate_assignment_envelope_pair(
+        fixture.get("assignmentEnvelopes"),
+        fixture.get("assignmentEnvelopeAttestations"),
+    ))
     if fixture.get("status") == "invalid":
         invalid_fields = {
-            "fixtureVersion", "fixtureKind", "protocolVersion", "status",
+            "fixtureVersion", "fixtureKind", "protocolVersion",
+            "assignmentEnvelopes", "assignmentEnvelopeAttestations", "status",
             "activeInvalidation", "invalidAttempts", "evaluations", "outcome",
         }
         exact_fields(fixture, invalid_fields, "run", errors)
@@ -492,6 +723,7 @@ def validate_execution(fixture: Any) -> list[str]:
     top_fields = {
         "fixtureVersion", "fixtureKind", "protocolVersion", "canonicalContractSha256",
         "status", "activeInvalidation", "invalidAttempts",
+        "assignmentEnvelopes", "assignmentEnvelopeAttestations",
         "bindings", "environment", "workers", "builderFreezes", "assignment",
         "evaluationRandomization", "runs", "reviews", "fixes", "tests", "packages",
         "evaluations", "outcome", "costs", "evidenceChain",
@@ -554,7 +786,8 @@ def validate_execution(fixture: Any) -> list[str]:
         for candidate in ("candidate-a", "candidate-b"):
             freeze = freezes.get(candidate)
             location = f"builderFreezes.{candidate}"
-            fields = {"candidateLabel", "workerId", "promptSha256", "configSha256", "commit", "treeSha256", "sealedAt"}
+            fields = {"candidateLabel", "workerId", "promptSha256", "configSha256",
+                      "assignmentEnvelopeSha256", "commit", "treeSha256", "sealedAt"}
             if not exact_fields(freeze, fields, location, errors):
                 continue
             require(freeze.get("candidateLabel") == candidate, f"{location}: candidateLabel mismatch", errors)
@@ -568,6 +801,8 @@ def validate_execution(fixture: Any) -> list[str]:
             require(freeze.get("configSha256") == BUILDER_CONFIG_SHA256 and
                     freeze.get("configSha256") == LOCK_CONFIG_SHA256,
                     f"{location}: config commitment drift from canonical contract and lock", errors)
+            require(valid_hash(freeze.get("assignmentEnvelopeSha256")),
+                    f"{location}: assignment envelope hash invalid", errors)
             require(valid_hash(freeze.get("commit"), HEX40), f"{location}: commit invalid", errors)
             parsed = parse_time(freeze.get("sealedAt"), f"{location}.sealedAt", errors)
             if parsed:
@@ -577,6 +812,16 @@ def validate_execution(fixture: Any) -> list[str]:
                     "builder freezes: prompt bytes differ", errors)
             require(freezes["candidate-a"].get("configSha256") == freezes["candidate-b"].get("configSha256"),
                     "builder freezes: config bytes differ", errors)
+            attested_hashes = {
+                item.get("envelopeSha256") for item in
+                fixture.get("assignmentEnvelopeAttestations", []) if isinstance(item, dict)
+            }
+            freeze_hashes = {
+                freezes[candidate].get("assignmentEnvelopeSha256")
+                for candidate in ("candidate-a", "candidate-b")
+            }
+            require(len(freeze_hashes) == 2 and freeze_hashes == attested_hashes,
+                    "builder freezes: assignment envelopes must be separately attested", errors)
     if not isinstance(freezes, dict):
         freezes = {}
 
@@ -623,8 +868,13 @@ def validate_execution(fixture: Any) -> list[str]:
     if exact_fields(runs, {"candidate-a", "candidate-b"}, "runs", errors):
         baseline = runs.get("candidate-a")
         treatment = runs.get("candidate-b")
-        run_fields = {"candidateLabel", "assignedArm", "builderWorkerId", "initialSnapshot", "finalSnapshot", "cycles", "stopReason", "convergence", "status"}
+        run_fields = {"candidateLabel", "assignedArm", "builderWorkerId",
+                      "assignmentEnvelopePath", "assignmentEnvelopeSha256",
+                      "assignmentEnvelopeSchemaSha256", "initialSnapshot", "finalSnapshot",
+                      "cycles", "stopReason", "convergence", "status"}
         if exact_fields(baseline, run_fields, "runs.candidate-a", errors):
+            validate_run_envelope_binding(baseline, freezes.get("candidate-a"),
+                                          "runs.candidate-a", errors)
             require(baseline.get("assignedArm") == "baseline", "baseline: assignedArm diverges", errors)
             require(baseline.get("cycles") == [], "baseline: must have zero cycles", errors)
             require(baseline.get("stopReason") == "baseline-zero-cycles",
@@ -633,6 +883,8 @@ def validate_execution(fixture: Any) -> list[str]:
             require(baseline.get("initialSnapshot") == baseline.get("finalSnapshot"),
                     "baseline: final snapshot must equal initial", errors)
         if exact_fields(treatment, run_fields, "runs.candidate-b", errors):
+            validate_run_envelope_binding(treatment, freezes.get("candidate-b"),
+                                          "runs.candidate-b", errors)
             require(treatment.get("assignedArm") == "treatment", "treatment: assignedArm diverges", errors)
             cycles = treatment.get("cycles")
             require(isinstance(cycles, list) and 1 <= len(cycles) <= 5, "treatment: one to five cycles required", errors)
@@ -928,19 +1180,80 @@ def validate_path(path: Path, mode: str, expect_golden: bool = False) -> list[st
     return sorted(set(errors))
 
 
+def validate_envelope_pair_files(first_path: Path, second_path: Path) -> list[str]:
+    errors: list[str] = []
+    try:
+        envelopes = [load_json(first_path), load_json(second_path)]
+        for envelope in envelopes:
+            errors.extend(validate_artifact_mode(envelope, "execution"))
+        attestations = [
+            {"opaqueCandidateId": envelope.get("opaqueCandidateId"),
+             "envelopeSha256": canonical_hash(envelope)}
+            for envelope in envelopes if isinstance(envelope, dict)
+        ]
+        errors.extend(validate_assignment_envelope_pair(
+            envelopes, attestations, [str(first_path), str(second_path)]
+        ))
+    except FileNotFoundError as exc:
+        errors.append(f"missing envelope input: {exc.filename}")
+    except (OSError, UnicodeError, json.JSONDecodeError, TypeError) as exc:
+        errors.append(f"invalid envelope input: {exc}")
+    return sorted(set(errors))
+
+
+def validate_envelope_paths(first_path: Path, second_path: Path | None = None) -> list[str]:
+    errors = validate_bundles()
+    try:
+        errors.extend(validate_contract(load_json(CONTRACT_PATH)))
+    except (OSError, UnicodeError, json.JSONDecodeError, TypeError) as exc:
+        errors.append(f"canonical contract invalid: {exc}")
+    try:
+        first = load_json(first_path)
+        if second_path is None:
+            if not isinstance(first, dict):
+                return sorted(set([*errors, "envelope fixture must be an object"]))
+            envelopes = first.get("assignmentEnvelopes")
+            attestations = first.get("assignmentEnvelopeAttestations")
+            errors.extend(validate_artifact_mode(first, "execution"))
+            source_paths: list[str] = []
+        else:
+            errors.extend(validate_envelope_pair_files(first_path, second_path))
+            return sorted(set(errors))
+        errors.extend(validate_assignment_envelope_pair(envelopes, attestations, source_paths))
+    except FileNotFoundError as exc:
+        errors.append(f"missing envelope input: {exc.filename}")
+    except (OSError, UnicodeError, json.JSONDecodeError, TypeError) as exc:
+        errors.append(f"invalid envelope input: {exc}")
+    return sorted(set(errors))
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("artifact", type=Path, help="integrated protocol-v2 JSON artifact")
-    parser.add_argument("--mode", choices=("template", "execution"), required=True)
+    parser.add_argument("--mode", choices=("template", "execution", "envelope"), required=True)
+    parser.add_argument("--second", type=Path,
+                        help="second direct assignment file for envelope-pair validation")
     parser.add_argument("--expect-golden", action="store_true",
                         help="require the frozen golden fixture canonical SHA-256")
     args = parser.parse_args(argv)
-    errors = validate_path(args.artifact.resolve(), args.mode, args.expect_golden)
+    if args.mode == "envelope":
+        if args.expect_golden:
+            parser.error("--expect-golden is only valid with --mode execution")
+        errors = validate_envelope_paths(
+            args.artifact.resolve(), args.second.resolve() if args.second else None
+        )
+    else:
+        if args.second:
+            parser.error("--second is only valid with --mode envelope")
+        errors = validate_path(args.artifact.resolve(), args.mode, args.expect_golden)
     if errors:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    print(f"OK: protocol-v2 {args.mode} artifact is canonically valid")
+    if args.mode == "envelope":
+        print("OK: protocol-v2 envelope pair is canonically valid")
+    else:
+        print(f"OK: protocol-v2 {args.mode} artifact is canonically valid")
     return 0
 
 

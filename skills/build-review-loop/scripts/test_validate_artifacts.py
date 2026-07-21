@@ -20,6 +20,8 @@ class ProtocolV2ValidatorTests(unittest.TestCase):
     def setUp(self) -> None:
         self.golden = validator.load_json(validator.GOLDEN_PATH)
         self.invalid = validator.load_json(validator.INVALID_PATH)
+        self.envelopes = copy.deepcopy(self.golden["assignmentEnvelopes"])
+        self.attestations = copy.deepcopy(self.golden["assignmentEnvelopeAttestations"])
 
     def errors(self, value: object, mode: str = "execution",
                expect_golden: bool = False) -> list[str]:
@@ -41,6 +43,190 @@ class ProtocolV2ValidatorTests(unittest.TestCase):
                          hashlib.sha256(validator.GOLDEN_PATH.read_bytes()).hexdigest())
         self.assertEqual(validator.INVALID_RAW_SHA256,
                          hashlib.sha256(validator.INVALID_PATH.read_bytes()).hexdigest())
+        self.assertEqual(validator.ENVELOPE_SCHEMA_SHA256,
+                         hashlib.sha256(validator.ENVELOPE_SCHEMA_PATH.read_bytes()).hexdigest())
+        self.assertEqual(validator.BUILDER_PROMPT_SHA256,
+                         hashlib.sha256(validator.NEUTRAL_PROMPT_PATH.read_bytes()).hexdigest())
+        self.assertEqual(validator.BUILDER_CONFIG_SHA256,
+                         hashlib.sha256(validator.BUILDER_CONFIG_PATH.read_bytes()).hexdigest())
+
+    def test_exact_golden_and_invalid_envelope_pairs_validate(self) -> None:
+        self.assertEqual([], validator.validate_assignment_envelope_pair(
+            self.golden["assignmentEnvelopes"],
+            self.golden["assignmentEnvelopeAttestations"],
+        ))
+        self.assertEqual([], validator.validate_assignment_envelope_pair(
+            self.invalid["assignmentEnvelopes"],
+            self.invalid["assignmentEnvelopeAttestations"],
+        ))
+
+    def test_envelope_cli_accepts_protocol_fixture(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(Path(validator.__file__)),
+             str(validator.GOLDEN_PATH), "--mode", "envelope"],
+            check=False, capture_output=True, text=True,
+        )
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("envelope pair is canonically valid", result.stdout)
+
+    def test_real_envelope_pair_file_helper_accepts_direct_safe_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            first = Path(directory) / "builder_one.json"
+            second = Path(directory) / "builder_two.json"
+            first.write_text(json.dumps(self.envelopes[0]), encoding="utf-8")
+            second.write_text(json.dumps(self.envelopes[1]), encoding="utf-8")
+            with mock.patch.object(validator, "COORDINATION_DIRECTORY", directory):
+                self.assertEqual([], validator.validate_envelope_pair_files(first, second))
+
+    def test_direct_assignment_paths_require_safe_task_leaves(self) -> None:
+        safe = [
+            validator.COORDINATION_DIRECTORY + r"\builder_one.json",
+            validator.COORDINATION_DIRECTORY + r"\builder_two.json",
+        ]
+        self.assertEqual([], validator.validate_assignment_envelope_pair(
+            self.envelopes, self.attestations, safe
+        ))
+        bad_cases = [
+            [r"C:\other\builder_one.json", safe[1]],
+            [validator.COORDINATION_DIRECTORY + r"\Builder-One.json", safe[1]],
+            [validator.COORDINATION_DIRECTORY + r"\builder_one.txt", safe[1]],
+        ]
+        for paths in bad_cases:
+            with self.subTest(paths=paths):
+                errors = validator.validate_assignment_envelope_pair(
+                    self.envelopes, self.attestations, paths
+                )
+                self.assertTrue(any("task-leaf path convention" in error for error in errors), errors)
+
+    def test_rejects_envelope_semantic_extension_fields(self) -> None:
+        self.envelopes[0]["arm"] = "treatment"
+        errors = validator.validate_assignment_envelope_pair(self.envelopes, self.attestations)
+        self.assertTrue(any("fields must be exactly" in error for error in errors), errors)
+
+    def test_rejects_invalid_envelope_schema_and_opaque_ids(self) -> None:
+        cases = [
+            ("schemaVersion", "2.0.0", "schemaVersion diverges"),
+            ("opaqueWorkerKey", "UPPER", "opaqueWorkerKey must be 24"),
+            ("opaqueCandidateId", "short", "opaqueCandidateId must be 24"),
+        ]
+        for field, replacement, fragment in cases:
+            with self.subTest(field=field):
+                envelopes = copy.deepcopy(self.envelopes)
+                envelopes[0][field] = replacement
+                errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
+                self.assertTrue(any(fragment in error for error in errors), errors)
+
+    def test_rejects_envelope_prompt_config_and_schema_commitment_drift(self) -> None:
+        cases = [
+            ("promptSha256", "prompt commitment mismatch"),
+            ("configSha256", "config commitment mismatch"),
+            ("envelopeSchemaSha256", "schema commitment mismatch"),
+        ]
+        for field, fragment in cases:
+            with self.subTest(field=field):
+                envelopes = copy.deepcopy(self.envelopes)
+                envelopes[0][field] = "f" * 64
+                errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
+                self.assertTrue(any(fragment in error for error in errors), errors)
+
+    def test_rejects_envelope_lock_commitment_drift(self) -> None:
+        for constant, fragment in (
+            ("LOCK_PROMPT_SHA256", "prompt commitment mismatch"),
+            ("LOCK_CONFIG_SHA256", "config commitment mismatch"),
+            ("LOCK_ENVELOPE_SCHEMA_SHA256", "schema commitment mismatch"),
+        ):
+            with self.subTest(constant=constant), mock.patch.object(validator, constant, "f" * 64):
+                errors = validator.validate_assignment_envelope_pair(self.envelopes, self.attestations)
+                self.assertTrue(any(fragment in error for error in errors), errors)
+
+    def test_rejects_envelope_common_start_mismatch(self) -> None:
+        for field in ("commonStartCommit", "commonStartTree"):
+            with self.subTest(field=field):
+                envelopes = copy.deepcopy(self.envelopes)
+                envelopes[1][field] = "f" * 40
+                errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
+                self.assertTrue(any(f"pair mismatch at {field}" in error for error in errors), errors)
+
+    def test_rejects_unsafe_or_noncanonical_envelope_worktree_paths(self) -> None:
+        cases = [
+            r"C:\outside-workspace",
+            validator.COORDINATION_DIRECTORY,
+            validator.COORDINATION_DIRECTORY + r"\nested",
+            validator.ASSIGNMENT_WORKSPACE_ROOT + r"\folder\..\worktree",
+        ]
+        for replacement in cases:
+            with self.subTest(path=replacement):
+                envelopes = copy.deepcopy(self.envelopes)
+                envelopes[0]["absoluteWorktreePath"] = replacement
+                errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
+                self.assertTrue(any("safe canonical absolute path" in error for error in errors), errors)
+
+    def test_rejects_shared_or_nested_envelope_worktree_paths(self) -> None:
+        for replacement in (
+            self.envelopes[0]["absoluteWorktreePath"],
+            self.envelopes[0]["absoluteWorktreePath"] + r"\nested",
+        ):
+            with self.subTest(path=replacement):
+                envelopes = copy.deepcopy(self.envelopes)
+                envelopes[1]["absoluteWorktreePath"] = replacement
+                errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
+                self.assertTrue(any("distinct and nonnested" in error for error in errors), errors)
+
+    def test_rejects_duplicate_envelope_ids_and_branches(self) -> None:
+        for field, fragment in (
+            ("opaqueWorkerKey", "duplicates opaqueWorkerKey"),
+            ("opaqueCandidateId", "duplicates opaqueCandidateId"),
+            ("buildBranch", "branches must all be distinct"),
+            ("baseBranch", "branches must all be distinct"),
+        ):
+            with self.subTest(field=field):
+                envelopes = copy.deepcopy(self.envelopes)
+                envelopes[1][field] = envelopes[0][field]
+                errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
+                self.assertTrue(any(fragment in error for error in errors), errors)
+
+    def test_rejects_invalid_branch_syntax(self) -> None:
+        envelopes = copy.deepcopy(self.envelopes)
+        envelopes[0]["buildBranch"] = "UPPER BRANCH"
+        errors = validator.validate_assignment_envelope_pair(envelopes, self.attestations)
+        self.assertTrue(any("buildBranch invalid" in error for error in errors), errors)
+
+    def test_rejects_missing_malformed_or_duplicate_attestations(self) -> None:
+        cases = []
+        cases.append((self.attestations[:1], "two separate attestations"))
+        extra = copy.deepcopy(self.attestations)
+        extra[0]["extra"] = True
+        cases.append((extra, "fields must be exactly"))
+        wrong = copy.deepcopy(self.attestations)
+        wrong[0]["envelopeSha256"] = "f" * 64
+        cases.append((wrong, "attestation hash mismatch"))
+        duplicate = [copy.deepcopy(self.attestations[0]), copy.deepcopy(self.attestations[0])]
+        cases.append((duplicate, "attested more than once"))
+        for attestations, fragment in cases:
+            with self.subTest(fragment=fragment):
+                errors = validator.validate_assignment_envelope_pair(self.envelopes, attestations)
+                self.assertTrue(any(fragment in error for error in errors), errors)
+
+    def test_rejects_unattested_freeze_or_run_envelope_binding_drift(self) -> None:
+        value = copy.deepcopy(self.golden)
+        value["builderFreezes"]["candidate-a"]["assignmentEnvelopeSha256"] = "f" * 64
+        self.assert_error(value, "assignment envelopes must be separately attested")
+        value = copy.deepcopy(self.golden)
+        value["runs"]["candidate-a"]["assignmentEnvelopeSha256"] = "f" * 64
+        self.assert_error(value, "run/envelope binding mismatch")
+        value = copy.deepcopy(self.golden)
+        value["runs"]["candidate-a"]["assignmentEnvelopeSchemaSha256"] = "f" * 64
+        self.assert_error(value, "assignment envelope schema binding mismatch")
+
+    def test_neutral_prompt_marks_sibling_listing_or_read_as_invalidation(self) -> None:
+        prompt = validator.NEUTRAL_PROMPT_PATH.read_text(encoding="utf-8")
+        self.assertEqual([], validator.validate_neutral_builder_prompt(prompt))
+        changed = prompt.replace(
+            "Listing the directory or reading a sibling assignment is an experiment invalidation.",
+            "Sibling access is discouraged.",
+        )
+        errors = validator.validate_neutral_builder_prompt(changed)
+        self.assertTrue(any("assignment prose missing" in error for error in errors), errors)
 
     def test_exact_golden_validates_in_execution_mode(self) -> None:
         self.assertEqual([], validator.validate_path(

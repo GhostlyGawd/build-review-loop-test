@@ -1,7 +1,45 @@
 {
   "fixtureVersion": "1.0.0",
   "fixtureKind": "prospective-invalid-current",
-  "protocolVersion": "2.2.0",
+  "protocolVersion": "2.3.0",
+  "assignmentEnvelopes": [
+    {
+      "schemaVersion": "1.0.0",
+      "opaqueWorkerKey": "7f3a9d2c4b6e8f1023456789",
+      "opaqueCandidateId": "a1c3e5f709b2d4e6f8012345",
+      "absoluteWorktreePath": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-worktree-7f3a9d2c",
+      "buildBranch": "experiment/pilot-002-build-7f3a9d2c",
+      "baseBranch": "experiment/pilot-002-base-7f3a9d2c",
+      "commonStartCommit": "79454a133f990982253744a85ccb8516d62f5a19",
+      "commonStartTree": "1234567890abcdef1234567890abcdef12345678",
+      "promptSha256": "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39",
+      "configSha256": "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606",
+      "envelopeSchemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "opaqueWorkerKey": "1b4c7e9a2d5f803162748590",
+      "opaqueCandidateId": "b2d4f60718c3e5a709123456",
+      "absoluteWorktreePath": "C:\\Users\\rhenm\\Documents\\Codex\\2026-07-20\\pilot-002-worktree-1b4c7e9a",
+      "buildBranch": "experiment/pilot-002-build-1b4c7e9a",
+      "baseBranch": "experiment/pilot-002-base-1b4c7e9a",
+      "commonStartCommit": "79454a133f990982253744a85ccb8516d62f5a19",
+      "commonStartTree": "1234567890abcdef1234567890abcdef12345678",
+      "promptSha256": "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39",
+      "configSha256": "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606",
+      "envelopeSchemaSha256": "a09fc1ea370f37f320804cfa249b3cf6ac2a1ae975ad3edecce8640e2495eb21"
+    }
+  ],
+  "assignmentEnvelopeAttestations": [
+    {
+      "opaqueCandidateId": "a1c3e5f709b2d4e6f8012345",
+      "envelopeSha256": "c11d5922f5477b9be7ec446c19cda7080c69904eb22189ac862fc9311ed3e399"
+    },
+    {
+      "opaqueCandidateId": "b2d4f60718c3e5a709123456",
+      "envelopeSha256": "bb438b9577df4658fae28c84864ead67422e8c6deb3d45a387d7e15331a4e2d8"
+    }
+  ],
   "status": "invalid",
   "activeInvalidation": {
     "invalidationId": "invalidation-001",
