@@ -91,11 +91,11 @@ const administrativeParityExceptions = new Set([
 
 export function validateFinalLockEvidence(evidence, inventory, lock) {
   const failures = [];
-  const expectedParentCommit = "24b04d47ea906605e736e5b20ac1ba37eb6b7379";
-  const expectedParentTree = "749c66d82360f4d0b46344065b27694b7395f3a1";
+  const expectedParentCommit = "889de57980cf8e39109c8a95ea6348aafdac3cfb";
+  const expectedParentTree = "feed01bfd5c440024d7cffa12290474b4f852dbd";
   if (
     evidence.supersedesFinalizationCommit !==
-      "c373d77cbbd82cadcd24a456d68fac771f34ffd3" ||
+      "a45a257a1039c6de2729d23fff2ef427ce59e784" ||
     evidence.supersedesFinalizationCommit !== lock.supersedesFinalizationCommit
   )
     failures.push("final-lock superseded-finalization binding mismatch");
@@ -129,7 +129,7 @@ export function validateFinalLockEvidence(evidence, inventory, lock) {
       lock.treatmentSkillAttributesSha256 ||
     evidence.treatmentSkill.sourceParitySha256 !==
       lock.treatmentSkillSourceParitySha256 ||
-    evidence.treatmentSkill.sourceParityFileCount !== 44 ||
+    evidence.treatmentSkill.sourceParityFileCount !== 49 ||
     evidence.treatmentSkill.sourceParityAllMatch !== true
   )
     failures.push("final-lock treatment-skill binding mismatch");
@@ -148,10 +148,27 @@ export function validateFinalLockEvidence(evidence, inventory, lock) {
       lock.permissionProbeScriptSha256 ||
     evidence.permissionProbe?.commitScriptSha256 !==
       lock.candidateCommitScriptSha256 ||
-    evidence.permissionProbe?.modelCall !== false ||
+    evidence.permissionProbe?.schemaSha256 !==
+      lock.permissionProbeSchemaSha256 ||
+    evidence.permissionProbe?.promptSha256 !==
+      lock.actualExecProbePromptSha256 ||
+    evidence.permissionProbe?.modelCall !== true ||
+    evidence.permissionProbe?.builderPermissionDimensionsMatch !== true ||
     evidence.permissionProbe?.valid !== true
   )
     failures.push("final-lock permission-probe binding mismatch");
+  if (
+    evidence.secondaryPermissionProbe?.path !==
+      lock.secondaryPermissionProbePath ||
+    evidence.secondaryPermissionProbe?.sha256 !==
+      lock.secondaryPermissionProbeSha256 ||
+    evidence.secondaryPermissionProbe?.scriptSha256 !==
+      lock.secondaryPermissionProbeScriptSha256 ||
+    evidence.secondaryPermissionProbe?.modelCall !== false ||
+    evidence.secondaryPermissionProbe?.authoritative !== false ||
+    evidence.secondaryPermissionProbe?.valid !== true
+  )
+    failures.push("final-lock secondary permission-probe binding mismatch");
   if (
     canonicalHash(evidence.gates) !==
     "65f600fc7e320bcf43750b36bb6ce512dcc32157e912168f87c40537ec917022"
@@ -177,10 +194,10 @@ export function validateFinalLockEvidence(evidence, inventory, lock) {
   if (
     inventory.protocolCommit !== expectedParentCommit ||
     inventory.protocolTree !== expectedParentTree ||
-    inventory.fileCount !== 44 ||
+    inventory.fileCount !== 49 ||
     inventory.allMatch !== true ||
     !Array.isArray(inventory.files) ||
-    inventory.files.length !== 44
+    inventory.files.length !== 49
   )
     failures.push("operational parent inventory header mismatch");
   const seen = new Set();
@@ -651,7 +668,13 @@ export function validateActualExecPermissionProbe(probe, lock) {
     failures.push("actual-exec probe argv differs from builder invariant argv");
   if (
     JSON.stringify(probe.environmentKeys) !==
-      JSON.stringify(["TEMP", "TMP", "NPM_CONFIG_CACHE", "CODEX_DEPENDENCY_ROOT", "PORT"]) ||
+      JSON.stringify([
+        "TEMP",
+        "TMP",
+        "NPM_CONFIG_CACHE",
+        "CODEX_DEPENDENCY_ROOT",
+        "PORT",
+      ]) ||
     JSON.stringify(probe.addDirRoles) !==
       JSON.stringify(["tempRoot", "cacheRoot", "dependencyRoot"])
   )
@@ -1517,8 +1540,7 @@ export function validateCanonicalContract(contract) {
       fileSha256("experiment/prompts/runner-smoke.md") ||
     contract.builderFreeze?.smokePromptSha256 !==
       lock.runnerSmokePromptSha256 ||
-    contract.builderFreeze?.configSha256 !==
-      "f3c706ac3fd3180748aadcfebb6e17171103f1184be7bbdf9af5704a2bb445b4" ||
+    contract.builderFreeze?.configSha256 !== lock.neutralBuilderConfigSha256 ||
     contract.builderFreeze?.rule !==
       "each builder receives the exact raw prompt bytes and a byte-identical source-history-free neutral product projection; only opaque invocation ID and runtime coordinate paths differ" ||
     contract.builderFreeze?.inputProjection?.allowlistSha256 !==
@@ -2227,7 +2249,31 @@ export function validateScaffold() {
     readFileSync(path.join(root, "scripts/commit-candidate.ps1"), "utf8"),
   );
   const actualPermissionProbeScriptHash = sha256(
-    readFileSync(path.join(root, "scripts/verify-cli-permissions.ps1"), "utf8"),
+    readFileSync(
+      path.join(root, "scripts/verify-cli-exec-permissions.ps1"),
+      "utf8",
+    ),
+  );
+  const actualPermissionProbeSchemaHash = sha256Bytes(
+    readFileSync(
+      path.join(
+        root,
+        "experiment/schemas/actual-exec-permission-probe.schema.json",
+      ),
+    ),
+  );
+  const actualPermissionProbePromptHash = sha256Bytes(
+    readFileSync(
+      path.join(root, "experiment/prompts/actual-exec-capability-probe.md"),
+    ),
+  );
+  const actualSecondaryPermissionProbeScriptHash = sha256Bytes(
+    readFileSync(path.join(root, "scripts/verify-cli-permissions.ps1")),
+  );
+  const actualSecondaryPermissionProbeHash = sha256Bytes(
+    readFileSync(
+      path.join(root, "experiment/preflight/permission-probe-2.6.0.json"),
+    ),
   );
   const actualRoleSchemaHash = sha256(
     readFileSync(
@@ -2295,7 +2341,7 @@ export function validateScaffold() {
   );
   const actualAbortedPrelaunchRecordHash = sha256Bytes(
     readFileSync(
-      path.join(root, "experiment/preflight/aborted-lock-2.5.0.json"),
+      path.join(root, "experiment/preflight/aborted-lock-2.6.0.json"),
     ),
   );
   const actualPermissionProbeHash = sha256Bytes(
@@ -2341,33 +2387,33 @@ export function validateScaffold() {
   const goldenRun = readJson("experiment/golden-run/golden-run.json");
   const invalidCurrent = readJson("experiment/golden-run/invalid-current.json");
   const finalCommitments = {
-    protocolVersion: "2.6.0",
+    protocolVersion: "2.7.0",
     protocolStatus: "locked",
-    supersedesLockCommit: "c373d77cbbd82cadcd24a456d68fac771f34ffd3",
-    supersedesFinalizationCommit: "c373d77cbbd82cadcd24a456d68fac771f34ffd3",
-    lockParentCommit: "24b04d47ea906605e736e5b20ac1ba37eb6b7379",
-    lockParentTree: "749c66d82360f4d0b46344065b27694b7395f3a1",
+    supersedesLockCommit: "a45a257a1039c6de2729d23fff2ef427ce59e784",
+    supersedesFinalizationCommit: "a45a257a1039c6de2729d23fff2ef427ce59e784",
+    lockParentCommit: "889de57980cf8e39109c8a95ea6348aafdac3cfb",
+    lockParentTree: "feed01bfd5c440024d7cffa12290474b4f852dbd",
     lockParentLockSha256:
-      "162e82044939481d9939fec92a276ee832fde592bc9d61be419cf72300125f65",
+      "aa2ce55dc05ca8b48a2c6a0a0be80ab7c2435819463ce202313b187ed397349c",
     hiddenSuiteId: "permissions-playground-sealed-v2",
     hiddenSuiteSha256:
       "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
-    treatmentSkillCommit: "041901aed48353e7fe0f791541362efd5b2efd67",
-    treatmentSkillTree: "efd39c7a040eba2589205e7237d663c675877815",
+    treatmentSkillCommit: "dedfc28a2f547bf477077e7363369363a9b3ed1e",
+    treatmentSkillTree: "f76f80397fdc0bfced6f8d1cb3b6b33731a28e2e",
     treatmentSkillManifestFile: "MANIFEST.sha256",
     treatmentSkillManifestSha256:
-      "d79908e3d6f8d1b824e2aa27d4f136f6b41ba2670433cfab9827700c906d99e4",
-    treatmentSkillManifestEntryCount: 57,
+      "3da24722c37b4c427a032d20661e9678e1dcee1c49319c6596fb4afaa3af285a",
+    treatmentSkillManifestEntryCount: 62,
     treatmentSkillManifestCommentLineCount: 3,
-    treatmentSkillManifestPhysicalLineCount: 60,
+    treatmentSkillManifestPhysicalLineCount: 65,
     treatmentSkillManifestByteSource: "canonical-git-blob",
     treatmentSkillManifestToolPath: "validation/manifest_tool.py",
     treatmentSkillManifestToolSha256:
-      "428a611c722f200d7c0cf0391e2c6fdf733ed266f97490f2eef614b1efccb0bc",
+      "e215d9c8999612c1adfd6f6d563571795ac595dce88f523cfa1d413d42b27671",
     treatmentSkillAttributesSha256: actualAttributesHash,
     treatmentSkillSourceParitySha256:
-      "ab66c1075badd85405f47d239c6b1625338f5f4c102a5bd795d341b0ab667ccc",
-    treatmentSkillSourceParityFileCount: 44,
+      "7e7b7ccff4fae31983e9814a00211c1f925f881d798316370cc891cd421434a8",
+    treatmentSkillSourceParityFileCount: 49,
     treatmentSkillSourceParityAllMatch: true,
     treatmentAlgorithmSha256: actualAlgorithmHash,
     neutralBuilderPromptSha256: actualPromptHash,
@@ -2389,7 +2435,8 @@ export function validateScaffold() {
     cliRunnerSha256: actualCliRunnerHash,
     canonicalPathHelperSha256: actualCanonicalPathHelperHash,
     candidateCommitScriptSha256: actualCandidateCommitScriptHash,
-    permissionProbePath: "experiment/preflight/permission-probe-2.6.0.json",
+    permissionProbePath:
+      "experiment/preflight/actual-exec-permission-probe-2.7.0.json",
     permissionProbeSha256: actualPermissionProbeHash,
     permissionProbeScriptSha256: actualPermissionProbeScriptHash,
     roleRuntimeSchemaSha256: actualRoleSchemaHash,
@@ -2428,24 +2475,33 @@ export function validateScaffold() {
     operationalParentInventoryPath:
       "experiment/preflight/operational-parent-inventory.json",
     operationalParentInventorySha256:
-      "ab66c1075badd85405f47d239c6b1625338f5f4c102a5bd795d341b0ab667ccc",
+      "7e7b7ccff4fae31983e9814a00211c1f925f881d798316370cc891cd421434a8",
     preflightEvidencePath: "experiment/preflight/final-lock-evidence.json",
     preflightEvidenceSha256:
-      "19067db41586e3080c75ec7067f60d02558c8bc7a9158bccc9655b6af076defc",
+      "be66bafa5be1480a22481a558a4bcfe83ebd8b8f5d1ea4fa431b1973e36995ae",
     preflightEvidenceSchemaPath:
       "experiment/schemas/final-lock-evidence.schema.json",
     preflightEvidenceSchemaSha256:
-      "171288b4cb2abc031e7cf790fa739d23bb6c28e6740e43d33c5000e12a90893a",
+      "559be338a7304676fd85346bdbee28017663203e724a1db49a0bd7aebff95aa4",
     gateAggregateSha256:
-      "d2a2441818cdc806033aa735a4301ef6a8ea6119c6b0ee3ee886f55b9dd47661",
-    abortedPrelaunchRecordPath: "experiment/preflight/aborted-lock-2.5.0.json",
+      "fbf668e322f3ab915a60ad8f88315d9d89da5b6326d45289ac8795730753a20d",
+    abortedPrelaunchRecordPath: "experiment/preflight/aborted-lock-2.6.0.json",
     abortedPrelaunchRecordSha256:
-      "30fd68984b0625467d5a7c64ac50256365d5db0b5f924cb2c7590d5546d7d571",
+      "bb8696bcb50d7a6febec9924d2402e2a1a595315e6730c55dd4799bf4e5c01e0",
     canonicalContractSha256: canonicalHash(canonicalContract),
     goldenFixtureSha256: canonicalHash(goldenRun),
     invalidCurrentFixtureSha256: canonicalHash(invalidCurrent),
     commonStartCommitPolicy:
-      "At execution, record the exact merged common-start commit/tree, this final preregistration commit, and the lock-file SHA-256 before any builder launch.",
+      "At execution, record the exact merged common-start commit/tree, this final preregistration commit, and the lock-file SHA-256 before any replacement builder launch.",
+    nodeVersion: "22.x",
+    packageManager: "npm@11.11.0",
+    actualExecProbePromptSha256: actualPermissionProbePromptHash,
+    permissionProbeSchemaSha256: actualPermissionProbeSchemaHash,
+    secondaryPermissionProbePath:
+      "experiment/preflight/permission-probe-2.6.0.json",
+    secondaryPermissionProbeSha256: actualSecondaryPermissionProbeHash,
+    secondaryPermissionProbeScriptSha256:
+      actualSecondaryPermissionProbeScriptHash,
     freezeState: "locked",
   };
   if (

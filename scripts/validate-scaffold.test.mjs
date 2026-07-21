@@ -47,6 +47,16 @@ const clone = (value) => structuredClone(value);
 const zero40 = "0".repeat(40);
 const hash = (digit) => digit.repeat(64);
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
+const exactClrInternalErrorStatus = 0x80131506;
+const normalizeDiagnostic = (value) =>
+  (value ?? "").replaceAll("\r\n", "\n").trim();
+const isExactClrStartupCrash = (result) =>
+  result.status === exactClrInternalErrorStatus &&
+  result.signal === null &&
+  (result.error === undefined || result.error === null) &&
+  normalizeDiagnostic(result.stdout) === "" &&
+  normalizeDiagnostic(result.stderr) ===
+    "Fatal error.\nInternal CLR error. (0x80131506)";
 const snapshot = (number) => ({
   commit: `${number}`.repeat(40),
   sealedAt: "2026-07-20T00:00:00Z",
@@ -425,17 +435,23 @@ const createRoleRunnerFixture = () => {
   const run = () => {
     const contractPath = path.join(privateRoot, "role-contract.json");
     writeFileSync(contractPath, `${JSON.stringify(contract, null, 2)}\n`);
-    return spawnSync(
-      lock.powerShellHostPath,
-      [
-        "-NoProfile",
-        "-File",
-        lockedPath("scripts/run-cli-role.ps1"),
-        "-ContractPath",
-        contractPath,
-      ],
-      { cwd: root, encoding: "utf8", timeout: 120000 },
-    );
+    const argv = [
+      "-NoProfile",
+      "-File",
+      lockedPath("scripts/run-cli-role.ps1"),
+      "-ContractPath",
+      contractPath,
+    ];
+    let result;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      result = spawnSync(lock.powerShellHostPath, argv, {
+        cwd: root,
+        encoding: "utf8",
+        timeout: 120000,
+      });
+      if (!isExactClrStartupCrash(result)) break;
+    }
+    return result;
   };
   const setDeadline = (deadline) => {
     contract.promptSubstitutions.WALL_CLOCK_DEADLINE_ISO = deadline;
@@ -457,6 +473,33 @@ const createRoleRunnerFixture = () => {
 };
 
 describe("protocol 2.7.0 locked cross-contract validation", () => {
+  it("retries only the exact CLR startup crash signature", () => {
+    const exact = {
+      status: exactClrInternalErrorStatus,
+      signal: null,
+      error: undefined,
+      stdout: "",
+      stderr: "Fatal error.\r\nInternal CLR error. (0x80131506)\r\n",
+    };
+    assert.equal(isExactClrStartupCrash(exact), true);
+    assert.equal(
+      isExactClrStartupCrash({
+        ...exact,
+        stderr: `${exact.stderr}product failure`,
+      }),
+      false,
+    );
+    assert.equal(isExactClrStartupCrash({ ...exact, status: 1 }), false);
+    assert.equal(
+      isExactClrStartupCrash({ ...exact, signal: "SIGTERM" }),
+      false,
+    );
+    assert.equal(
+      isExactClrStartupCrash({ ...exact, error: new Error("spawn failed") }),
+      false,
+    );
+  });
+
   it("binds actual-exec permissions to the builder runtime dimensions", () => {
     const lock = readJson("experiment/lock.json");
     const probe = readJson(
@@ -1148,11 +1191,11 @@ describe("protocol 2.7.0 locked cross-contract validation", () => {
     assert.deepEqual(validateFinalLockEvidence(evidence, inventory, lock), []);
     assert.equal(
       lock.supersedesFinalizationCommit,
-      "c373d77cbbd82cadcd24a456d68fac771f34ffd3",
+      "a45a257a1039c6de2729d23fff2ef427ce59e784",
     );
-    assert.equal(lock.treatmentSkillManifestEntryCount, 57);
+    assert.equal(lock.treatmentSkillManifestEntryCount, 62);
     assert.equal(lock.treatmentSkillManifestCommentLineCount, 3);
-    assert.equal(lock.treatmentSkillManifestPhysicalLineCount, 60);
+    assert.equal(lock.treatmentSkillManifestPhysicalLineCount, 65);
     assert.equal(lock.treatmentSkillManifestByteSource, "canonical-git-blob");
     assert.equal(lock.runnerSmokeContractSha256, null);
     assert.equal(lock.runnerSmokeSupervisionSha256, null);

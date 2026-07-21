@@ -110,7 +110,7 @@ jobs:
           @'
           ## Hosted integration boundary
 
-          This credential-free hosted integration runs 49/55 protocol tests. It is **not** canonical `npm run check`, **not** the locked 55/55 protocol execution, and **not** F2 execution or evidence.
+          This credential-free hosted integration runs 50/56 protocol tests. It is **not** canonical `npm run check`, **not** the locked 56/56 protocol execution, and **not** F2 execution or evidence.
 
           The following live-auth-coupled tests are **NOT EXECUTED IN HOSTED CI**:
 

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ghostlygawd.example/schemas/final-lock-evidence.schema.json",
-  "title": "Protocol 2.6.0 final-lock preflight evidence",
+  "title": "Protocol 2.7.0 final-lock preflight evidence",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -12,13 +12,14 @@
     "treatmentSkill",
     "abortedPrelaunch",
     "permissionProbe",
+    "secondaryPermissionProbe",
     "gates",
     "gateAggregateSha256"
   ],
   "properties": {
     "evidenceVersion": { "const": "1.0.0" },
     "supersedesFinalizationCommit": {
-      "const": "c373d77cbbd82cadcd24a456d68fac771f34ffd3"
+      "const": "a45a257a1039c6de2729d23fff2ef427ce59e784"
     },
     "aggregation": {
       "type": "object",
@@ -71,14 +72,14 @@
         "tree": { "$ref": "#/$defs/sha1" },
         "manifestFile": { "const": "MANIFEST.sha256" },
         "manifestSha256": { "$ref": "#/$defs/sha256" },
-        "manifestEntryCount": { "const": 57 },
+        "manifestEntryCount": { "const": 62 },
         "manifestCommentLineCount": { "const": 3 },
-        "manifestPhysicalLineCount": { "const": 60 },
+        "manifestPhysicalLineCount": { "const": 65 },
         "manifestByteSource": { "const": "canonical-git-blob" },
         "manifestToolSha256": { "$ref": "#/$defs/sha256" },
         "attributesSha256": { "$ref": "#/$defs/sha256" },
         "sourceParitySha256": { "$ref": "#/$defs/sha256" },
-        "sourceParityFileCount": { "const": 44 },
+        "sourceParityFileCount": { "const": 49 },
         "sourceParityAllMatch": { "const": true }
       }
     },
@@ -87,7 +88,7 @@
       "additionalProperties": false,
       "required": ["path", "sha256", "disposition", "activityCount"],
       "properties": {
-        "path": { "const": "experiment/preflight/aborted-lock-2.5.0.json" },
+        "path": { "const": "experiment/preflight/aborted-lock-2.6.0.json" },
         "sha256": { "$ref": "#/$defs/sha256" },
         "disposition": { "const": "invalidated-before-assignment" },
         "activityCount": { "const": 2 }
@@ -100,16 +101,44 @@
         "path",
         "sha256",
         "scriptSha256",
+        "schemaSha256",
+        "promptSha256",
         "commitScriptSha256",
         "modelCall",
+        "builderPermissionDimensionsMatch",
+        "valid"
+      ],
+      "properties": {
+        "path": {
+          "const": "experiment/preflight/actual-exec-permission-probe-2.7.0.json"
+        },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "scriptSha256": { "$ref": "#/$defs/sha256" },
+        "schemaSha256": { "$ref": "#/$defs/sha256" },
+        "promptSha256": { "$ref": "#/$defs/sha256" },
+        "commitScriptSha256": { "$ref": "#/$defs/sha256" },
+        "modelCall": { "const": true },
+        "builderPermissionDimensionsMatch": { "const": true },
+        "valid": { "const": true }
+      }
+    },
+    "secondaryPermissionProbe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "scriptSha256",
+        "modelCall",
+        "authoritative",
         "valid"
       ],
       "properties": {
         "path": { "const": "experiment/preflight/permission-probe-2.6.0.json" },
         "sha256": { "$ref": "#/$defs/sha256" },
         "scriptSha256": { "$ref": "#/$defs/sha256" },
-        "commitScriptSha256": { "$ref": "#/$defs/sha256" },
         "modelCall": { "const": false },
+        "authoritative": { "const": false },
         "valid": { "const": true }
       }
     },
