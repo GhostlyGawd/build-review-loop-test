@@ -1,10 +1,10 @@
 build-review-loop skill v2 / protocol 2.7.0-draft validation evidence
 validated: 2026-07-21 America/New_York
-skill base commit: 32f0899b74c20958a3a9163c0cd94e9ef5be494d
-skill base tree: f40662a6766ff0112d8f7b8593ed540d0d95254b
+skill base commit: 2c4b2344f76b7f34b3ba6af7695e0f3e2bb952eb
+skill base tree: bf2b9bfa1109c010d30cc0d707854d8b64ed0381
 skill branch: agent/protocol-v2.7-actual-exec
-protocol source commit: 32f0899b74c20958a3a9163c0cd94e9ef5be494d
-protocol source tree: f40662a6766ff0112d8f7b8593ed540d0d95254b
+protocol source commit: 2c4b2344f76b7f34b3ba6af7695e0f3e2bb952eb
+protocol source tree: bf2b9bfa1109c010d30cc0d707854d8b64ed0381
 candidate access: no replacement builder access after the two invalid 2.6 launches; no assignment, treatment, hidden access, evaluation, or outcome
 push/PR/publication: none
 
