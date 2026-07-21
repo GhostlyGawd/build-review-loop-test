@@ -1,15 +1,15 @@
 # Permissions Playground review-loop experiment
 
-This repository is the prospective common-start scaffold for protocol version 2.3.0. It tests a treatment-only review loop after two independent builders create the same React permissions-policy playground from an identical neutral prompt and configuration.
+This repository is the prospective common-start scaffold for protocol version 2.3.0-frozen. It tests a treatment-only review loop after two independent builders create the same React permissions-policy playground from an identical neutral prompt and configuration.
 
 ## Status
 
-- Phase: protocol 2.3.0 runtime-compatibility correction, provisional before builder exposure
+- Phase: protocol 2.3.0-frozen preregistration lock, before builder exposure
 - Product: intentionally not implemented on this branch
 - Public contract tests: committed but gated until all required implementation files exist
 - Hidden tests: sealed externally; the existing v2 commitment remains unchanged
 - Treatment algorithm: exact skill-v1 flow incorporated and content-addressed
-- Experiment lock: 2.3.0 draft; skill integration and final lock parent remain provisional
+- Experiment lock: 2.3.0-frozen, bound to the synchronized skill and content parent
 - License: none has been granted; no license file is included
 
 Do not present this branch as a completed application or executable experiment. A passing scaffold check establishes internal consistency only.
@@ -58,7 +58,7 @@ The winner promoted to `main` is the higher-scoring of B0 and Tfinal; an exact t
 - [`experiment/treatment-loop-algorithm.md`](experiment/treatment-loop-algorithm.md): exact frozen skill-v1 flow
 - [`experiment/schemas/`](experiment/schemas/): machine-readable artifact contracts and the authoritative finding schema
 - [`experiment/templates/`](experiment/templates/): prospective, non-evidentiary artifact examples
-- [`experiment/lock.json`](experiment/lock.json): provisional 2.3 commitments; execution is prohibited until refrozen
+- [`experiment/lock.json`](experiment/lock.json): final 2.3 preregistration commitments
 
 ## Architecture and boundaries
 

@@ -31,7 +31,7 @@ const snapshot = (number) => ({
   packageProcedure: "frozen-test-procedure",
 });
 
-describe("protocol 2.3.0 cross-contract validation", () => {
+describe("protocol 2.3.0-frozen cross-contract validation", () => {
   it("accepts the prospective scaffold and seeded assignment algorithms", () => {
     assert.deepEqual(validateScaffold().failures, []);
     assert.deepEqual(

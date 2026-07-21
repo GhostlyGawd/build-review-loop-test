@@ -1150,16 +1150,17 @@ export function validateScaffold() {
   const goldenRun = readJson("experiment/golden-run/golden-run.json");
   const invalidCurrent = readJson("experiment/golden-run/invalid-current.json");
   const finalCommitments = {
-    protocolVersion: "2.3.0",
-    protocolStatus: "draft",
+    protocolVersion: "2.3.0-frozen",
+    protocolStatus: "locked",
     supersedesLockCommit: "67eb14066fc437f0944b963f7d8b3328e09a88b1",
-    lockParentCommit: null,
+    lockParentCommit: "b76a5fa3a82543d793b7344648e0abbc51214958",
     hiddenSuiteId: "permissions-playground-sealed-v2",
     hiddenSuiteSha256:
       "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
-    treatmentSkillCommit: null,
-    treatmentSkillTree: null,
-    treatmentSkillManifestSha256: null,
+    treatmentSkillCommit: "33355b97041070e1dec4b7c9beca4ce96faa50bb",
+    treatmentSkillTree: "14b0ca16dfe873e07307c6d0d333744ebbc88cc0",
+    treatmentSkillManifestSha256:
+      "4f2909c061f342170a3f1658a3a4d68551ddc0dd46b66054c85e31eb53c6dfc5",
     treatmentAlgorithmSha256: actualAlgorithmHash,
     neutralBuilderPromptSha256: actualPromptHash,
     neutralBuilderConfigSha256: actualConfigHash,
@@ -1168,7 +1169,7 @@ export function validateScaffold() {
     canonicalContractSha256: canonicalHash(canonicalContract),
     goldenFixtureSha256: canonicalHash(goldenRun),
     invalidCurrentFixtureSha256: canonicalHash(invalidCurrent),
-    freezeState: "provisional",
+    freezeState: "frozen",
   };
   for (const [key, expected] of Object.entries(finalCommitments)) {
     if (lock[key] !== expected)
@@ -1331,6 +1332,6 @@ if (isEntrypoint) {
     process.exit(1);
   }
   console.log(
-    `Protocol 2.3.0 provisional scaffold validation passed (${schemaPairCount} schema/data pairs; assignment envelopes and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
+    `Protocol 2.3.0-frozen scaffold validation passed (${schemaPairCount} schema/data pairs; assignment envelopes and golden execution fixtures accepted; ${implementationCount === 0 ? "implementation intentionally absent" : "implementation active"}).`,
   );
 }

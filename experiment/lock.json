@@ -1,13 +1,13 @@
 {
-  "protocolVersion": "2.3.0",
-  "protocolStatus": "draft",
+  "protocolVersion": "2.3.0-frozen",
+  "protocolStatus": "locked",
   "supersedesLockCommit": "67eb14066fc437f0944b963f7d8b3328e09a88b1",
-  "lockParentCommit": null,
+  "lockParentCommit": "b76a5fa3a82543d793b7344648e0abbc51214958",
   "hiddenSuiteId": "permissions-playground-sealed-v2",
   "hiddenSuiteSha256": "a6f38c08eff3fd23fca3299f0777adbea4001d3ac3147272511ff9babd98a19b",
-  "treatmentSkillCommit": null,
-  "treatmentSkillTree": null,
-  "treatmentSkillManifestSha256": null,
+  "treatmentSkillCommit": "33355b97041070e1dec4b7c9beca4ce96faa50bb",
+  "treatmentSkillTree": "14b0ca16dfe873e07307c6d0d333744ebbc88cc0",
+  "treatmentSkillManifestSha256": "4f2909c061f342170a3f1658a3a4d68551ddc0dd46b66054c85e31eb53c6dfc5",
   "treatmentAlgorithmSha256": "abc1ffa422244259592452cab096fbb3abda7ee0ae64705d70ed7d54c4f93f2b",
   "neutralBuilderPromptSha256": "28f4cae60ff3de6e4ced0aa839f7f2e435fe6bdb1d3d8f2ef48a0309c9f89a39",
   "neutralBuilderConfigSha256": "8185506b5091bb4791da1dd6a4324c90e4fffc7cf3a9c87090022977e542a606",
@@ -19,5 +19,5 @@
   "commonStartCommitPolicy": "Record the final GitHub commonStartCommit post-merge in the experiment and run manifests, together with the refrozen preregistration lock commit and lock-file SHA-256.",
   "nodeVersion": "22.x",
   "packageManager": "npm@11.11.0",
-  "freezeState": "provisional"
+  "freezeState": "frozen"
 }
