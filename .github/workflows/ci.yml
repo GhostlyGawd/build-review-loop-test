@@ -77,11 +77,11 @@ jobs:
         run: npm run lint
       - name: Typecheck
         run: npm run typecheck
-      - name: Validate frozen scaffold
-        run: npm run validate:scaffold
       - name: Run credential-free protocol integration tests
         run: |
           $testNames = @(
+            'accepts the prospective scaffold and seeded assignment algorithms',
+            'binds the final lock to P/S/A/B/C, abort, and permission evidence',
             'rejects ignored builder contamination before model launch',
             'rejects private runtime inputs nested inside a builder before model launch',
             'rejects every schema-valid builder containment overlap before evidence or model launch',
@@ -98,10 +98,10 @@ jobs:
             }
           }
 
-          $skipPattern = '^(?:rejects ignored builder contamination before model launch|rejects private runtime inputs nested inside a builder before model launch|rejects every schema-valid builder containment overlap before evidence or model launch|rejects a junction-aliased builder workdir before model launch|canonicalizes real Windows 8\.3 aliases and rejects aliased private builder input before model launch|rejects stale and malformed absolute role deadlines before evidence or model launch)$'
+          $skipPattern = '^(?:accepts the prospective scaffold and seeded assignment algorithms|binds the final lock to P/S/A/B/C, abort, and permission evidence|rejects ignored builder contamination before model launch|rejects private runtime inputs nested inside a builder before model launch|rejects every schema-valid builder containment overlap before evidence or model launch|rejects a junction-aliased builder workdir before model launch|canonicalizes real Windows 8\.3 aliases and rejects aliased private builder input before model launch|rejects stale and malformed absolute role deadlines before evidence or model launch)$'
           node --test --test-skip-pattern $skipPattern scripts/validate-scaffold.test.mjs
-      - name: Run public tests when implemented
-        run: npm run test:public:if-implemented
+      - name: Run public tests
+        run: npm run test:public
       - name: Build
         run: npm run build
       - name: Record hosted integration boundary
@@ -110,9 +110,14 @@ jobs:
           @'
           ## Hosted integration boundary
 
-          This credential-free hosted integration runs 52/58 protocol tests. It is **not** canonical `npm run check`, **not** the locked 58/58 protocol execution, and **not** F2 execution or evidence.
+          This credential-free hosted integration runs 50/58 protocol tests. It is **not** canonical `npm run check`, **not** the locked 58/58 protocol execution, and **not** F2 execution or evidence.
 
-          The following live-auth-coupled tests are **NOT EXECUTED IN HOSTED CI**:
+          The following pre-promotion repository-state tests are **NOT EXECUTED IN HOSTED CI**:
+
+          - `accepts the prospective scaffold and seeded assignment algorithms`
+          - `binds the final lock to P/S/A/B/C, abort, and permission evidence`
+
+          The following live-auth-coupled tests are also **NOT EXECUTED IN HOSTED CI**:
 
           - `rejects ignored builder contamination before model launch`
           - `rejects private runtime inputs nested inside a builder before model launch`
