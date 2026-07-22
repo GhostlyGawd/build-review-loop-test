@@ -1,18 +1,29 @@
 # Permissions Playground review-loop experiment
 
-This repository is the prospective source scaffold for protocol version 2.8.0. Before builder launch, a deterministic allowlist projects only neutral Permissions Playground task files into two byte-identical, freshly initialized one-root Git repositories. Builders never receive this repository, its history, README, experiment material, skills, hidden material, or evidence.
+This repository contains the completed Permissions Playground app and the
+protocol 2.8 build-versus-review-loop experiment that produced it. The
+preregistered run was invalidated by a reviewer artifact-schema failure. A
+separately labeled exploratory recovery completed the loop and blinded
+evaluation, and the higher-scoring sealed baseline implementation was promoted.
 
 ## Status
 
-- Phase: protocol 2.8.0 locked, before replacement builder exposure
-- Product: intentionally not implemented on this branch
-- Public contract tests: committed but gated until all required implementation files exist
+- Phase: protocol 2.8.0 execution complete
+- Confirmatory result: invalid; no confirmatory effect estimate
+- Exploratory result: B0 82, Tfinal 44, T0 45 fallback; primary difference -38
+- Product: B0 winner implementation promoted and runnable; publish-only
+  adjustments are documented in the report
+- Public contract tests: active
 - Hidden tests: sealed externally; the existing v2 commitment remains unchanged
-- Treatment algorithm: exact skill-v1 flow incorporated and content-addressed
+- Treatment: stopped at cycle 1 with zero findings; no fixer or tester ran
 - Experiment lock: 2.8.0 supervisor-evidence repair, preserving the exact actual-exec permission attestation and supervisor-owned commits
 - License: none has been granted; no license file is included
 
-Do not present this branch as a completed application or executable experiment. A passing scaffold check establishes internal consistency only.
+The full sanitized result, deviations, artifact commitments, usage, and
+limitations are in
+[`experiment/results/v2.8-exploratory-report.md`](experiment/results/v2.8-exploratory-report.md).
+
+![Permissions Playground showing the promoted policy-rule editor](docs/permissions-playground.png)
 
 ## Five-minute setup
 
@@ -24,7 +35,11 @@ npm run check
 npm run dev
 ```
 
-`npm run dev` serves an honest placeholder page. `npm run test:public` intentionally exits nonzero until all three implementation modules exist. `npm run check` accepts only the all-files-absent scaffold state or a complete implementation, and also runs protocol semantic tests.
+`npm run dev` serves the promoted interactive Permissions Playground.
+`npm run check` runs formatting, lint, types, 56 protocol semantic tests,
+public tests, and a production build. The archival `npm run test:protocol` and
+`npm run validate:scaffold` commands continue to include two assertions of the
+frozen pre-promotion byte inventory and are not part of the product gate.
 
 ## Experiment flow
 
@@ -71,7 +86,10 @@ Protocol 2.8 preserves the neutral candidate projection, exact five-stage candid
 
 ## Architecture and boundaries
 
-The scaffold contains protocol documents, schemas, test contracts, public tests, parameterized supervisors, a deterministic builder-input projector, a deterministic blinding packager, and a Vite placeholder. First prepare two neutral repositories with `node scripts/prepare-builder-input.mjs` and the exact bound source commit/tree, allowlist, destinations, and private manifest arguments. The preparer rejects symlink, junction, or reparse-point ancestors and uses native realpath canonicalization through each prospective path's nearest existing physical parent before enforcing nonnesting. Then invoke neutral construction as `pwsh -NoProfile -File scripts/run-cli-builders.ps1 -ContractPath <absolute-contract.json>`. Before creating evidence or runtime directories or launching a model, the builder runner validates the private manifest and projection-policy hashes; uses the frozen `scripts/canonicalize-paths.mjs` helper to collapse existing and prospective short-name or other physical aliases; proves both workdirs, every authoritative output, all external temp/cache/dependency roots across invocations, and every private input satisfy the canonical distinctness and nonnesting graph; and requires the complete visible filesystem outside root `.git` to equal the manifest's exact file, directory, byte, and hash set. It also checks the aggregate projection hash, identical one-root commit/tree, disabled remotes, and `core.autocrlf=false`. After each model exits, it preserves a deterministic full visible-filesystem snapshot and hash outside the workdir and requires the evidence root to contain exactly the authoritative outputs and necessary parent directories with no reparse points; legitimate ignored build output is recorded rather than treated as a dirty tracked-file failure. Invoke one reviewer, fixer, tester, or evaluator as `pwsh -NoProfile -File scripts/run-cli-role.ps1 -ContractPath <absolute-role-contract.json>`. Both runners hash-bind and use the same canonical-path helper for every private/workdir/evidence/output/runtime comparison, require the frozen PowerShell 7 host, schema-validate the complete runtime contract before any Codex launch, use frozen `gpt-5.4`/`xhigh` argv, raw stdin, fresh external processes, and content-addressed evidence. Before any role evidence or runtime directory is created, the role runner requires evidence and workdir separation, exactly four pairwise-nonnested direct-child outputs, external pairwise-nonnested temp/cache/dependency roots, and every private input separate from every mutable root and output. It then strict-parses the prompt's UTC deadline, starts the monotonic budget clock before capturing the wall-clock supervisor start, and requires the absolute deadline to be later than that start but no later than `deadlineSeconds` after it. The runner floors the wall-clock absolute budget, subtracts every millisecond of monotonic elapsed time—including directory, process-start, stdin, and other scheduling delay before the wait—and treats a remaining interval below one millisecond as zero. `completedAt` is the actual OS exit time and must not exceed the deadline; only the distinct `completionObservedAt` and process-tree termination receive a two-second tolerance. The supervisor overwrites review/fix/test artifact chronology with its observed start and actual exit and evaluator chronology with its actual exit/seal, then binds the enclosing interval and observation time in supervision evidence. `smokeMode: true` is reserved for the exact committed harmless runner-smoke prompt; normal construction accepts only the neutral builder prompt. Although this CLI exposes `--output-schema`, role argv omits it until a distinct pre-injection schema is frozen: the authoritative final schema requires observed runtime identity and chronology, which the supervisor—not the model—must inject.
+The repository contains the promoted local-state React application alongside
+the protocol documents, schemas, test contracts, public tests, parameterized
+supervisors, deterministic builder-input projector, and deterministic blinding
+packager. First prepare two neutral repositories with `node scripts/prepare-builder-input.mjs` and the exact bound source commit/tree, allowlist, destinations, and private manifest arguments. The preparer rejects symlink, junction, or reparse-point ancestors and uses native realpath canonicalization through each prospective path's nearest existing physical parent before enforcing nonnesting. Then invoke neutral construction as `pwsh -NoProfile -File scripts/run-cli-builders.ps1 -ContractPath <absolute-contract.json>`. Before creating evidence or runtime directories or launching a model, the builder runner validates the private manifest and projection-policy hashes; uses the frozen `scripts/canonicalize-paths.mjs` helper to collapse existing and prospective short-name or other physical aliases; proves both workdirs, every authoritative output, all external temp/cache/dependency roots across invocations, and every private input satisfy the canonical distinctness and nonnesting graph; and requires the complete visible filesystem outside root `.git` to equal the manifest's exact file, directory, byte, and hash set. It also checks the aggregate projection hash, identical one-root commit/tree, disabled remotes, and `core.autocrlf=false`. After each model exits, it preserves a deterministic full visible-filesystem snapshot and hash outside the workdir and requires the evidence root to contain exactly the authoritative outputs and necessary parent directories with no reparse points; legitimate ignored build output is recorded rather than treated as a dirty tracked-file failure. Invoke one reviewer, fixer, tester, or evaluator as `pwsh -NoProfile -File scripts/run-cli-role.ps1 -ContractPath <absolute-role-contract.json>`. Both runners hash-bind and use the same canonical-path helper for every private/workdir/evidence/output/runtime comparison, require the frozen PowerShell 7 host, schema-validate the complete runtime contract before any Codex launch, use frozen `gpt-5.4`/`xhigh` argv, raw stdin, fresh external processes, and content-addressed evidence. Before any role evidence or runtime directory is created, the role runner requires evidence and workdir separation, exactly four pairwise-nonnested direct-child outputs, external pairwise-nonnested temp/cache/dependency roots, and every private input separate from every mutable root and output. It then strict-parses the prompt's UTC deadline, starts the monotonic budget clock before capturing the wall-clock supervisor start, and requires the absolute deadline to be later than that start but no later than `deadlineSeconds` after it. The runner floors the wall-clock absolute budget, subtracts every millisecond of monotonic elapsed time—including directory, process-start, stdin, and other scheduling delay before the wait—and treats a remaining interval below one millisecond as zero. `completedAt` is the actual OS exit time and must not exceed the deadline; only the distinct `completionObservedAt` and process-tree termination receive a two-second tolerance. The supervisor overwrites review/fix/test artifact chronology with its observed start and actual exit and evaluator chronology with its actual exit/seal, then binds the enclosing interval and observation time in supervision evidence. `smokeMode: true` is reserved for the exact committed harmless runner-smoke prompt; normal construction accepts only the neutral builder prompt. Although this CLI exposes `--output-schema`, role argv omits it until a distinct pre-injection schema is frozen: the authoritative final schema requires observed runtime identity and chronology, which the supervisor—not the model—must inject.
 
 Create evaluator inputs with `node scripts/package-blinded-snapshots.mjs --mapping <private-mapping.json> --output-root <fresh-output-directory> --manifest <private-manifest.json>`. Prepare each clean independent source clone with `git -c core.autocrlf=false clone ...` and retain `core.autocrlf=false`; this keeps frozen gate bytes stable before history-free export. The packager exports only regular blobs enumerated by the bound `HEAD` tree, reading each blob from Git rather than recursively copying the working filesystem. Ignored or untracked private files therefore cannot enter a package. The mapping supplies the exact X/Y/Z order, B0/T0/Tfinal source clones, source refs, commit/tree bindings, frozen public-gate-set hash, and exact private provenance markers (candidate/run IDs, evidence paths, and role-artifact names). Generic product or dependency vocabulary is allowed; exact private markers and Git/protocol/evidence artifacts are rejected. The manifest must remain outside the output root.
 
@@ -81,7 +99,10 @@ Evaluators own the sealed hidden suite outside this repository. Each fresh evalu
 
 This is a two-candidate pilot, not a statistically powered benchmark. Its results are descriptive for this task and frozen provider configuration. Isolation is an audited procedural boundary plus the CLI sandbox, not kernel-enforced proof against every child-process, network, junction, or reparse-point escape. Operators must use non-reparse, nonnested roots and audit pre/post Git and evidence commitments. Public tests expose examples and contracts, not hidden cases. Hidden fixtures must never be committed to a candidate or protocol branch.
 
-The diagram above is the truthful visual for this protocol scaffold. Product screenshots are deferred because no product exists yet; a promoted implementation must later capture sanitized real UI evidence with alt text and provenance. The specification and protocol materials are original project work. Dependency provenance remains pinned in `package-lock.json`.
+The diagram above is the truthful protocol visual. The product screenshot is a
+sanitized capture of the promoted B0 implementation's default local state,
+recorded on 2026-07-21. The specification and protocol materials are original
+project work. Dependency provenance remains pinned in `package-lock.json`.
 
 ## Contributing and support
 
