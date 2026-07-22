@@ -1,0 +1,49 @@
+{
+  "protocolVersion": "2.8.0",
+  "confirmatoryStatus": "invalid",
+  "confirmatoryInvalidation": "cycle-1 reviewer artifact schema failure",
+  "exploratory": true,
+  "sampleSize": 1,
+  "treatment": {
+    "cycles": 1,
+    "acceptedReviewFindings": 0,
+    "fixerInvocations": 0,
+    "testerInvocations": 0,
+    "stopReason": "zero-findings",
+    "tfinalEqualsT0": true
+  },
+  "packageMapping": {
+    "X": "B0",
+    "Y": "Tfinal",
+    "Z": "T0"
+  },
+  "scores": {
+    "B0": 82,
+    "Tfinal": 44,
+    "T0": 45
+  },
+  "scoreStatus": {
+    "B0": "valid evaluator artifact",
+    "Tfinal": "valid fresh recovery evaluator artifact",
+    "T0": "deterministic exploratory fallback from invalid arithmetic artifact"
+  },
+  "primaryTfinalMinusB0": -38,
+  "secondaryTfinalMinusT0": -1,
+  "winner": "B0",
+  "winnerCommit": "3b4ea5d228bf42930e0aed41568c482e0982430e",
+  "usage": {
+    "modelTurns": 9,
+    "inputTokens": 17131860,
+    "cachedInputTokens": 16145408,
+    "outputTokens": 275795,
+    "reasoningOutputTokens": 156609,
+    "usdCost": null,
+    "usdCostUnavailableReason": "not exposed by runtime"
+  },
+  "commitments": {
+    "assignmentRecordSha256": "a95da3bb46201d7fb96a69909fdec92e063a1ec95ee11308e509f15e25fdea2c",
+    "evaluationRandomizationDigestSha256": "00c3eb2ddc1c07e2ca3d87ccee7cf912a7f18ad47a9184eb657293e91567e5b7",
+    "acceptedReviewArtifactSha256": "d437c115f2d128434337b6ae50b3b8ce8b2baee63940fcbe1c794409289b691c",
+    "exploratoryOutcomeSha256": "19965e8a6f786fa83bc8974b3aa6eb6b2657832833f95bc702756cc3948ce67d"
+  }
+}
